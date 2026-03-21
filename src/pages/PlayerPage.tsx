@@ -1,0 +1,1998 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { Varhub } from "@flinbein/varhub-web-client";
+import { getBackendUrl } from "../varhub/hubUtils";
+import { audioManager } from "../audio/AudioManager";
+import type { PublicGameState, CaptainPrivateInfo, BlitzItem } from "../game/types";
+import type { PlayerToHostMsg, BlitzTaskPublic } from "../game/messages";
+import { QuestionTable } from "../components/shared/QuestionTable";
+
+const sessionKey = (roomId: string) => `player:${roomId}`;
+
+interface PlayerSession {
+  name: string;
+  role: "player" | "spectator";
+}
+
+type Status = "form" | "connecting" | "connected" | "error";
+
+function useTimer(endsAt: number | undefined, clockOffset: number): number {
+  const [remaining, setRemaining] = useState(0);
+  useEffect(() => {
+    if (!endsAt) {
+      setRemaining(0);
+      return;
+    }
+    const update = () =>
+      setRemaining(Math.max(0, endsAt - (Date.now() + clockOffset)));
+    update();
+    const id = setInterval(update, 200);
+    return () => clearInterval(id);
+  }, [endsAt, clockOffset]);
+  return remaining;
+}
+
+function TeamBadge({ teamId }: { teamId: string }) {
+  if (teamId === "red")
+    return (
+      <span className="inline-block px-2 py-0.5 rounded-full bg-red-900/50 text-red-300 text-xs font-semibold">
+        Красные
+      </span>
+    );
+  if (teamId === "blue")
+    return (
+      <span className="inline-block px-2 py-0.5 rounded-full bg-blue-900/50 text-blue-300 text-xs font-semibold">
+        Синие
+      </span>
+    );
+  return null;
+}
+
+export default function PlayerPage() {
+  const { roomId } = useParams<{ roomId: string }>();
+  const [name, setName] = useState(() => localStorage.getItem("lastPlayerName") ?? "");
+  const [status, setStatus] = useState<Status>("form");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [gameState, setGameState] = useState<PublicGameState | null>(null);
+  const [localRole, setLocalRole] = useState<"player" | "spectator">("player");
+  const [musicPlaying, setMusicPlaying] = useState(false);
+  const musicTogglingRef = useRef(false); // prevent concurrent toggle calls
+  const [readySent, setReadySent] = useState(false);
+  const [suggestText, setSuggestText] = useState("");
+  const [noIdeasSent, setNoIdeasSent] = useState(false);
+  const clockOffsetRef = useRef(0);
+  const [progressPct, setProgressPct] = useState(100);
+
+  // Captain private info
+  const [captainInfo, setCaptainInfo] = useState<CaptainPrivateInfo | null>(null);
+  const [blitzCaptainItem, setBlitzCaptainItem] = useState<BlitzItem | null>(null);
+
+  // Answer input state
+  const [answerInput, setAnswerInput] = useState("");
+  const [answerSent, setAnswerSent] = useState(false);
+  const [blitzAnswerInput, setBlitzAnswerInput] = useState("");
+  const [blitzAnswerSent, setBlitzAnswerSent] = useState(false);
+  const [blitzTaskList, setBlitzTaskList] = useState<BlitzTaskPublic[] | null>(null);
+  const [musicVolume, setMusicVolumeState] = useState(() => audioManager.getMusicVolume());
+  const [ringVolume, setRingVolumeState] = useState(() => audioManager.getRingVolume());
+
+  const clientRef = useRef<ReturnType<Varhub["join"]> | null>(null);
+  const shouldReconnectRef = useRef(true);
+  const reconnectAttemptsRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wasConnectedRef = useRef(false); // true after first syncState received
+  // null = not kicked, "host" = kicked by host, "duplicate" = duplicate session
+  const [kickReason, setKickReason] = useState<null | "host" | "duplicate">(null);
+
+  function sendMsg(msg: PlayerToHostMsg) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (clientRef.current as any)?.send(msg);
+  }
+
+  // Reset answer state on phase change
+  const prevPhaseRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!gameState) return;
+    const phase = gameState.phase;
+    if (phase !== prevPhaseRef.current) {
+      prevPhaseRef.current = phase;
+      if (phase === "round-active" || phase === "round-captain") {
+        setAnswerInput("");
+        setAnswerSent(false);
+      }
+      if (phase === "blitz-active" || phase === "blitz-captain") {
+        setBlitzAnswerInput("");
+        setBlitzAnswerSent(false);
+      }
+      if (phase === "round-ready" || phase === "blitz-ready") {
+        setReadySent(false);
+      }
+      // Ring signal on answer-input phase starts
+      if (
+        phase === "round-active" ||
+        phase === "round-answer" ||
+        phase === "blitz-active" ||
+        phase === "blitz-answer"
+      ) {
+        void audioManager.playRing();
+      }
+      // Clear captain info when leaving captain phases
+      if (!phase.includes("active") && !phase.includes("answer") && !phase.includes("pick")) {
+        setCaptainInfo(null);
+        setBlitzCaptainItem(null);
+        setBlitzTaskList(null);
+      }
+    }
+  }, [gameState?.phase]);
+
+  const connectToRoom = useCallback(
+    (playerName: string, role: "player" | "spectator" = "player") => {
+      setStatus("connecting");
+      setErrorMsg(null);
+      setLocalRole(role);
+      setReadySent(false);
+      setNoIdeasSent(false);
+
+      wasConnectedRef.current = false;
+      localStorage.setItem("lastPlayerName", playerName);
+      const hub = new Varhub(getBackendUrl());
+      // Pass name and role as connection parameters so the host (Players class) registers us immediately
+      const client = hub.join(roomId!, { integrity: "custom:loudquiz", params: [playerName, role] });
+      clientRef.current = client;
+
+      client.on("open", () => {
+        sendMsg({ type: "join", name: playerName, role });
+        reconnectAttemptsRef.current = 0;
+        sessionStorage.setItem(
+          sessionKey(roomId!),
+          JSON.stringify({ name: playerName, role } satisfies PlayerSession),
+        );
+        void audioManager.requestWakeLock();
+      });
+
+      client.on("message", (...args: unknown[]) => {
+        const data = args[0] as { type: string } | null;
+        if (!data?.type) return;
+
+        if (data.type === "syncState") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const state = (data as any).state as PublicGameState;
+          const rawOffset = state.serverNow - Date.now();
+          clockOffsetRef.current = clockOffsetRef.current * 0.9 + rawOffset * 0.1;
+          wasConnectedRef.current = true; // Successfully reached the game
+          setGameState(state);
+          setStatus("connected");
+        } else if (data.type === "captainInfo") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const info = (data as any).info as CaptainPrivateInfo;
+          setCaptainInfo(info);
+        } else if (data.type === "blitzCaptainInfo") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const item = (data as any).item as BlitzItem;
+          setBlitzCaptainItem(item);
+        } else if (data.type === "blitzTaskList") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const tasks = (data as any).tasks as BlitzTaskPublic[];
+          setBlitzTaskList(tasks);
+        } else if (data.type === "pong") {
+          // NTP offset refinement handled if needed
+        } else if (data.type === "kicked") {
+          // Forcibly disconnected — do not auto-reconnect
+          shouldReconnectRef.current = false;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const reason = (data as any).reason as string;
+          const isDuplicate = reason === "duplicate_session";
+          setKickReason(isDuplicate ? "duplicate" : "host");
+          setErrorMsg(
+            isDuplicate
+              ? "Вы вошли с другого устройства. Это подключение закрыто."
+              : "Вас отключил ведущий.",
+          );
+          setStatus("error");
+          void audioManager.releaseWakeLock();
+        }
+      });
+
+      client.on("close", (_reason: unknown) => {
+        void audioManager.releaseWakeLock();
+        if (!shouldReconnectRef.current) return;
+        if (!wasConnectedRef.current) {
+          // Never received syncState — handled by promise.catch
+          return;
+        }
+        // Was connected to the game — try to reconnect
+        const attempt = reconnectAttemptsRef.current;
+        reconnectAttemptsRef.current = attempt + 1;
+        const delay = Math.min(1000 * Math.pow(2, attempt), 30_000);
+        setStatus("connecting");
+        setErrorMsg(null);
+        reconnectTimerRef.current = setTimeout(() => {
+          if (shouldReconnectRef.current) {
+            connectToRoom(playerName, role);
+          }
+        }, delay);
+      });
+
+      client.promise.catch((_err: unknown) => {
+        if (!shouldReconnectRef.current) return;
+        shouldReconnectRef.current = false;
+        const wasEverConnected = reconnectAttemptsRef.current > 0;
+        const msg = wasEverConnected
+          ? "Ведущий завершил игру или потерял соединение."
+          : "Комната не найдена. Проверьте код комнаты.";
+        setErrorMsg(msg);
+        setStatus("error");
+        void audioManager.releaseWakeLock();
+      });
+    },
+    [roomId],
+  );
+
+  // Check sessionStorage for saved session and auto-connect
+  useEffect(() => {
+    const raw = sessionStorage.getItem(sessionKey(roomId!));
+    if (!raw) return;
+    try {
+      const session = JSON.parse(raw) as PlayerSession;
+      if (session.name) {
+        setName(session.name);
+        connectToRoom(session.name, session.role);
+      }
+    } catch {
+      sessionStorage.removeItem(sessionKey(roomId!));
+    }
+  }, [roomId, connectToRoom]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      shouldReconnectRef.current = false;
+      if (reconnectTimerRef.current !== null) {
+        clearTimeout(reconnectTimerRef.current);
+      }
+      clientRef.current?.close();
+      void audioManager.releaseWakeLock();
+      audioManager.stopMusic(0);
+    };
+  }, []);
+
+  // Auto-join team in 1-team mode
+  useEffect(() => {
+    if (!gameState || gameState.phase !== "lobby") return;
+    if (gameState.settings?.teamCount !== 1) return;
+    const myPlayer = gameState.players.find((p) => p.name === name && p.role === localRole);
+    if (!myPlayer || myPlayer.teamId !== null) return;
+    sendMsg({ type: "setTeam", teamId: "red" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState?.phase, gameState?.players.length]);
+
+  // Auto-start/stop music based on game phase
+  useEffect(() => {
+    if (!gameState) return;
+    const { phase } = gameState;
+    // Phases where music plays (round-ready is the trigger: headphones on, game starting)
+    const musicOnPhases = [
+      "round-ready", "round-active",
+      "blitz-ready", "blitz-active",
+    ];
+    // Phases where music stops (no music during selection or review)
+    const musicOffPhases = [
+      "lobby", "calibration",
+      "round-captain", "round-pick",
+      "round-answer", "round-review", "round-result",
+      "blitz-captain", "blitz-pick",
+      "blitz-answer", "blitz-result",
+      "topic-suggest", "question-setup", "finale",
+    ];
+    if (musicOnPhases.includes(phase)) {
+      void audioManager.startMusic().then(() => {
+        if (audioManager.isMusicPlaying()) setMusicPlaying(true);
+      });
+    } else if (musicOffPhases.includes(phase)) {
+      const instant = phase === "lobby" || phase === "calibration" || phase === "round-captain" || phase === "round-pick";
+      audioManager.stopMusic(instant ? 0 : 3);
+      setMusicPlaying(false);
+    }
+  }, [gameState?.phase]);
+
+  // Timer progress bar for topic-suggest
+  useEffect(() => {
+    if (!gameState || gameState.phase !== "topic-suggest") return;
+    const endsAt = gameState.topicSuggestEndsAt;
+    if (!endsAt) return;
+
+    const interval = setInterval(() => {
+      const offset = clockOffsetRef.current;
+      const now = Date.now() + offset;
+      const remaining = endsAt - now;
+      const pct = Math.max(0, (remaining / 60_000) * 100);
+      setProgressPct(pct);
+      if (remaining <= 0) clearInterval(interval);
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, [gameState?.phase, gameState?.topicSuggestEndsAt]);
+
+  function handleJoin() {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    connectToRoom(trimmed, "player");
+  }
+
+  function handleRetry() {
+    shouldReconnectRef.current = true;
+    reconnectAttemptsRef.current = 0;
+    wasConnectedRef.current = false;
+    setKickReason(null);
+    if (reconnectTimerRef.current !== null) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    setStatus("form");
+    setErrorMsg(null);
+    setGameState(null);
+    setReadySent(false);
+    setNoIdeasSent(false);
+    setCaptainInfo(null);
+    setBlitzCaptainItem(null);
+    setBlitzTaskList(null);
+    sessionStorage.removeItem(sessionKey(roomId!));
+    clientRef.current?.close();
+    clientRef.current = null;
+    void audioManager.stopMusic(0);
+    setMusicPlaying(false);
+  }
+
+  function handleToggleMusic() {
+    if (musicTogglingRef.current) return;
+    musicTogglingRef.current = true;
+    if (musicPlaying) {
+      audioManager.stopMusic(1);
+      setMusicPlaying(false);
+      musicTogglingRef.current = false;
+    } else {
+      void audioManager.startMusic().then(() => {
+        setMusicPlaying(audioManager.isMusicPlaying());
+        musicTogglingRef.current = false;
+      });
+    }
+  }
+
+  function handleReady() {
+    sendMsg({ type: "ready" });
+    setReadySent(true);
+  }
+
+  function handleSuggest() {
+    const text = suggestText.trim();
+    if (!text) return;
+    sendMsg({ type: "suggest", text });
+    setSuggestText("");
+  }
+
+  function handleNoIdeas() {
+    sendMsg({ type: "noIdeas" });
+    setNoIdeasSent(true);
+  }
+
+  function handleSubmitAnswer() {
+    const answer = answerInput.trim();
+    if (!answer) return;
+    sendMsg({ type: "submitAnswer", answer });
+    setAnswerSent(true);
+  }
+
+  function handleBlitzSubmitAnswer() {
+    const answer = blitzAnswerInput.trim();
+    if (!answer) return;
+    sendMsg({ type: "blitzSubmitAnswer", answer });
+    setBlitzAnswerSent(true);
+  }
+
+  function handleSurrender() {
+    sendMsg({ type: "surrender" });
+    setBlitzAnswerSent(true);
+  }
+
+  // ── Connecting ─────────────────────────────────────────────────────────────
+  if (status === "connecting") {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4">
+        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-300">Подключение к комнате {roomId}...</p>
+      </div>
+    );
+  }
+
+  // ── Error ──────────────────────────────────────────────────────────────────
+  if (status === "error") {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+        <div className="text-center space-y-3">
+          <div className="text-5xl">{kickReason ? "🚫" : "❌"}</div>
+          <h2 className="text-xl font-semibold">
+            {kickReason === "host"
+              ? "Вы отключены"
+              : kickReason === "duplicate"
+                ? "Другое устройство"
+                : "Не удалось подключиться"}
+          </h2>
+          {errorMsg && <p className="text-red-400 text-sm max-w-xs">{errorMsg}</p>}
+        </div>
+        <div className="flex gap-3">
+          {/* Host kick: no retry. Duplicate session: allow re-entry. No kick: allow retry. */}
+          {kickReason !== "host" && (
+            <button
+              onClick={handleRetry}
+              className="px-5 py-2 bg-blue-700 hover:bg-blue-600 rounded transition-colors"
+            >
+              {kickReason === "duplicate" ? "Повторить вход" : "Попробовать снова"}
+            </button>
+          )}
+          <Link
+            to="/"
+            className="px-5 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+          >
+            На главную
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Connected ──────────────────────────────────────────────────────────────
+  if (status === "connected" && gameState) {
+    const { phase } = gameState;
+    const savedSession = (() => {
+      try {
+        return JSON.parse(
+          sessionStorage.getItem(sessionKey(roomId!)) ?? "null",
+        ) as PlayerSession | null;
+      } catch {
+        return null;
+      }
+    })();
+    const myName = savedSession?.name ?? name;
+    const ownPlayer = gameState.players.find(
+      (p) => p.name === myName && p.role === localRole,
+    );
+    const myId = ownPlayer?.id;
+    const isSpectator = localRole === "spectator";
+    const isCaptain = myId !== undefined && gameState.captainId === myId;
+    const isActiveTeam = ownPlayer?.teamId === gameState.activeTeamId;
+    const clockOffset = clockOffsetRef.current;
+
+    // ── LOBBY ────────────────────────────────────────────────────────────────
+    if (phase === "lobby") {
+      const isOneTeam = gameState.settings?.teamCount === 1;
+      const redPlayers = gameState.players.filter((p) => p.teamId === "red");
+      const bluePlayers = gameState.players.filter((p) => p.teamId === "blue");
+      const unassigned = gameState.players.filter(
+        (p) => p.teamId === null && p.role === "player",
+      );
+      const spectators = gameState.players.filter((p) => p.role === "spectator");
+      const allPlayers = [...redPlayers, ...bluePlayers];
+
+      // Start game button logic
+      const hasUnassigned = unassigned.length > 0;
+      const teamImbalanced =
+        !isOneTeam && Math.abs(redPlayers.length - bluePlayers.length) > 1;
+      const noPlayers = allPlayers.length === 0;
+      const canStart = !noPlayers && !hasUnassigned && !teamImbalanced;
+      const startDisabledReason = noPlayers
+        ? "Нет игроков"
+        : hasUnassigned
+          ? "Есть игроки без команды"
+          : teamImbalanced
+            ? "Команды несбалансированы"
+            : null;
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">LoudQuiz</h1>
+            <p className="text-gray-400 text-sm">
+              Комната{" "}
+              <span className="font-mono font-bold text-blue-300">{roomId}</span>
+            </p>
+            <p className="text-lg font-medium mt-2">{myName}</p>
+          </div>
+
+          {!isSpectator && !isOneTeam && (
+            <div className="space-y-3">
+              {ownPlayer?.teamId && (
+                <p className="text-center text-sm text-gray-400">
+                  Вы в команде:{" "}
+                  <span
+                    className={
+                      ownPlayer.teamId === "red"
+                        ? "text-red-400 font-bold"
+                        : "text-blue-400 font-bold"
+                    }
+                  >
+                    {ownPlayer.teamId === "red" ? "Красных" : "Синих"}
+                  </span>
+                </p>
+              )}
+              {!ownPlayer?.teamId && (
+                <p className="text-center text-sm text-yellow-400">Выберите команду</p>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => sendMsg({ type: "setTeam", teamId: "red" })}
+                  className="flex-1 py-3 bg-red-700 hover:bg-red-600 rounded-lg font-semibold transition-colors"
+                >
+                  Красные
+                </button>
+                <button
+                  onClick={() => sendMsg({ type: "setTeam", teamId: "blue" })}
+                  className="flex-1 py-3 bg-blue-700 hover:bg-blue-600 rounded-lg font-semibold transition-colors"
+                >
+                  Синие
+                </button>
+              </div>
+              <button
+                onClick={() => sendMsg({ type: "setTeam", teamId: null })}
+                className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-gray-300 transition-colors"
+              >
+                Смотреть (зритель)
+              </button>
+            </div>
+          )}
+
+          {!isSpectator && isOneTeam && ownPlayer?.teamId && (
+            <p className="text-center text-sm text-green-400">Вы в игре!</p>
+          )}
+
+          {isSpectator && (
+            <p className="text-center text-gray-400 text-sm">Режим зрителя</p>
+          )}
+
+          <div className="space-y-3 text-sm">
+            {isOneTeam ? (
+              allPlayers.length > 0 && (
+                <div>
+                  <p className="text-green-400 font-semibold mb-1">Игроки ({allPlayers.length}):</p>
+                  <ul className="space-y-1">
+                    {allPlayers.map((p) => (
+                      <li key={p.id} className="bg-green-900/20 rounded px-3 py-1">
+                        {p.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            ) : (
+              <>
+                {redPlayers.length > 0 && (
+                  <div>
+                    <p className="text-red-400 font-semibold mb-1">Красные:</p>
+                    <ul className="space-y-1">
+                      {redPlayers.map((p) => (
+                        <li key={p.id} className="bg-red-900/20 rounded px-3 py-1">
+                          {p.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {bluePlayers.length > 0 && (
+                  <div>
+                    <p className="text-blue-400 font-semibold mb-1">Синие:</p>
+                    <ul className="space-y-1">
+                      {bluePlayers.map((p) => (
+                        <li key={p.id} className="bg-blue-900/20 rounded px-3 py-1">
+                          {p.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {unassigned.length > 0 && (
+                  <div>
+                    <p className="text-yellow-400 font-semibold mb-1">Не выбрали команду:</p>
+                    <ul className="space-y-1">
+                      {unassigned.map((p) => (
+                        <li key={p.id} className="bg-yellow-900/10 rounded px-3 py-1 text-gray-400">
+                          {p.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            )}
+            {spectators.length > 0 && (
+              <div>
+                <p className="text-gray-500 font-semibold mb-1">Зрители:</p>
+                <ul className="space-y-1">
+                  {spectators.map((p) => (
+                    <li key={p.id} className="bg-gray-800 rounded px-3 py-1 text-gray-500">
+                      {p.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {!isSpectator && (
+            <div className="space-y-2">
+              <button
+                onClick={() => sendMsg({ type: "startGame" })}
+                disabled={!canStart}
+                className="w-full py-3 bg-green-700 hover:bg-green-600 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-colors"
+              >
+                Начать игру
+              </button>
+              {startDisabledReason && (
+                <p className="text-center text-xs text-gray-500">{startDisabledReason}</p>
+              )}
+            </div>
+          )}
+
+          {isSpectator && (
+            <p className="text-center text-gray-600 text-sm">Ожидание начала игры...</p>
+          )}
+        </div>
+      );
+    }
+
+    // ── CALIBRATION ──────────────────────────────────────────────────────────
+    if (phase === "calibration") {
+      if (isSpectator) {
+        const readyCount = gameState.players.filter((p) => p.isReady).length;
+        const totalPlayers = gameState.players.filter((p) => p.role === "player").length;
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4">
+            <div className="text-6xl">🎧</div>
+            <h2 className="text-2xl font-bold">Калибровка</h2>
+            <p className="text-gray-400">
+              Готовы: {readyCount} / {totalPlayers}
+            </p>
+          </div>
+        );
+      }
+
+      const isReady = ownPlayer?.isReady ?? readySent;
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <div className="text-6xl">🎧</div>
+          <h2 className="text-2xl font-bold text-center">Проверка наушников</h2>
+
+          <div className="w-full space-y-3">
+            <button
+              onClick={handleToggleMusic}
+              className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+                musicPlaying
+                  ? "bg-gray-700 hover:bg-gray-600"
+                  : "bg-purple-700 hover:bg-purple-600"
+              }`}
+            >
+              {musicPlaying ? "Выключить музыку" : "Включить музыку"}
+            </button>
+
+            <div className="flex items-center gap-3 px-1">
+              <span className="text-sm text-gray-400 w-24 shrink-0">Музыка</span>
+              <input
+                type="range" min={0} max={1} step={0.05}
+                value={musicVolume}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  audioManager.setMusicVolume(v);
+                  setMusicVolumeState(v);
+                }}
+                className="flex-1 accent-purple-500"
+              />
+              <span className="text-sm text-gray-400 w-8 text-right">{Math.round(musicVolume * 100)}%</span>
+            </div>
+
+            <button
+              onClick={() => void audioManager.playRing()}
+              className="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-semibold transition-colors"
+            >
+              Проиграть сигнал
+            </button>
+
+            <div className="flex items-center gap-3 px-1">
+              <span className="text-sm text-gray-400 w-24 shrink-0">Сигнал</span>
+              <input
+                type="range" min={0} max={1} step={0.05}
+                value={ringVolume}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  audioManager.setRingVolume(v);
+                  setRingVolumeState(v);
+                }}
+                className="flex-1 accent-blue-500"
+              />
+              <span className="text-sm text-gray-400 w-8 text-right">{Math.round(ringVolume * 100)}%</span>
+            </div>
+
+            <button
+              onClick={handleReady}
+              disabled={isReady}
+              className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
+                isReady
+                  ? "bg-green-800 cursor-not-allowed text-green-300"
+                  : "bg-green-700 hover:bg-green-600"
+              }`}
+            >
+              {isReady ? "✓ Я готов" : "Я готов"}
+            </button>
+          </div>
+
+          <div className="w-full text-sm space-y-1">
+            {gameState.players
+              .filter((p) => p.role === "player")
+              .map((p) => (
+                <div key={p.id} className="flex items-center gap-2 text-gray-400">
+                  <span>{p.isReady ? "✅" : "⭕"}</span>
+                  <span className={p.isReady ? "text-green-400" : "text-gray-500"}>{p.name}</span>
+                </div>
+              ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── TOPIC-SUGGEST ────────────────────────────────────────────────────────
+    if (phase === "topic-suggest") {
+      const suggestions = gameState.suggestions ?? [];
+      const selectedTopics = gameState.selectedTopics;
+      const isGenerating = gameState.isGeneratingQuestions ?? false;
+      const questionsReady = gameState.questionsReady ?? false;
+      const questionTable = gameState.publicQuestionTable ?? [];
+      const mySuggestionsCount = suggestions.filter((s) => s.playerName === myName).length;
+      const canSuggestMore = mySuggestionsCount < 3 && !isGenerating && !questionsReady;
+
+      // After questions generated: show table + "Далее" button for everyone
+      if (questionsReady) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5">
+            <div className="text-center">
+              <div className="text-4xl mb-2">✅</div>
+              <h2 className="text-xl font-bold">Вопросы готовы!</h2>
+            </div>
+            {questionTable.length > 0 && (
+              <QuestionTable questionTable={questionTable} compact />
+            )}
+            {!isSpectator && (
+              <button
+                onClick={() => sendMsg({ type: "proceed" })}
+                className="w-full py-3 bg-green-700 hover:bg-green-600 rounded-lg font-bold text-lg transition-colors"
+              >
+                Далее →
+              </button>
+            )}
+          </div>
+        );
+      }
+
+      if (isSpectator) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-4">
+            <h2 className="text-xl font-bold">Предложение тем</h2>
+            <div className="w-full bg-gray-700 rounded-full h-2">
+              <div
+                className="bg-blue-500 h-2 rounded-full transition-all duration-200"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <p className="text-gray-400 text-sm">Предложений: {suggestions.length}</p>
+            {isGenerating && (
+              <div className="flex items-center gap-3 text-yellow-400">
+                <div className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm">Генерирую вопросы...</span>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5">
+          <h2 className="text-xl font-bold">Предложите темы</h2>
+
+          <div className="w-full bg-gray-700 rounded-full h-3">
+            <div
+              className="bg-blue-500 h-3 rounded-full transition-all duration-200"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm text-gray-400">Предложений: {mySuggestionsCount} / 3</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={suggestText}
+                onChange={(e) => setSuggestText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && canSuggestMore && handleSuggest()}
+                placeholder="Тема..."
+                maxLength={100}
+                disabled={!canSuggestMore}
+                className="flex-1 bg-gray-800 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:outline-none focus:border-blue-500 disabled:opacity-50"
+              />
+              <button
+                onClick={handleSuggest}
+                disabled={!canSuggestMore || !suggestText.trim()}
+                className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
+              >
+                Предложить
+              </button>
+            </div>
+          </div>
+
+          {mySuggestionsCount > 0 && (
+            <div className="text-sm space-y-1">
+              <p className="text-gray-400">Ваши предложения:</p>
+              {suggestions
+                .filter((s) => s.playerName === myName)
+                .map((s, i) => (
+                  <div key={i} className="bg-gray-800 rounded px-3 py-1 text-gray-300">
+                    {s.text}
+                  </div>
+                ))}
+            </div>
+          )}
+
+          <button
+            onClick={handleNoIdeas}
+            disabled={noIdeasSent}
+            className="w-full py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm text-gray-300 transition-colors"
+          >
+            {noIdeasSent ? "Отмечено: нет идей" : "Больше нет идей"}
+          </button>
+
+          {selectedTopics && selectedTopics.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-green-400 font-semibold text-sm">Выбранные темы:</p>
+              {selectedTopics.map((t, i) => (
+                <div key={i} className="bg-green-900/20 rounded px-3 py-1 text-sm text-green-300">
+                  {t.name}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {isGenerating && (
+            <div className="flex items-center gap-3 text-yellow-400">
+              <div className="w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+              <span>Генерирую вопросы...</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── QUESTION-SETUP ───────────────────────────────────────────────────────
+    if (phase === "question-setup") {
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-300 text-lg">Ведущий загружает вопросы...</p>
+        </div>
+      );
+    }
+
+    // ── ROUND-CAPTAIN ────────────────────────────────────────────────────────
+    if (phase === "round-captain") {
+      const captainId = gameState.captainId;
+      const captain = gameState.players.find((p) => p.id === captainId);
+      const canBecomeCaptain =
+        isActiveTeam && !isSpectator && !captainId && !(ownPlayer?.wasRecentCaptain);
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-1">Выбор капитана</h2>
+            {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
+          </div>
+
+          {captain ? (
+            <div className="text-center">
+              <p className="text-yellow-400 text-xl font-bold">{captain.name}</p>
+              <p className="text-gray-400 text-sm">стал капитаном</p>
+            </div>
+          ) : (
+            <p className="text-gray-400 text-center">
+              Кто хочет быть капитаном этого раунда?
+            </p>
+          )}
+
+          {isActiveTeam && !isSpectator && !captain && (
+            <button
+              onClick={() => sendMsg({ type: "becomeCapitain" })}
+              disabled={!canBecomeCaptain}
+              className={`w-full py-4 rounded-lg font-bold text-xl transition-colors ${
+                canBecomeCaptain
+                  ? "bg-yellow-600 hover:bg-yellow-500"
+                  : "bg-gray-700 cursor-not-allowed text-gray-500"
+              }`}
+            >
+              {ownPlayer?.wasRecentCaptain ? "Я был капитаном" : "Буду капитаном!"}
+            </button>
+          )}
+
+          {!isActiveTeam && !isSpectator && (
+            <p className="text-gray-600 text-sm text-center">Ход другой команды</p>
+          )}
+
+          <div className="w-full text-sm">
+            {gameState.players
+              .filter((p) => p.teamId === gameState.activeTeamId && p.role === "player")
+              .map((p) => (
+                <div key={p.id} className="flex items-center gap-2 py-1 text-gray-400">
+                  <span>{p.id === captainId ? "👑" : "  "}</span>
+                  <span className={p.id === captainId ? "text-yellow-400 font-bold" : ""}>
+                    {p.name}
+                  </span>
+                  {p.wasRecentCaptain && (
+                    <span className="text-gray-600 text-xs">(прошлый)</span>
+                  )}
+                </div>
+              ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── ROUND-READY ──────────────────────────────────────────────────────────
+    if (phase === "round-ready") {
+      const isReady = ownPlayer?.isReady ?? readySent;
+      const captainId = gameState.captainId;
+      const captain = gameState.players.find((p) => p.id === captainId);
+
+      if (!isActiveTeam || isSpectator) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+            <div className="text-5xl">🎧</div>
+            <h2 className="text-xl font-bold text-center">Другая команда готовится</h2>
+            {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <div className="text-6xl">🎧</div>
+          <h2 className="text-2xl font-bold text-center">Надевайте наушники!</h2>
+          {captain && (
+            <p className="text-yellow-400 text-sm">
+              {isCaptain ? "Вы капитан!" : `Капитан: ${captain.name}`}
+            </p>
+          )}
+
+          <button
+            onClick={handleReady}
+            disabled={isReady}
+            className={`w-full py-3 rounded-lg font-bold text-lg transition-colors ${
+              isReady
+                ? "bg-green-800 cursor-not-allowed text-green-300"
+                : "bg-green-700 hover:bg-green-600"
+            }`}
+          >
+            {isReady ? "✓ Готов" : "Я готов!"}
+          </button>
+
+          <div className="w-full text-sm space-y-1">
+            {gameState.players
+              .filter((p) => p.teamId === gameState.activeTeamId && p.role === "player")
+              .map((p) => (
+                <div key={p.id} className="flex items-center gap-2 text-gray-400">
+                  <span>{p.isReady ? "✅" : "⭕"}</span>
+                  <span className={p.isReady ? "text-green-400" : "text-gray-500"}>
+                    {p.name}
+                    {p.id === gameState.captainId && (
+                      <span className="text-yellow-600 text-xs ml-1">(капитан)</span>
+                    )}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── ROUND-PICK ───────────────────────────────────────────────────────────
+    if (phase === "round-pick") {
+      const questionTable = gameState.publicQuestionTable ?? [];
+      const jokerUsed = gameState.jokerUsed;
+      const jokerActive = gameState.jokerActivatedThisRound;
+      const activeTeam = gameState.activeTeamId ?? "";
+      const teamJokerUsed = jokerUsed[activeTeam];
+      const teamJokerActive = jokerActive[activeTeam];
+      const captainName = gameState.players.find((p) => p.id === gameState.captainId)?.name;
+
+      if (!isActiveTeam || isSpectator) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+            <div className="text-center">
+              <h2 className="text-xl font-bold">Другая команда выбирает вопрос</h2>
+              {gameState.activeTeamId && (
+                <div className="mt-2">
+                  <TeamBadge teamId={gameState.activeTeamId} />
+                </div>
+              )}
+            </div>
+            <QuestionTable
+            questionTable={questionTable}
+            questionHistory={gameState.questionHistory}
+            compact
+          />
+          </div>
+        );
+      }
+
+      // All active team members see the same table; captain can pick
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-lg mx-auto gap-4">
+          <div className="text-center">
+            {isCaptain ? (
+              <>
+                <h2 className="text-2xl font-bold">Выберите вопрос</h2>
+                <p className="text-yellow-400 font-semibold text-sm">Вы капитан!</p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-xl font-bold">Выбор вопроса</h2>
+                {captainName && (
+                  <p className="text-yellow-400 text-sm mt-1">Капитан: {captainName}</p>
+                )}
+              </>
+            )}
+          </div>
+
+          {isCaptain && (
+            <>
+              {!teamJokerUsed && !teamJokerActive && (
+                <button
+                  onClick={() => sendMsg({ type: "activateJoker" })}
+                  className="w-full py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-sm font-semibold transition-colors"
+                >
+                  Активировать Джокер (x2 очки)
+                </button>
+              )}
+              {teamJokerActive && (
+                <div className="bg-yellow-900/30 border border-yellow-700/50 rounded p-2 text-center">
+                  <p className="text-yellow-400 font-bold text-sm">Джокер активирован!</p>
+                </div>
+              )}
+              {teamJokerUsed && (
+                <p className="text-gray-600 text-sm text-center">Джокер уже использован</p>
+              )}
+            </>
+          )}
+
+          {!isCaptain && teamJokerActive && (
+            <div className="bg-yellow-900/30 border border-yellow-700/50 rounded p-2 text-center">
+              <p className="text-yellow-400 font-bold text-sm">Джокер активирован!</p>
+            </div>
+          )}
+
+          <QuestionTable
+            questionTable={questionTable}
+            questionHistory={gameState.questionHistory}
+            onPick={
+              isCaptain
+                ? (topicIdx, questionIdx) =>
+                    sendMsg({ type: "pickQuestion", topicIdx, questionIdx })
+                : null
+            }
+            compact
+          />
+        </div>
+      );
+    }
+
+    // ── ROUND-ACTIVE ─────────────────────────────────────────────────────────
+    if (phase === "round-active") {
+      const currentRound = gameState.currentRound;
+      const hasAnswered = ownPlayer?.hasAnswered ?? answerSent;
+
+      if (isCaptain) {
+        // Captain sees the question + can submit answer
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+            <div className="text-center">
+              <p className="text-yellow-400 font-bold mb-1">Вы капитан!</p>
+              <p className="text-gray-400 text-sm">Объясняйте жестами, не говорите слов</p>
+            </div>
+            {currentRound && (
+              <div className="text-center text-gray-400 text-sm">
+                {currentRound.topicName} · {currentRound.difficulty} очков
+              </div>
+            )}
+            {captainInfo ? (
+              <div className="bg-blue-900/40 border border-blue-700/60 rounded-xl p-6 text-center">
+                <p className="text-sm text-blue-300 mb-2">Ваш вопрос / слово:</p>
+                <p className="text-2xl font-bold text-white">{captainInfo.questionText}</p>
+              </div>
+            ) : (
+              <div className="text-gray-500 text-sm">Загружаем вопрос...</div>
+            )}
+            <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
+            {!hasAnswered ? (
+              <div className="w-full space-y-2">
+                <input
+                  type="text"
+                  value={answerInput}
+                  onChange={(e) => setAnswerInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !hasAnswered && handleSubmitAnswer()}
+                  placeholder="Ваш ответ..."
+                  maxLength={100}
+                  className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+                />
+                <button
+                  onClick={handleSubmitAnswer}
+                  disabled={!answerInput.trim()}
+                  className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors"
+                >
+                  Ответить
+                </button>
+              </div>
+            ) : (
+              <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center w-full">
+                <p className="text-green-400 font-bold">Ответ отправлен!</p>
+                <p className="text-gray-400 text-sm mt-1">{answerInput}</p>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      if (!isActiveTeam || isSpectator) {
+        const questionReveal = gameState.questionRevealText;
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+            <h2 className="text-xl font-bold text-center">Другая команда играет</h2>
+            {questionReveal && (
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-center max-w-sm w-full">
+                <p className="text-sm text-gray-400 mb-1">Вопрос:</p>
+                <p className="text-white font-semibold">{questionReveal}</p>
+              </div>
+            )}
+            <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
+          </div>
+        );
+      }
+
+      // Active team non-captain player
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <div className="text-6xl">🎧</div>
+          <h2 className="text-xl font-bold text-center">Следите за капитаном!</h2>
+          {currentRound && (
+            <div className="text-center text-gray-400 text-sm">
+              {currentRound.topicName} · {currentRound.difficulty} очков
+            </div>
+          )}
+          <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
+
+          {!hasAnswered ? (
+            <div className="w-full space-y-2">
+              <input
+                type="text"
+                value={answerInput}
+                onChange={(e) => setAnswerInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !hasAnswered && handleSubmitAnswer()}
+                placeholder="Ваш ответ..."
+                maxLength={100}
+                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+              />
+              <button
+                onClick={handleSubmitAnswer}
+                disabled={!answerInput.trim()}
+                className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors"
+              >
+                Ответить
+              </button>
+            </div>
+          ) : (
+            <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center">
+              <p className="text-green-400 font-bold">Ответ отправлен!</p>
+              <p className="text-gray-400 text-sm mt-1">{answerInput}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── ROUND-ANSWER ─────────────────────────────────────────────────────────
+    if (phase === "round-answer") {
+      const hasAnswered = ownPlayer?.hasAnswered ?? answerSent;
+      const questionReveal = gameState.questionRevealText;
+
+      // Non-active team or spectator: show question reveal only
+      if (!isActiveTeam || isSpectator) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+            <h2 className="text-xl font-bold text-center">Время отвечать!</h2>
+            {questionReveal && (
+              <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 text-center">
+                <p className="text-sm text-gray-400 mb-1">Вопрос:</p>
+                <p className="text-white font-semibold">{questionReveal}</p>
+              </div>
+            )}
+            <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
+          </div>
+        );
+      }
+
+      // Active team players (including captain) answer
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <h2 className="text-2xl font-bold text-center">
+            {isCaptain ? "Ваш ответ!" : "Ваш ответ!"}
+          </h2>
+          {questionReveal && (
+            <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 text-center w-full">
+              <p className="text-sm text-gray-400 mb-1">Вопрос:</p>
+              <p className="text-white font-semibold">{questionReveal}</p>
+            </div>
+          )}
+          <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
+
+          {!hasAnswered ? (
+            <div className="w-full space-y-2">
+              <input
+                type="text"
+                value={answerInput}
+                onChange={(e) => setAnswerInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !hasAnswered && handleSubmitAnswer()}
+                placeholder="Ваш ответ..."
+                maxLength={100}
+                autoFocus
+                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+              />
+              <button
+                onClick={handleSubmitAnswer}
+                disabled={!answerInput.trim()}
+                className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors"
+              >
+                Ответить
+              </button>
+            </div>
+          ) : (
+            <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center w-full">
+              <p className="text-green-400 font-bold">Ответ отправлен!</p>
+              <p className="text-gray-400 text-sm mt-1">{answerInput}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── ROUND-REVIEW ─────────────────────────────────────────────────────────
+    if (phase === "round-review") {
+      const isAutoReviewing = gameState.isAutoReviewing ?? false;
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+          {isAutoReviewing ? (
+            <>
+              <div className="w-8 h-8 border-3 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+              <p className="text-yellow-400 font-semibold">ИИ проверяет ответы...</p>
+            </>
+          ) : (
+            <>
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-gray-300 text-lg text-center">Ведущий проверяет ответы...</p>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // ── ROUND-RESULT ─────────────────────────────────────────────────────────
+    if (phase === "round-result") {
+      const result = gameState.roundResult;
+      const scores = gameState.scores;
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Результат раунда</h2>
+            {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
+          </div>
+
+          {result && (
+            <>
+              <div className="bg-gray-800 rounded-lg p-4">
+                <p className="text-sm text-gray-400 mb-1">Вопрос:</p>
+                <p className="text-white font-semibold">{result.questionText}</p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 mb-2">Ответы:</h3>
+                <ul className="space-y-2">
+                  {result.groups.map((g) => {
+                    const groupPlayers = g.playerIds
+                      .map((pid) => gameState.players.find((p) => p.id === pid)?.name ?? pid)
+                      .join(", ");
+                    return (
+                      <li
+                        key={g.id}
+                        className={`rounded border p-3 text-sm flex items-start gap-2 ${
+                          g.accepted
+                            ? "bg-green-900/20 border-green-700/50"
+                            : "bg-red-900/10 border-red-800/30"
+                        }`}
+                      >
+                        <span className="text-lg flex-shrink-0">
+                          {g.accepted ? "✅" : "❌"}
+                        </span>
+                        <div>
+                          <p className="text-white font-medium">{g.canonicalAnswer}</p>
+                          <p className="text-gray-400 text-xs">{groupPlayers}</p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4 text-center">
+                <p className="text-gray-400 text-sm">Очки за раунд:</p>
+                <p className="text-3xl font-bold text-yellow-400">
+                  +{result.score}
+                  {result.jokerApplied && (
+                    <span className="text-base text-yellow-300 ml-2">Джокер x2</span>
+                  )}
+                </p>
+              </div>
+
+              {result.commentary && (
+                <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3 text-sm text-blue-300">
+                  {result.commentary}
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="bg-gray-800 rounded-lg p-3">
+            <div className="flex justify-around">
+              {Object.entries(scores).map(([teamId, score]) => (
+                <div key={teamId} className="text-center">
+                  <p
+                    className={`font-bold text-lg ${teamId === "red" ? "text-red-400" : "text-blue-400"}`}
+                  >
+                    {score}
+                  </p>
+                  <p className="text-gray-500 text-xs">
+                    {teamId === "red" ? "Красные" : "Синие"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => sendMsg({ type: "nextRound" })}
+            className="w-full py-3 bg-blue-700 hover:bg-blue-600 rounded-lg font-bold text-lg transition-colors"
+          >
+            Следующий раунд
+          </button>
+        </div>
+      );
+    }
+
+    // ── BLITZ-CAPTAIN ────────────────────────────────────────────────────────
+    if (phase === "blitz-captain") {
+      const captainId = gameState.captainId;
+      const captain = gameState.players.find((p) => p.id === captainId);
+      const canBecomeCaptain =
+        isActiveTeam && !isSpectator && !captainId && !(ownPlayer?.wasRecentCaptain);
+      const teamPlayersForBlitz = gameState.players.filter(
+        (p) => p.teamId === gameState.activeTeamId && p.role === "player" && p.id !== captainId,
+      );
+      const maxPosition = teamPlayersForBlitz.length;
+      const myBlitzOrder = ownPlayer?.blitzOrder;
+      const takenPositions = teamPlayersForBlitz
+        .filter((p) => (p.blitzOrder ?? 0) > 0)
+        .map((p) => p.blitzOrder!);
+
+      if (!isActiveTeam || isSpectator) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-1">Блиц!</h2>
+              {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
+            </div>
+            <p className="text-gray-500 text-sm text-center">Команда выбирает капитана и порядок</p>
+          </div>
+        );
+      }
+
+      // Phase 1: no captain yet — show become-captain button
+      if (!captain) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-1">Блиц!</h2>
+              <p className="text-gray-400 mb-1">Выбор капитана</p>
+              {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
+            </div>
+            <p className="text-gray-400 text-center">Кто будет капитаном в блице?</p>
+            <button
+              onClick={() => sendMsg({ type: "blitzBecomeCapitain" })}
+              disabled={!canBecomeCaptain}
+              className={`w-full py-4 rounded-lg font-bold text-xl transition-colors ${
+                canBecomeCaptain
+                  ? "bg-yellow-600 hover:bg-yellow-500"
+                  : "bg-gray-700 cursor-not-allowed text-gray-500"
+              }`}
+            >
+              {ownPlayer?.wasRecentCaptain ? "Я был капитаном" : "Буду капитаном!"}
+            </button>
+          </div>
+        );
+      }
+
+      // Phase 2: captain chosen — captain waits, others pick blitz order
+      if (isCaptain) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 max-w-sm mx-auto">
+            <p className="text-yellow-400 text-xl font-bold">Вы капитан блица!</p>
+            <p className="text-gray-400 text-sm text-center">Ждём, пока команда выберет порядок</p>
+            <div className="w-full space-y-1 text-sm">
+              {teamPlayersForBlitz.map((p) => (
+                <div key={p.id} className="flex items-center gap-2 py-1 text-gray-400">
+                  <span className="w-5 text-center text-xs">
+                    {(p.blitzOrder ?? 0) > 0 ? `${p.blitzOrder}.` : "?"}
+                  </span>
+                  <span className={(p.blitzOrder ?? 0) > 0 ? "text-green-400" : ""}>{p.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      // Non-captain active team: pick blitz order
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-5 px-4 max-w-sm mx-auto">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Блиц — ваша очередь</h2>
+            <p className="text-yellow-400 text-sm">Капитан: {captain.name}</p>
+          </div>
+
+          {(myBlitzOrder ?? 0) > 0 ? (
+            <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center">
+              <p className="text-green-400 font-bold">Вы выбрали позицию {myBlitzOrder}</p>
+            </div>
+          ) : (
+            <p className="text-gray-400 text-center">Выберите свою позицию в очереди ответов:</p>
+          )}
+
+          <div className="grid grid-cols-3 gap-2 w-full">
+            {Array.from({ length: maxPosition }, (_, i) => i + 1).map((pos) => {
+              const isTaken = takenPositions.includes(pos) && myBlitzOrder !== pos;
+              const isMyPos = myBlitzOrder === pos;
+              return (
+                <button
+                  key={pos}
+                  onClick={() => sendMsg({ type: "blitzSetOrder", position: pos })}
+                  disabled={isTaken}
+                  className={`py-3 rounded-lg font-bold transition-colors ${
+                    isMyPos
+                      ? "bg-green-700 text-white"
+                      : isTaken
+                        ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                        : "bg-gray-700 hover:bg-gray-600"
+                  }`}
+                >
+                  {pos}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="w-full text-sm space-y-1">
+            {teamPlayersForBlitz.map((p) => (
+              <div key={p.id} className="flex items-center gap-2 py-1 text-gray-400">
+                <span className="w-5 text-center text-xs">
+                  {(p.blitzOrder ?? 0) > 0 ? `${p.blitzOrder}.` : "?"}
+                </span>
+                <span className={(p.blitzOrder ?? 0) > 0 ? "text-green-400" : ""}>{p.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── BLITZ-READY ──────────────────────────────────────────────────────────
+    if (phase === "blitz-ready") {
+      const isReady = ownPlayer?.isReady ?? readySent;
+      const captainId = gameState.captainId;
+      const captain = gameState.players.find((p) => p.id === captainId);
+      const activeTeamPlayers = gameState.players.filter(
+        (p) => p.teamId === gameState.activeTeamId && p.role === "player",
+      );
+
+      if (!isActiveTeam || isSpectator) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+            <div className="text-5xl">🎧</div>
+            <h2 className="text-xl font-bold text-center">Другая команда готовится к блицу</h2>
+            {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <div className="text-6xl">🎧</div>
+          <h2 className="text-2xl font-bold text-center">Надевайте наушники!</h2>
+          {captain && (
+            <p className="text-yellow-400 text-sm">
+              {isCaptain ? "Вы капитан блица!" : `Капитан: ${captain.name}`}
+            </p>
+          )}
+
+          <button
+            onClick={handleReady}
+            disabled={isReady}
+            className={`w-full py-3 rounded-lg font-bold text-lg transition-colors ${
+              isReady
+                ? "bg-green-800 cursor-not-allowed text-green-300"
+                : "bg-green-700 hover:bg-green-600"
+            }`}
+          >
+            {isReady ? "✓ Готов" : "Я готов!"}
+          </button>
+
+          <div className="w-full text-sm space-y-1">
+            {activeTeamPlayers.map((p) => (
+              <div key={p.id} className="flex items-center gap-2 text-gray-400">
+                <span>{p.isReady ? "✅" : "⭕"}</span>
+                <span className={p.isReady ? "text-green-400" : "text-gray-500"}>
+                  {p.name}
+                  {p.id === captainId && (
+                    <span className="text-yellow-600 text-xs ml-1">(капитан)</span>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── BLITZ-PICK ───────────────────────────────────────────────────────────
+    if (phase === "blitz-pick") {
+      if (!isCaptain) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 max-w-sm mx-auto">
+            <h2 className="text-xl font-bold">Капитан выбирает вопрос...</h2>
+            {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
+          </div>
+        );
+      }
+
+      // Captain: pick an item from the pre-selected task (sent privately)
+      const currentTask = blitzTaskList?.[0] ?? null;
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-4">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Выберите вопрос</h2>
+            <p className="text-yellow-400 text-sm font-semibold">Вы капитан блица!</p>
+          </div>
+
+          <div className="space-y-2">
+            {currentTask === null && (
+              <div className="flex items-center justify-center gap-2 text-gray-400">
+                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm">Загружаем задания...</span>
+              </div>
+            )}
+            {currentTask?.items.map((item, idx) => (
+              <button
+                key={idx}
+                onClick={() => sendMsg({ type: "blitzPickTask", itemIdx: idx })}
+                className="w-full flex items-center justify-between px-4 py-3 bg-blue-700 hover:bg-blue-600 rounded font-semibold transition-colors"
+              >
+                <span className="text-left">{item.text}</span>
+                <span className="text-blue-200 text-sm ml-4 flex-shrink-0">{item.difficulty}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── BLITZ-ACTIVE ─────────────────────────────────────────────────────────
+    if (phase === "blitz-active") {
+      const blitzOrder = gameState.blitzOrder ?? [];
+      const myPosition = blitzOrder.indexOf(myId ?? "");
+      const hasAnswered = ownPlayer?.hasAnswered ?? blitzAnswerSent;
+
+      if (isCaptain) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+            <p className="text-yellow-400 font-bold">Вы капитан блица!</p>
+            <p className="text-gray-400 text-sm text-center">
+              Объясняйте жестами, пока команда отвечает по очереди
+            </p>
+            {blitzCaptainItem ? (
+              <div className="bg-blue-900/40 border border-blue-700/60 rounded-xl p-6 text-center">
+                <p className="text-sm text-blue-300 mb-2">Слово:</p>
+                <p className="text-3xl font-bold text-white">{blitzCaptainItem.text}</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Сложность: {blitzCaptainItem.difficulty}
+                </p>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm">Загружаем...</p>
+            )}
+            <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
+          </div>
+        );
+      }
+
+      if (!isActiveTeam || isSpectator) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+            <h2 className="text-xl font-bold text-center">Блиц идёт!</h2>
+            <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
+          </div>
+        );
+      }
+
+      const isMyTurn = myPosition >= 0 && !hasAnswered;
+      const previousAnswered = myPosition > 0
+        ? blitzOrder.slice(0, myPosition).every(
+            (pid) => gameState.players.find((p) => p.id === pid)?.hasAnswered,
+          )
+        : true;
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <div className="text-6xl">🎧</div>
+          <h2 className="text-xl font-bold text-center">Блиц!</h2>
+          {myPosition >= 0 && (
+            <p className="text-gray-400 text-sm">Ваша позиция: {myPosition + 1}</p>
+          )}
+          <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
+
+          {!hasAnswered && isMyTurn ? (
+            <div className="w-full space-y-2">
+              <p className="text-yellow-400 font-bold text-center">Ваша очередь!</p>
+              <input
+                type="text"
+                value={blitzAnswerInput}
+                onChange={(e) => setBlitzAnswerInput(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && !hasAnswered && handleBlitzSubmitAnswer()
+                }
+                placeholder="Ваш ответ..."
+                maxLength={100}
+                autoFocus
+                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+              />
+              <button
+                onClick={handleBlitzSubmitAnswer}
+                disabled={!blitzAnswerInput.trim()}
+                className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors"
+              >
+                Ответить
+              </button>
+            </div>
+          ) : hasAnswered ? (
+            <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center">
+              <p className="text-green-400 font-bold">Ответ отправлен!</p>
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center">
+              {previousAnswered ? "Ждём вашей очереди..." : "Ждём предыдущих игроков..."}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    // ── BLITZ-ANSWER ─────────────────────────────────────────────────────────
+    if (phase === "blitz-answer") {
+      const hasAnswered = ownPlayer?.hasAnswered ?? blitzAnswerSent;
+
+      if (isCaptain || !isActiveTeam || isSpectator) {
+        return (
+          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+            <h2 className="text-xl font-bold">Финальные ответы!</h2>
+            <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <h2 className="text-2xl font-bold text-center">Финальный ответ!</h2>
+          <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
+
+          {!hasAnswered ? (
+            <div className="w-full space-y-2">
+              <input
+                type="text"
+                value={blitzAnswerInput}
+                onChange={(e) => setBlitzAnswerInput(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && !hasAnswered && handleBlitzSubmitAnswer()
+                }
+                placeholder="Ваш ответ..."
+                maxLength={100}
+                autoFocus
+                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+              />
+              <button
+                onClick={handleBlitzSubmitAnswer}
+                disabled={!blitzAnswerInput.trim()}
+                className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors"
+              >
+                Ответить
+              </button>
+              <button
+                onClick={handleSurrender}
+                className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-gray-300 transition-colors"
+              >
+                Не знаю
+              </button>
+            </div>
+          ) : (
+            <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center w-full">
+              <p className="text-green-400 font-bold">Ответ отправлен!</p>
+              <p className="text-gray-400 text-sm mt-1">
+                {blitzAnswerInput || "Нет ответа"}
+              </p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── BLITZ-RESULT ─────────────────────────────────────────────────────────
+    if (phase === "blitz-result") {
+      const result = gameState.roundResult;
+      const blitzTaskReveal = gameState.blitzTaskReveal;
+      const scores = gameState.scores;
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Результат блица</h2>
+            {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
+          </div>
+
+          {blitzTaskReveal && (
+            <div className="bg-gray-800 rounded-lg p-4 text-center">
+              <p className="text-sm text-gray-400 mb-1">Слово:</p>
+              <p className="text-3xl font-bold text-white">{blitzTaskReveal.text}</p>
+            </div>
+          )}
+
+          {result && (
+            <>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 mb-2">Цепочка:</h3>
+                <ul className="space-y-2">
+                  {result.groups.map((g, i) => {
+                    const playerName =
+                      gameState.players.find((p) => p.id === g.playerIds[0])?.name ??
+                      g.playerIds[0];
+                    return (
+                      <li
+                        key={g.id}
+                        className={`rounded border p-3 text-sm flex items-start gap-2 ${
+                          g.accepted
+                            ? "bg-green-900/20 border-green-700/50"
+                            : "bg-red-900/10 border-red-800/30"
+                        }`}
+                      >
+                        <span className="text-gray-500 w-5 text-center flex-shrink-0">
+                          {i + 1}.
+                        </span>
+                        <span className="text-lg flex-shrink-0">
+                          {g.accepted ? "✅" : "❌"}
+                        </span>
+                        <div>
+                          <p className="text-white font-medium">{g.canonicalAnswer}</p>
+                          <p className="text-gray-400 text-xs">{playerName}</p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4 text-center">
+                <p className="text-gray-400 text-sm">Очки за блиц:</p>
+                <p className="text-3xl font-bold text-yellow-400">+{result.score}</p>
+              </div>
+            </>
+          )}
+
+          <div className="bg-gray-800 rounded-lg p-3">
+            <div className="flex justify-around">
+              {Object.entries(scores).map(([teamId, score]) => (
+                <div key={teamId} className="text-center">
+                  <p
+                    className={`font-bold text-lg ${
+                      teamId === "red" ? "text-red-400" : "text-blue-400"
+                    }`}
+                  >
+                    {score}
+                  </p>
+                  <p className="text-gray-500 text-xs">
+                    {teamId === "red" ? "Красные" : "Синие"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => sendMsg({ type: "nextRound" })}
+            className="w-full py-3 bg-blue-700 hover:bg-blue-600 rounded-lg font-bold text-lg transition-colors"
+          >
+            Продолжить
+          </button>
+        </div>
+      );
+    }
+
+    // ── FINALE ────────────────────────────────────────────────────────────────
+    if (phase === "finale") {
+      const scores = gameState.scores;
+      const gameStats = gameState.gameStats;
+      const sortedTeams = Object.entries(scores).sort(([, a], [, b]) => b - a);
+      const myTeamId = ownPlayer?.teamId;
+      const winnerTeamId = sortedTeams[0]?.[0];
+      const iWon = myTeamId === winnerTeamId;
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-4 gap-6 max-w-md mx-auto">
+          <div className="text-center">
+            <div className="text-6xl mb-2">{iWon ? "🏆" : "🎉"}</div>
+            <h2 className="text-3xl font-bold">Игра завершена!</h2>
+            {myTeamId && (
+              <p
+                className={`text-lg font-semibold mt-1 ${
+                  iWon ? "text-yellow-400" : "text-gray-400"
+                }`}
+              >
+                {iWon ? "Ваша команда победила!" : "Хорошая игра!"}
+              </p>
+            )}
+          </div>
+
+          <div className="w-full space-y-3">
+            {sortedTeams.map(([teamId, score], i) => (
+              <div
+                key={teamId}
+                className={`rounded-lg p-4 border flex items-center justify-between ${
+                  i === 0
+                    ? "bg-yellow-900/20 border-yellow-600/50"
+                    : "bg-gray-800 border-gray-700"
+                }`}
+              >
+                <span
+                  className={`font-semibold ${
+                    teamId === "red" ? "text-red-400" : "text-blue-400"
+                  }`}
+                >
+                  {teamId === "red" ? "Красные" : "Синие"}
+                  {i === 0 && <span className="ml-2 text-yellow-400">👑</span>}
+                </span>
+                <span className="text-2xl font-bold">{score}</span>
+              </div>
+            ))}
+          </div>
+
+          {gameStats && (
+            <div className="w-full bg-gray-800 rounded-lg p-4 space-y-2">
+              <h3 className="text-gray-400 text-sm font-semibold">Статистика:</h3>
+              {gameStats.topAnswererName && (
+                <p className="text-sm">
+                  <span className="text-gray-400">Лучший отвечающий: </span>
+                  <span className="text-green-400 font-medium">{gameStats.topAnswererName}</span>
+                </p>
+              )}
+              {gameStats.topCaptainName && (
+                <p className="text-sm">
+                  <span className="text-gray-400">Лучший капитан: </span>
+                  <span className="text-yellow-400 font-medium">{gameStats.topCaptainName}</span>
+                </p>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={() => sendMsg({ type: "restart" })}
+            className="w-full py-3 bg-green-700 hover:bg-green-600 rounded-lg font-bold text-lg transition-colors"
+          >
+            Перезапустить игру
+          </button>
+        </div>
+      );
+    }
+
+    // Fallback for any unknown phase
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+        <p className="text-gray-500 text-sm font-mono">{phase}</p>
+      </div>
+    );
+  }
+
+  // ── Form ───────────────────────────────────────────────────────────────────
+  return (
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-4">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-1">LoudQuiz</h1>
+          <p className="text-gray-400 text-sm">
+            Комната{" "}
+            <span className="font-mono font-bold text-blue-300">{roomId}</span>
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Ваше имя</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+            placeholder="Введите имя"
+            maxLength={30}
+            autoFocus
+            className="w-full bg-gray-800 text-white rounded px-3 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500 text-center"
+          />
+        </div>
+
+        <button
+          onClick={handleJoin}
+          disabled={!name.trim()}
+          className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded font-semibold text-lg transition-colors"
+        >
+          Войти как игрок
+        </button>
+
+        <button
+          onClick={() => connectToRoom(name.trim() || "Зритель", "spectator")}
+          disabled={!name.trim()}
+          className="w-full py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm text-gray-300 transition-colors"
+        >
+          Смотреть (зритель)
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function PlayerTimerDisplay({
+  endsAt,
+  clockOffset,
+}: {
+  endsAt: number | undefined;
+  clockOffset: number;
+}) {
+  const remaining = useTimer(endsAt, clockOffset);
+  const seconds = Math.ceil(remaining / 1000);
+  const isWarning = seconds <= 10;
+  return (
+    <div
+      className={`text-5xl font-mono font-bold text-center ${
+        isWarning ? "text-red-400 animate-pulse" : "text-white"
+      }`}
+    >
+      {seconds}
+    </div>
+  );
+}
+

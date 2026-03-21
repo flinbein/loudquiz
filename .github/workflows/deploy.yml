@@ -33,7 +33,7 @@ jobs:
       - name: Build
         env:
           VITE_BASE_URL: /loudquiz/
-        run: npm run build
+        run: npx vite build
 
       - name: Copy index.html to 404.html (SPA fallback)
         run: cp dist/index.html dist/404.html

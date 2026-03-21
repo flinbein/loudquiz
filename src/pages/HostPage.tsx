@@ -878,7 +878,7 @@ export default function HostPage() {
     const captain = players.find((p) => p.id === captainId);
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="round-captain" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-8 max-w-2xl mx-auto space-y-6">
           <div className="text-center">
@@ -946,7 +946,7 @@ export default function HostPage() {
     const readyCount = teamPlayers.filter((p) => p.isReady).length;
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="round-ready" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-8 max-w-2xl mx-auto space-y-6">
           <div className="text-center">
@@ -997,7 +997,7 @@ export default function HostPage() {
     const teamJokerActive = activeTeamId ? jokerActive[activeTeamId] : false;
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="round-pick" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-8 max-w-4xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
@@ -1080,7 +1080,7 @@ export default function HostPage() {
     const questionHistory = gameState?.questionHistory ?? [];
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="round-active" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-6 max-w-5xl mx-auto grid grid-cols-3 gap-6">
           <div className="col-span-2 space-y-4">
@@ -1133,7 +1133,7 @@ export default function HostPage() {
     const questionReveal = gameState?.questionRevealText;
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="round-answer" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-6 max-w-5xl mx-auto grid grid-cols-3 gap-6">
           <div className="col-span-2 space-y-4">
@@ -1197,7 +1197,7 @@ export default function HostPage() {
     }
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="round-review" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-8 max-w-2xl mx-auto space-y-6">
           <h2 className="text-2xl font-bold">Проверка ответов</h2>
@@ -1308,7 +1308,7 @@ export default function HostPage() {
     const captain = players.find((p) => p.id === captainId);
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="round-result" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-8 max-w-2xl mx-auto space-y-6">
           <div className="text-center">
@@ -1359,7 +1359,7 @@ export default function HostPage() {
 
               <div className="bg-gray-800 rounded-lg p-4 text-center">
                 <p className="text-gray-400 text-sm">Очки за раунд:</p>
-                <p className="text-3xl font-bold text-yellow-400">
+                <p className="text-3xl font-bold text-yellow-400 animate-pop-in">
                   +{result.score}
                   {result.jokerApplied && (
                     <span className="text-base text-yellow-300 ml-2">(Джокер x2)</span>
@@ -1400,7 +1400,7 @@ export default function HostPage() {
     const orderedCount = nonCaptainPlayers.filter((p) => (p.blitzOrder ?? 0) > 0).length;
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="blitz-captain" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-8 max-w-2xl mx-auto space-y-6">
           <div className="text-center">
@@ -1444,7 +1444,7 @@ export default function HostPage() {
     const readyCount = teamPlayers.filter((p) => p.isReady).length;
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="blitz-ready" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-8 max-w-2xl mx-auto space-y-6">
           <div className="text-center">
@@ -1481,7 +1481,7 @@ export default function HostPage() {
     const teamPlayers = players.filter((p) => p.teamId === activeTeamId && p.role === "player");
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="blitz-pick" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-8 max-w-4xl mx-auto grid grid-cols-3 gap-6">
           <div className="col-span-2 space-y-4">
@@ -1535,7 +1535,7 @@ export default function HostPage() {
     const blitzTaskReveal = gameState?.blitzTaskReveal;
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="blitz-result" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-8 max-w-2xl mx-auto space-y-6">
           <div className="text-center">
@@ -1589,7 +1589,7 @@ export default function HostPage() {
 
               <div className="bg-gray-800 rounded-lg p-4 text-center">
                 <p className="text-gray-400 text-sm">Очки за блиц:</p>
-                <p className="text-3xl font-bold text-yellow-400">+{result.score}</p>
+                <p className="text-3xl font-bold text-yellow-400 animate-pop-in">+{result.score}</p>
               </div>
             </>
           )}
@@ -1616,7 +1616,7 @@ export default function HostPage() {
     const sortedTeams = Object.entries(scores).sort(([, a], [, b]) => b - a);
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div key="finale" className="min-h-screen bg-gray-900 text-white animate-fade-in">
         {header}
         <main className="p-8 max-w-2xl mx-auto space-y-6 text-center">
           <div>
@@ -1641,7 +1641,7 @@ export default function HostPage() {
                     }`}
                   >
                     {teamId === "red" ? "Красные" : "Синие"}
-                    {i === 0 && <span className="ml-2 text-yellow-400">👑</span>}
+                    {i === 0 && <span className="ml-2 text-yellow-400 inline-block animate-crown">👑</span>}
                   </span>
                   <span className="text-2xl font-bold">{score}</span>
                 </div>
@@ -1733,7 +1733,7 @@ function BlitzActiveView({
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div key="blitz-active" className="min-h-screen bg-gray-900 text-white animate-fade-in">
       {header}
       <main className="p-8 max-w-4xl mx-auto grid grid-cols-3 gap-6">
         <div className="col-span-2 space-y-4">
@@ -1783,7 +1783,7 @@ function BlitzAnswerView({
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div key="blitz-answer" className="min-h-screen bg-gray-900 text-white animate-fade-in">
       {header}
       <main className="p-8 max-w-4xl mx-auto grid grid-cols-3 gap-6">
         <div className="col-span-2 space-y-4">

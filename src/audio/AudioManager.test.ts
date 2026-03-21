@@ -2,15 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AudioManager } from "./AudioManager";
 
 function makeMockAudio() {
-  return {
-    play: vi.fn().mockResolvedValue(undefined),
-    pause: vi.fn(),
+  const mock = {
+    play: vi.fn().mockImplementation(() => { mock.paused = false; return Promise.resolve(); }),
+    pause: vi.fn().mockImplementation(() => { mock.paused = true; }),
     loop: false,
     volume: 1,
     currentTime: 0,
     paused: true,
     addEventListener: vi.fn(),
   };
+  return mock;
 }
 
 describe("AudioManager", () => {

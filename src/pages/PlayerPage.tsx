@@ -886,7 +886,7 @@ export default function PlayerPage() {
         isActiveTeam && !isSpectator && !captainId && !(ownPlayer?.wasRecentCaptain);
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+        <div key="round-captain" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-1">Выбор капитана</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
@@ -1009,7 +1009,8 @@ export default function PlayerPage() {
 
       if (!isActiveTeam || isSpectator) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+          <div key="round-pick-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
+            <div className="text-6xl">🎧</div>
             <div className="text-center">
               <h2 className="text-xl font-bold">Другая команда выбирает вопрос</h2>
               {gameState.activeTeamId && (
@@ -1029,12 +1030,12 @@ export default function PlayerPage() {
 
       // All active team members see the same table; captain can pick
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-lg mx-auto gap-4">
+        <div key="round-pick-active" className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-lg mx-auto gap-4 animate-fade-in">
           <div className="text-center">
             {isCaptain ? (
               <>
                 <h2 className="text-2xl font-bold">Выберите вопрос</h2>
-                <p className="text-yellow-400 font-semibold text-sm">Вы капитан!</p>
+                <p className="text-yellow-400 font-semibold text-sm">Вы капитан! 🎧</p>
               </>
             ) : (
               <>
@@ -1096,7 +1097,7 @@ export default function PlayerPage() {
       if (isCaptain) {
         // Captain sees the question + can submit answer
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <div key="round-active-captain" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
             <div className="text-center">
               <p className="text-yellow-400 font-bold mb-1">Вы капитан!</p>
               <p className="text-gray-400 text-sm">Объясняйте жестами, не говорите слов</p>
@@ -1147,7 +1148,7 @@ export default function PlayerPage() {
       if (!isActiveTeam || isSpectator) {
         const questionReveal = gameState.questionRevealText;
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+          <div key="round-active-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
             <h2 className="text-xl font-bold text-center">Другая команда играет</h2>
             {questionReveal && (
               <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-center max-w-sm w-full">
@@ -1162,7 +1163,7 @@ export default function PlayerPage() {
 
       // Active team non-captain player
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+        <div key="round-active-player" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
           <div className="text-6xl">🎧</div>
           <h2 className="text-xl font-bold text-center">Следите за капитаном!</h2>
           {currentRound && (
@@ -1209,7 +1210,7 @@ export default function PlayerPage() {
       // Non-active team or spectator: show question reveal only
       if (!isActiveTeam || isSpectator) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <div key="round-answer-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
             <h2 className="text-xl font-bold text-center">Время отвечать!</h2>
             {questionReveal && (
               <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 text-center">
@@ -1224,7 +1225,7 @@ export default function PlayerPage() {
 
       // Active team players (including captain) answer
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+        <div key="round-answer-active" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
           <h2 className="text-2xl font-bold text-center">
             {isCaptain ? "Ваш ответ!" : "Ваш ответ!"}
           </h2>
@@ -1270,7 +1271,7 @@ export default function PlayerPage() {
     if (phase === "round-review") {
       const isAutoReviewing = gameState.isAutoReviewing ?? false;
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+        <div key="round-review" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
           {isAutoReviewing ? (
             <>
               <div className="w-8 h-8 border-3 border-yellow-400 border-t-transparent rounded-full animate-spin" />
@@ -1292,7 +1293,7 @@ export default function PlayerPage() {
       const scores = gameState.scores;
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5">
+        <div key="round-result" className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5 animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold">Результат раунда</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
@@ -1336,7 +1337,7 @@ export default function PlayerPage() {
 
               <div className="bg-gray-800 rounded-lg p-4 text-center">
                 <p className="text-gray-400 text-sm">Очки за раунд:</p>
-                <p className="text-3xl font-bold text-yellow-400">
+                <p className="text-3xl font-bold text-yellow-400 animate-pop-in">
                   +{result.score}
                   {result.jokerApplied && (
                     <span className="text-base text-yellow-300 ml-2">Джокер x2</span>
@@ -1396,7 +1397,8 @@ export default function PlayerPage() {
 
       if (!isActiveTeam || isSpectator) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+          <div key="blitz-captain-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
+            <div className="text-6xl">🎧</div>
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-1">Блиц!</h2>
               {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
@@ -1409,7 +1411,7 @@ export default function PlayerPage() {
       // Phase 1: no captain yet — show become-captain button
       if (!captain) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <div key="blitz-captain-pick" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-1">Блиц!</h2>
               <p className="text-gray-400 mb-1">Выбор капитана</p>
@@ -1434,7 +1436,7 @@ export default function PlayerPage() {
       // Phase 2: captain chosen — captain waits, others pick blitz order
       if (isCaptain) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 max-w-sm mx-auto">
+          <div key="blitz-captain-active" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 max-w-sm mx-auto animate-fade-in">
             <p className="text-yellow-400 text-xl font-bold">Вы капитан блица!</p>
             <p className="text-gray-400 text-sm text-center">Ждём, пока команда выберет порядок</p>
             <div className="w-full space-y-1 text-sm">
@@ -1453,7 +1455,7 @@ export default function PlayerPage() {
 
       // Non-captain active team: pick blitz order
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-5 px-4 max-w-sm mx-auto">
+        <div key="blitz-captain-order" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-5 px-4 max-w-sm mx-auto animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold">Блиц — ваша очередь</h2>
             <p className="text-yellow-400 text-sm">Капитан: {captain.name}</p>
@@ -1566,7 +1568,7 @@ export default function PlayerPage() {
     if (phase === "blitz-pick") {
       if (!isCaptain) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 max-w-sm mx-auto">
+          <div key="blitz-pick-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 max-w-sm mx-auto animate-fade-in">
             <h2 className="text-xl font-bold">Капитан выбирает вопрос...</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
           </div>
@@ -1577,7 +1579,7 @@ export default function PlayerPage() {
       const currentTask = blitzTaskList?.[0] ?? null;
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-4">
+        <div key="blitz-pick-captain" className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-4 animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold">Выберите вопрос</h2>
             <p className="text-yellow-400 text-sm font-semibold">Вы капитан блица!</p>
@@ -1613,7 +1615,7 @@ export default function PlayerPage() {
 
       if (isCaptain) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+          <div key="blitz-active-captain" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
             <p className="text-yellow-400 font-bold">Вы капитан блица!</p>
             <p className="text-gray-400 text-sm text-center">
               Объясняйте жестами, пока команда отвечает по очереди
@@ -1636,7 +1638,7 @@ export default function PlayerPage() {
 
       if (!isActiveTeam || isSpectator) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+          <div key="blitz-active-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
             <h2 className="text-xl font-bold text-center">Блиц идёт!</h2>
             <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
           </div>
@@ -1651,7 +1653,7 @@ export default function PlayerPage() {
         : true;
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+        <div key="blitz-active-player" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
           <div className="text-6xl">🎧</div>
           <h2 className="text-xl font-bold text-center">Блиц!</h2>
           {myPosition >= 0 && (
@@ -1701,7 +1703,7 @@ export default function PlayerPage() {
 
       if (isCaptain || !isActiveTeam || isSpectator) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+          <div key="blitz-answer-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
             <h2 className="text-xl font-bold">Финальные ответы!</h2>
             <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
           </div>
@@ -1709,7 +1711,7 @@ export default function PlayerPage() {
       }
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+        <div key="blitz-answer-active" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
           <h2 className="text-2xl font-bold text-center">Финальный ответ!</h2>
           <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
 
@@ -1760,7 +1762,7 @@ export default function PlayerPage() {
       const scores = gameState.scores;
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5">
+        <div key="blitz-result" className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5 animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold">Результат блица</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
@@ -1809,7 +1811,7 @@ export default function PlayerPage() {
 
               <div className="bg-gray-800 rounded-lg p-4 text-center">
                 <p className="text-gray-400 text-sm">Очки за блиц:</p>
-                <p className="text-3xl font-bold text-yellow-400">+{result.score}</p>
+                <p className="text-3xl font-bold text-yellow-400 animate-pop-in">+{result.score}</p>
               </div>
             </>
           )}
@@ -1853,7 +1855,7 @@ export default function PlayerPage() {
       const iWon = myTeamId === winnerTeamId;
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-4 gap-6 max-w-md mx-auto">
+        <div key="finale" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-4 gap-6 max-w-md mx-auto animate-fade-in">
           <div className="text-center">
             <div className="text-6xl mb-2">{iWon ? "🏆" : "🎉"}</div>
             <h2 className="text-3xl font-bold">Игра завершена!</h2>
@@ -1884,7 +1886,7 @@ export default function PlayerPage() {
                   }`}
                 >
                   {teamId === "red" ? "Красные" : "Синие"}
-                  {i === 0 && <span className="ml-2 text-yellow-400">👑</span>}
+                  {i === 0 && <span className="ml-2 text-yellow-400 inline-block animate-crown">👑</span>}
                 </span>
                 <span className="text-2xl font-bold">{score}</span>
               </div>

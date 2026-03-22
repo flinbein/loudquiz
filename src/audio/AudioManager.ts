@@ -24,7 +24,7 @@ export class AudioManager {
 
   private getMusic(): HTMLAudioElement {
     if (!this.music) {
-      this.music = new Audio("/music.mp3");
+      this.music = new Audio(import.meta.env.BASE_URL + "music.mp3");
       this.music.loop = true;
       this.music.volume = this.musicVolume;
     }
@@ -33,7 +33,7 @@ export class AudioManager {
 
   private getRing(): HTMLAudioElement {
     if (!this.ring) {
-      this.ring = new Audio("/ring.mp3");
+      this.ring = new Audio(import.meta.env.BASE_URL + "ring.mp3");
       this.ring.volume = this.ringVolume;
     }
     return this.ring;

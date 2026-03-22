@@ -25,22 +25,22 @@ export default function TopicEditor({ topic, index, onChange, onDelete, apiKey }
   }
 
   return (
-    <div className="border border-gray-600 rounded-xl p-5 space-y-4 bg-gray-850">
+    <div className="border border-slate-200 dark:border-slate-600 rounded-xl p-5 space-y-4 bg-slate-50 dark:bg-slate-800/50">
       {/* Topic header */}
       <div className="flex items-center gap-3">
-        <span className="text-gray-400 text-sm shrink-0">Тема {index + 1}</span>
+        <span className="text-slate-500 dark:text-slate-400 text-sm shrink-0">Тема {index + 1}</span>
         <input
           type="text"
           value={topic.name}
           onChange={(e) => onChange({ ...topic, name: e.target.value })}
-          className={`flex-1 bg-gray-900 text-white rounded px-3 py-2 text-base font-semibold border ${
-            topic.name.trim() === "" ? "border-red-500" : "border-gray-600"
-          } focus:outline-none focus:border-blue-500`}
+          className={`flex-1 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-base font-semibold border ${
+            topic.name.trim() === "" ? "border-red-400 dark:border-red-500" : "border-slate-300 dark:border-slate-600"
+          } focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
           placeholder="Название темы"
         />
         <button
           onClick={onDelete}
-          className="text-red-400 hover:text-red-300 text-sm px-3 py-1.5 rounded border border-red-800 hover:bg-red-900/30 transition-colors shrink-0"
+          className="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300 text-sm px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors shrink-0"
         >
           Удалить тему
         </button>
@@ -62,7 +62,7 @@ export default function TopicEditor({ topic, index, onChange, onDelete, apiKey }
 
       <button
         onClick={addQuestion}
-        className="text-blue-400 hover:text-blue-300 text-sm px-3 py-1.5 rounded border border-blue-800 hover:bg-blue-900/30 transition-colors"
+        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
       >
         + Добавить вопрос
       </button>

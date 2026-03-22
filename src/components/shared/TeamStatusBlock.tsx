@@ -1,15 +1,19 @@
 import type { PublicPlayerInfo } from "../../game/types";
+import { PlayerAvatar } from "./PlayerAvatar";
+import { TypingDots } from "./TypingDots";
 
 interface TeamStatusBlockProps {
   players: PublicPlayerInfo[];
   captainId?: string | null;
   showBlitzOrder?: boolean;
+  showTypingIndicator?: boolean;
 }
 
 export function TeamStatusBlock({
   players,
   captainId,
   showBlitzOrder = false,
+  showTypingIndicator = false,
 }: TeamStatusBlockProps) {
   const sorted = [...players].sort((a, b) => {
     if (a.id === captainId) return -1;
@@ -21,49 +25,52 @@ export function TeamStatusBlock({
   });
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       {sorted.map((p) => {
         const isCaptain = p.id === captainId;
+        const showDots = showTypingIndicator && !isCaptain && !p.hasAnswered && p.online;
         return (
           <div
             key={p.id}
-            className={`flex items-center gap-2 px-3 py-2 rounded text-sm ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
               isCaptain
-                ? "bg-yellow-900/20 border border-yellow-700/30"
-                : "bg-gray-800 border border-gray-700/30"
-            } ${!p.online ? "opacity-60" : ""}`}
+                ? "bg-amber-50/80 dark:bg-yellow-900/20 border border-amber-200 dark:border-yellow-700/30"
+                : "bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/30"
+            } ${!p.online ? "opacity-50" : ""}`}
           >
-            {isCaptain && (
-              <span className="text-yellow-400 flex-shrink-0 text-base" title="Капитан">
-                👑
-              </span>
-            )}
-            {!isCaptain && showBlitzOrder && (
-              <span className="text-gray-500 w-5 text-center text-xs flex-shrink-0">
+            <PlayerAvatar
+              name={p.name}
+              teamId={p.teamId}
+              isCaptain={isCaptain}
+              isOnline={p.online}
+              hasAnswered={p.hasAnswered}
+              isReady={p.isReady}
+              size="sm"
+            />
+            {showBlitzOrder && !isCaptain && (
+              <span className="text-slate-400 dark:text-slate-500 text-xs font-mono flex-shrink-0">
                 {(p.blitzOrder ?? 0) > 0 ? `${p.blitzOrder}.` : "?"}
               </span>
             )}
             <span
-              className={`flex-1 font-medium ${
+              className={`flex-1 font-medium truncate ${
                 isCaptain
-                  ? "text-yellow-300"
+                  ? "text-amber-700 dark:text-yellow-300"
                   : p.hasAnswered
-                    ? "text-green-400"
-                    : "text-gray-300"
+                    ? "text-emerald-600 dark:text-green-400"
+                    : "text-slate-700 dark:text-slate-300"
               }`}
             >
               {p.name}
             </span>
-            {!p.online && (
-              <span className="text-gray-600 text-xs flex-shrink-0">(офлайн)</span>
-            )}
-            {p.hasAnswered ? (
-              <span className="text-green-400 flex-shrink-0 text-base" title="Ответил">
-                ✓
+            {showDots && (
+              <span className="text-slate-400 dark:text-slate-500 flex-shrink-0">
+                <TypingDots />
               </span>
-            ) : (
-              <span className="text-gray-500 flex-shrink-0 text-sm" title="Не ответил">
-                ✏️
+            )}
+            {!p.online && (
+              <span className="text-slate-400 dark:text-slate-600 text-xs flex-shrink-0">
+                офлайн
               </span>
             )}
           </div>

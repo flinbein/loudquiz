@@ -2,33 +2,151 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Phase transitions ───────────────────────────────────────────────────── */
+/* ── Theme variables ────────────────────────────────────────────────────── */
+:root {
+  --color-surface: #f1f5f9;
+  --color-surface-elevated: #ffffff;
+  --color-surface-card: #e2e8f0;
+  --bg-gradient-from: #f0f4ff;
+  --bg-gradient-via: #f8fafc;
+  --bg-gradient-to: #ede9fe;
+  --accent-glow: rgba(99, 102, 241, 0.15);
+  color-scheme: light;
+}
+
+.dark {
+  --color-surface: #0f172a;
+  --color-surface-elevated: #1e293b;
+  --color-surface-card: #1e293b;
+  --bg-gradient-from: #0f172a;
+  --bg-gradient-via: #1a1040;
+  --bg-gradient-to: #0c1222;
+  --accent-glow: rgba(139, 92, 246, 0.2);
+  color-scheme: dark;
+}
+
+/* ── Base styles ────────────────────────────────────────────────────────── */
+@layer base {
+  body {
+    @apply bg-surface text-slate-900 dark:text-slate-50 transition-colors duration-200;
+  }
+}
+
+/* ── Game background ───────────────────────────────────────────────────── */
+.bg-game {
+  background: var(--bg-gradient-from);
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* ── Neon glow utilities ───────────────────────────────────────────────── */
+.neon-indigo { text-shadow: 0 0 10px rgba(99, 102, 241, 0.6), 0 0 30px rgba(99, 102, 241, 0.3); }
+.neon-amber  { text-shadow: 0 0 10px rgba(245, 158, 11, 0.6), 0 0 30px rgba(245, 158, 11, 0.3); }
+.neon-red    { text-shadow: 0 0 10px rgba(239, 68, 68, 0.6), 0 0 30px rgba(239, 68, 68, 0.3); }
+.neon-blue   { text-shadow: 0 0 10px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.3); }
+
+/* ── Phase transitions ──────────────────────────────────────────────────── */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0);   }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .animate-fade-in {
   animation: fade-in 0.25s ease-out both;
 }
 
-/* ── Score reveal ────────────────────────────────────────────────────────── */
+/* ── Score reveal ───────────────────────────────────────────────────────── */
 @keyframes pop-in {
-  0%   { transform: scale(0.5); opacity: 0; }
-  65%  { transform: scale(1.15); }
-  100% { transform: scale(1);   opacity: 1; }
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 .animate-pop-in {
   animation: pop-in 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
   animation-delay: 0.15s;
 }
 
-/* ── Finale winner ───────────────────────────────────────────────────────── */
+/* ── Finale winner ──────────────────────────────────────────────────────── */
 @keyframes crown-drop {
-  0%   { transform: translateY(-30px) scale(0.7) rotate(-15deg); opacity: 0; }
-  60%  { transform: translateY(4px)   scale(1.1) rotate(5deg);  opacity: 1; }
-  100% { transform: translateY(0)     scale(1)   rotate(0deg);  opacity: 1; }
+  0% {
+    transform: translateY(-30px) scale(0.7) rotate(-15deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(4px) scale(1.1) rotate(5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
 }
 .animate-crown {
   animation: crown-drop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
   animation-delay: 0.3s;
+}
+
+/* ── Circular timer ─────────────────────────────────────────────────────── */
+.timer-ring {
+  transition: stroke-dashoffset 0.5s linear;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* ── Question table game-board ──────────────────────────────────────────── */
+.question-cell {
+  @apply transition-all duration-200 ease-out;
+}
+.question-cell-selectable:hover {
+  @apply scale-105 shadow-lg z-10;
+}
+.question-cell-active {
+  animation: glow-pulse 1.5s ease-in-out infinite;
+}
+
+/* ── Card shimmer ──────────────────────────────────────────────────────── */
+@keyframes card-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.dark .question-card-untouched .absolute {
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 55%, transparent 60%) !important;
+  background-size: 200% 100% !important;
+}
+
+/* ── Scrollbar styling ──────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-400/40 dark:bg-slate-600/40 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400/60 dark:bg-slate-600/60;
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

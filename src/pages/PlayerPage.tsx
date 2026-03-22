@@ -6,6 +6,8 @@ import { audioManager } from "../audio/AudioManager";
 import type { PublicGameState, CaptainPrivateInfo, BlitzItem } from "../game/types";
 import type { PlayerToHostMsg, BlitzTaskPublic } from "../game/messages";
 import { QuestionTable } from "../components/shared/QuestionTable";
+import { ThemeToggle } from "../components/shared/ThemeToggle";
+import { vibrate, VIBRATION_PATTERNS } from "../utils/vibrate";
 
 const sessionKey = (roomId: string) => `player:${roomId}`;
 
@@ -35,13 +37,13 @@ function useTimer(endsAt: number | undefined, clockOffset: number): number {
 function TeamBadge({ teamId }: { teamId: string }) {
   if (teamId === "red")
     return (
-      <span className="inline-block px-2 py-0.5 rounded-full bg-red-900/50 text-red-300 text-xs font-semibold">
+      <span className="inline-block px-2.5 py-0.5 rounded-full bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs font-semibold">
         Красные
       </span>
     );
   if (teamId === "blue")
     return (
-      <span className="inline-block px-2 py-0.5 rounded-full bg-blue-900/50 text-blue-300 text-xs font-semibold">
+      <span className="inline-block px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-semibold">
         Синие
       </span>
     );
@@ -107,14 +109,15 @@ export default function PlayerPage() {
       if (phase === "round-ready" || phase === "blitz-ready") {
         setReadySent(false);
       }
-      // Ring signal on answer-input phase starts
-      if (
-        phase === "round-active" ||
-        phase === "round-answer" ||
-        phase === "blitz-active" ||
-        phase === "blitz-answer"
-      ) {
+      // Ring signal + vibration on phase starts
+      if (phase === "round-active" || phase === "blitz-active") {
         void audioManager.playRing();
+        vibrate(VIBRATION_PATTERNS.ROUND_START);
+      } else if (phase === "round-answer" || phase === "blitz-answer") {
+        void audioManager.playRing();
+        vibrate(VIBRATION_PATTERNS.ANSWER_TIME);
+      } else if (phase === "round-result" || phase === "blitz-result") {
+        vibrate(VIBRATION_PATTERNS.RESULT);
       }
       // Clear captain info when leaving captain phases
       if (!phase.includes("active") && !phase.includes("answer") && !phase.includes("pick")) {
@@ -397,9 +400,9 @@ export default function PlayerPage() {
   // ── Connecting ─────────────────────────────────────────────────────────────
   if (status === "connecting") {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4">
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-300">Подключение к комнате {roomId}...</p>
+      <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4">
+        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-slate-600 dark:text-slate-300">Подключение к комнате {roomId}...</p>
       </div>
     );
   }
@@ -407,7 +410,7 @@ export default function PlayerPage() {
   // ── Error ──────────────────────────────────────────────────────────────────
   if (status === "error") {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+      <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4">
         <div className="text-center space-y-3">
           <div className="text-5xl">{kickReason ? "🚫" : "❌"}</div>
           <h2 className="text-xl font-semibold">
@@ -417,21 +420,21 @@ export default function PlayerPage() {
                 ? "Другое устройство"
                 : "Не удалось подключиться"}
           </h2>
-          {errorMsg && <p className="text-red-400 text-sm max-w-xs">{errorMsg}</p>}
+          {errorMsg && <p className="text-red-500 dark:text-red-400 text-sm max-w-xs">{errorMsg}</p>}
         </div>
         <div className="flex gap-3">
           {/* Host kick: no retry. Duplicate session: allow re-entry. No kick: allow retry. */}
           {kickReason !== "host" && (
             <button
               onClick={handleRetry}
-              className="px-5 py-2 bg-blue-700 hover:bg-blue-600 rounded transition-colors"
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all"
             >
               {kickReason === "duplicate" ? "Повторить вход" : "Попробовать снова"}
             </button>
           )}
           <Link
             to="/"
-            className="px-5 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+            className="px-5 py-2 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-lg shadow-sm transition-all"
           >
             На главную
           </Link>
@@ -488,12 +491,12 @@ export default function PlayerPage() {
             : null;
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-6">
+        <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-6">
           <div className="text-center">
             <h1 className="text-2xl font-bold">LoudQuiz</h1>
-            <p className="text-gray-400 text-sm">
+            <p className="text-slate-500 dark:text-slate-400 text-sm">
               Комната{" "}
-              <span className="font-mono font-bold text-blue-300">{roomId}</span>
+              <span className="font-mono font-bold text-indigo-600 dark:text-blue-300">{roomId}</span>
             </p>
             <p className="text-lg font-medium mt-2">{myName}</p>
           </div>
@@ -501,13 +504,13 @@ export default function PlayerPage() {
           {!isSpectator && !isOneTeam && (
             <div className="space-y-3">
               {ownPlayer?.teamId && (
-                <p className="text-center text-sm text-gray-400">
+                <p className="text-center text-sm text-slate-500 dark:text-slate-400">
                   Вы в команде:{" "}
                   <span
                     className={
                       ownPlayer.teamId === "red"
-                        ? "text-red-400 font-bold"
-                        : "text-blue-400 font-bold"
+                        ? "text-red-500 dark:text-red-400 font-bold"
+                        : "text-blue-500 dark:text-blue-400 font-bold"
                     }
                   >
                     {ownPlayer.teamId === "red" ? "Красных" : "Синих"}
@@ -515,26 +518,26 @@ export default function PlayerPage() {
                 </p>
               )}
               {!ownPlayer?.teamId && (
-                <p className="text-center text-sm text-yellow-400">Выберите команду</p>
+                <p className="text-center text-sm text-amber-600 dark:text-yellow-400">Выберите команду</p>
               )}
 
               <div className="flex gap-3">
                 <button
                   onClick={() => sendMsg({ type: "setTeam", teamId: "red" })}
-                  className="flex-1 py-3 bg-red-700 hover:bg-red-600 rounded-lg font-semibold transition-colors"
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-semibold transition-all"
                 >
                   Красные
                 </button>
                 <button
                   onClick={() => sendMsg({ type: "setTeam", teamId: "blue" })}
-                  className="flex-1 py-3 bg-blue-700 hover:bg-blue-600 rounded-lg font-semibold transition-colors"
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition-all"
                 >
                   Синие
                 </button>
               </div>
               <button
                 onClick={() => sendMsg({ type: "setTeam", teamId: null })}
-                className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-gray-300 transition-colors"
+                className="w-full py-2 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-600 dark:text-slate-300 shadow-sm transition-all"
               >
                 Смотреть (зритель)
               </button>
@@ -542,21 +545,21 @@ export default function PlayerPage() {
           )}
 
           {!isSpectator && isOneTeam && ownPlayer?.teamId && (
-            <p className="text-center text-sm text-green-400">Вы в игре!</p>
+            <p className="text-center text-sm text-emerald-600 dark:text-green-400">Вы в игре!</p>
           )}
 
           {isSpectator && (
-            <p className="text-center text-gray-400 text-sm">Режим зрителя</p>
+            <p className="text-center text-slate-500 dark:text-slate-400 text-sm">Режим зрителя</p>
           )}
 
           <div className="space-y-3 text-sm">
             {isOneTeam ? (
               allPlayers.length > 0 && (
                 <div>
-                  <p className="text-green-400 font-semibold mb-1">Игроки ({allPlayers.length}):</p>
+                  <p className="text-emerald-600 dark:text-green-400 font-semibold mb-1">Игроки ({allPlayers.length}):</p>
                   <ul className="space-y-1">
                     {allPlayers.map((p) => (
-                      <li key={p.id} className="bg-green-900/20 rounded px-3 py-1">
+                      <li key={p.id} className="bg-emerald-50 dark:bg-green-900/20 rounded px-3 py-1">
                         {p.name}
                       </li>
                     ))}
@@ -567,10 +570,10 @@ export default function PlayerPage() {
               <>
                 {redPlayers.length > 0 && (
                   <div>
-                    <p className="text-red-400 font-semibold mb-1">Красные:</p>
+                    <p className="text-red-500 dark:text-red-400 font-semibold mb-1">Красные:</p>
                     <ul className="space-y-1">
                       {redPlayers.map((p) => (
-                        <li key={p.id} className="bg-red-900/20 rounded px-3 py-1">
+                        <li key={p.id} className="bg-red-50 dark:bg-red-900/20 rounded px-3 py-1">
                           {p.name}
                         </li>
                       ))}
@@ -579,10 +582,10 @@ export default function PlayerPage() {
                 )}
                 {bluePlayers.length > 0 && (
                   <div>
-                    <p className="text-blue-400 font-semibold mb-1">Синие:</p>
+                    <p className="text-blue-500 dark:text-blue-400 font-semibold mb-1">Синие:</p>
                     <ul className="space-y-1">
                       {bluePlayers.map((p) => (
-                        <li key={p.id} className="bg-blue-900/20 rounded px-3 py-1">
+                        <li key={p.id} className="bg-blue-50 dark:bg-blue-900/20 rounded px-3 py-1">
                           {p.name}
                         </li>
                       ))}
@@ -591,10 +594,10 @@ export default function PlayerPage() {
                 )}
                 {unassigned.length > 0 && (
                   <div>
-                    <p className="text-yellow-400 font-semibold mb-1">Не выбрали команду:</p>
+                    <p className="text-amber-600 dark:text-yellow-400 font-semibold mb-1">Не выбрали команду:</p>
                     <ul className="space-y-1">
                       {unassigned.map((p) => (
-                        <li key={p.id} className="bg-yellow-900/10 rounded px-3 py-1 text-gray-400">
+                        <li key={p.id} className="bg-amber-50 dark:bg-yellow-900/10 rounded px-3 py-1 text-slate-500 dark:text-slate-400">
                           {p.name}
                         </li>
                       ))}
@@ -605,10 +608,10 @@ export default function PlayerPage() {
             )}
             {spectators.length > 0 && (
               <div>
-                <p className="text-gray-500 font-semibold mb-1">Зрители:</p>
+                <p className="text-slate-400 dark:text-slate-500 font-semibold mb-1">Зрители:</p>
                 <ul className="space-y-1">
                   {spectators.map((p) => (
-                    <li key={p.id} className="bg-gray-800 rounded px-3 py-1 text-gray-500">
+                    <li key={p.id} className="bg-white dark:bg-slate-800 rounded px-3 py-1 text-slate-400 dark:text-slate-500">
                       {p.name}
                     </li>
                   ))}
@@ -622,18 +625,18 @@ export default function PlayerPage() {
               <button
                 onClick={() => sendMsg({ type: "startGame" })}
                 disabled={!canStart}
-                className="w-full py-3 bg-green-700 hover:bg-green-600 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-colors"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white disabled:bg-slate-100 dark:disabled:bg-slate-700 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-all"
               >
                 Начать игру
               </button>
               {startDisabledReason && (
-                <p className="text-center text-xs text-gray-500">{startDisabledReason}</p>
+                <p className="text-center text-xs text-slate-400 dark:text-slate-500">{startDisabledReason}</p>
               )}
             </div>
           )}
 
           {isSpectator && (
-            <p className="text-center text-gray-600 text-sm">Ожидание начала игры...</p>
+            <p className="text-center text-slate-400 dark:text-slate-600 text-sm">Ожидание начала игры...</p>
           )}
         </div>
       );
@@ -645,10 +648,10 @@ export default function PlayerPage() {
         const readyCount = gameState.players.filter((p) => p.isReady).length;
         const totalPlayers = gameState.players.filter((p) => p.role === "player").length;
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4">
+          <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4">
             <div className="text-6xl">🎧</div>
             <h2 className="text-2xl font-bold">Калибровка</h2>
-            <p className="text-gray-400">
+            <p className="text-slate-500 dark:text-slate-400">
               Готовы: {readyCount} / {totalPlayers}
             </p>
           </div>
@@ -658,24 +661,24 @@ export default function PlayerPage() {
       const isReady = ownPlayer?.isReady ?? readySent;
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+        <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
           <div className="text-6xl">🎧</div>
           <h2 className="text-2xl font-bold text-center">Проверка наушников</h2>
 
           <div className="w-full space-y-3">
             <button
               onClick={handleToggleMusic}
-              className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+              className={`w-full py-3 rounded-lg font-semibold transition-all ${
                 musicPlaying
-                  ? "bg-gray-700 hover:bg-gray-600"
-                  : "bg-purple-700 hover:bg-purple-600"
+                  ? "bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600 shadow-sm"
+                  : "bg-purple-600 hover:bg-purple-500 text-white shadow-md shadow-purple-600/25"
               }`}
             >
               {musicPlaying ? "Выключить музыку" : "Включить музыку"}
             </button>
 
             <div className="flex items-center gap-3 px-1">
-              <span className="text-sm text-gray-400 w-24 shrink-0">Музыка</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400 w-24 shrink-0">Музыка</span>
               <input
                 type="range" min={0} max={1} step={0.05}
                 value={musicVolume}
@@ -686,18 +689,18 @@ export default function PlayerPage() {
                 }}
                 className="flex-1 accent-purple-500"
               />
-              <span className="text-sm text-gray-400 w-8 text-right">{Math.round(musicVolume * 100)}%</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400 w-8 text-right">{Math.round(musicVolume * 100)}%</span>
             </div>
 
             <button
               onClick={() => void audioManager.playRing()}
-              className="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-semibold transition-colors"
+              className="w-full py-3 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600 rounded-lg font-semibold shadow-sm transition-all"
             >
               Проиграть сигнал
             </button>
 
             <div className="flex items-center gap-3 px-1">
-              <span className="text-sm text-gray-400 w-24 shrink-0">Сигнал</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400 w-24 shrink-0">Сигнал</span>
               <input
                 type="range" min={0} max={1} step={0.05}
                 value={ringVolume}
@@ -708,16 +711,16 @@ export default function PlayerPage() {
                 }}
                 className="flex-1 accent-blue-500"
               />
-              <span className="text-sm text-gray-400 w-8 text-right">{Math.round(ringVolume * 100)}%</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400 w-8 text-right">{Math.round(ringVolume * 100)}%</span>
             </div>
 
             <button
               onClick={handleReady}
               disabled={isReady}
-              className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
+              className={`w-full py-3 rounded-lg font-semibold text-lg transition-all ${
                 isReady
                   ? "bg-green-800 cursor-not-allowed text-green-300"
-                  : "bg-green-700 hover:bg-green-600"
+                  : "bg-emerald-600 hover:bg-emerald-500 text-white"
               }`}
             >
               {isReady ? "✓ Я готов" : "Я готов"}
@@ -728,9 +731,9 @@ export default function PlayerPage() {
             {gameState.players
               .filter((p) => p.role === "player")
               .map((p) => (
-                <div key={p.id} className="flex items-center gap-2 text-gray-400">
+                <div key={p.id} className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                   <span>{p.isReady ? "✅" : "⭕"}</span>
-                  <span className={p.isReady ? "text-green-400" : "text-gray-500"}>{p.name}</span>
+                  <span className={p.isReady ? "text-emerald-600 dark:text-green-400" : "text-slate-400 dark:text-slate-500"}>{p.name}</span>
                 </div>
               ))}
           </div>
@@ -751,7 +754,7 @@ export default function PlayerPage() {
       // After questions generated: show table + "Далее" button for everyone
       if (questionsReady) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5">
+          <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5">
             <div className="text-center">
               <div className="text-4xl mb-2">✅</div>
               <h2 className="text-xl font-bold">Вопросы готовы!</h2>
@@ -762,7 +765,7 @@ export default function PlayerPage() {
             {!isSpectator && (
               <button
                 onClick={() => sendMsg({ type: "proceed" })}
-                className="w-full py-3 bg-green-700 hover:bg-green-600 rounded-lg font-bold text-lg transition-colors"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-lg transition-all"
               >
                 Далее →
               </button>
@@ -773,18 +776,18 @@ export default function PlayerPage() {
 
       if (isSpectator) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-4">
+          <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-4">
             <h2 className="text-xl font-bold">Предложение тем</h2>
-            <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
               <div
-                className="bg-blue-500 h-2 rounded-full transition-all duration-200"
+                className="bg-indigo-500 h-2 rounded-full transition-all duration-200"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
-            <p className="text-gray-400 text-sm">Предложений: {suggestions.length}</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Предложений: {suggestions.length}</p>
             {isGenerating && (
-              <div className="flex items-center gap-3 text-yellow-400">
-                <div className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center gap-3 text-amber-600 dark:text-yellow-400">
+                <div className="w-4 h-4 border-2 border-amber-600 dark:border-yellow-400 border-t-transparent rounded-full animate-spin" />
                 <span className="text-sm">Генерирую вопросы...</span>
               </div>
             )}
@@ -793,18 +796,18 @@ export default function PlayerPage() {
       }
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5">
+        <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5">
           <h2 className="text-xl font-bold">Предложите темы</h2>
 
-          <div className="w-full bg-gray-700 rounded-full h-3">
+          <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3">
             <div
-              className="bg-blue-500 h-3 rounded-full transition-all duration-200"
+              className="bg-indigo-500 h-3 rounded-full transition-all duration-200"
               style={{ width: `${progressPct}%` }}
             />
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm text-gray-400">Предложений: {mySuggestionsCount} / 3</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Предложений: {mySuggestionsCount} / 3</p>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -814,12 +817,12 @@ export default function PlayerPage() {
                 placeholder="Тема..."
                 maxLength={100}
                 disabled={!canSuggestMore}
-                className="flex-1 bg-gray-800 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                className="flex-1 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
               />
               <button
                 onClick={handleSuggest}
                 disabled={!canSuggestMore || !suggestText.trim()}
-                className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-all"
               >
                 Предложить
               </button>
@@ -828,11 +831,11 @@ export default function PlayerPage() {
 
           {mySuggestionsCount > 0 && (
             <div className="text-sm space-y-1">
-              <p className="text-gray-400">Ваши предложения:</p>
+              <p className="text-slate-500 dark:text-slate-400">Ваши предложения:</p>
               {suggestions
                 .filter((s) => s.playerName === myName)
                 .map((s, i) => (
-                  <div key={i} className="bg-gray-800 rounded px-3 py-1 text-gray-300">
+                  <div key={i} className="bg-white dark:bg-slate-800 rounded px-3 py-1 text-slate-600 dark:text-slate-300">
                     {s.text}
                   </div>
                 ))}
@@ -842,16 +845,16 @@ export default function PlayerPage() {
           <button
             onClick={handleNoIdeas}
             disabled={noIdeasSent}
-            className="w-full py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm text-gray-300 transition-colors"
+            className="w-full py-2 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm text-slate-600 dark:text-slate-300 shadow-sm transition-all"
           >
             {noIdeasSent ? "Отмечено: нет идей" : "Больше нет идей"}
           </button>
 
           {selectedTopics && selectedTopics.length > 0 && (
             <div className="space-y-1">
-              <p className="text-green-400 font-semibold text-sm">Выбранные темы:</p>
+              <p className="text-emerald-600 dark:text-green-400 font-semibold text-sm">Выбранные темы:</p>
               {selectedTopics.map((t, i) => (
-                <div key={i} className="bg-green-900/20 rounded px-3 py-1 text-sm text-green-300">
+                <div key={i} className="bg-emerald-50 dark:bg-green-900/20 rounded px-3 py-1 text-sm text-emerald-700 dark:text-green-300">
                   {t.name}
                 </div>
               ))}
@@ -859,8 +862,8 @@ export default function PlayerPage() {
           )}
 
           {isGenerating && (
-            <div className="flex items-center gap-3 text-yellow-400">
-              <div className="w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-3 text-amber-600 dark:text-yellow-400">
+              <div className="w-5 h-5 border-2 border-amber-600 dark:border-yellow-400 border-t-transparent rounded-full animate-spin" />
               <span>Генерирую вопросы...</span>
             </div>
           )}
@@ -871,9 +874,9 @@ export default function PlayerPage() {
     // ── QUESTION-SETUP ───────────────────────────────────────────────────────
     if (phase === "question-setup") {
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
-          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-300 text-lg">Ведущий загружает вопросы...</p>
+        <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4">
+          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-600 dark:text-slate-300 text-lg">Ведущий загружает вопросы...</p>
         </div>
       );
     }
@@ -886,7 +889,7 @@ export default function PlayerPage() {
         isActiveTeam && !isSpectator && !captainId && !(ownPlayer?.wasRecentCaptain);
 
       return (
-        <div key="round-captain" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
+        <div key="round-captain" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-1">Выбор капитана</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
@@ -894,11 +897,11 @@ export default function PlayerPage() {
 
           {captain ? (
             <div className="text-center">
-              <p className="text-yellow-400 text-xl font-bold">{captain.name}</p>
-              <p className="text-gray-400 text-sm">стал капитаном</p>
+              <p className="text-amber-600 dark:text-yellow-400 text-xl font-bold">{captain.name}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">стал капитаном</p>
             </div>
           ) : (
-            <p className="text-gray-400 text-center">
+            <p className="text-slate-500 dark:text-slate-400 text-center">
               Кто хочет быть капитаном этого раунда?
             </p>
           )}
@@ -907,10 +910,10 @@ export default function PlayerPage() {
             <button
               onClick={() => sendMsg({ type: "becomeCapitain" })}
               disabled={!canBecomeCaptain}
-              className={`w-full py-4 rounded-lg font-bold text-xl transition-colors ${
+              className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
                 canBecomeCaptain
-                  ? "bg-yellow-600 hover:bg-yellow-500"
-                  : "bg-gray-700 cursor-not-allowed text-gray-500"
+                  ? "bg-yellow-600 hover:bg-yellow-500 text-white"
+                  : "bg-slate-200 dark:bg-slate-700 cursor-not-allowed text-slate-400 dark:text-slate-500"
               }`}
             >
               {ownPlayer?.wasRecentCaptain ? "Я был капитаном" : "Буду капитаном!"}
@@ -918,20 +921,20 @@ export default function PlayerPage() {
           )}
 
           {!isActiveTeam && !isSpectator && (
-            <p className="text-gray-600 text-sm text-center">Ход другой команды</p>
+            <p className="text-slate-400 dark:text-slate-600 text-sm text-center">Ход другой команды</p>
           )}
 
           <div className="w-full text-sm">
             {gameState.players
               .filter((p) => p.teamId === gameState.activeTeamId && p.role === "player")
               .map((p) => (
-                <div key={p.id} className="flex items-center gap-2 py-1 text-gray-400">
+                <div key={p.id} className="flex items-center gap-2 py-1 text-slate-500 dark:text-slate-400">
                   <span>{p.id === captainId ? "👑" : "  "}</span>
-                  <span className={p.id === captainId ? "text-yellow-400 font-bold" : ""}>
+                  <span className={p.id === captainId ? "text-amber-600 dark:text-yellow-400 font-bold" : ""}>
                     {p.name}
                   </span>
                   {p.wasRecentCaptain && (
-                    <span className="text-gray-600 text-xs">(прошлый)</span>
+                    <span className="text-slate-400 dark:text-slate-600 text-xs">(прошлый)</span>
                   )}
                 </div>
               ))}
@@ -948,7 +951,7 @@ export default function PlayerPage() {
 
       if (!isActiveTeam || isSpectator) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+          <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4">
             <div className="text-5xl">🎧</div>
             <h2 className="text-xl font-bold text-center">Другая команда готовится</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
@@ -957,11 +960,11 @@ export default function PlayerPage() {
       }
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+        <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
           <div className="text-6xl">🎧</div>
           <h2 className="text-2xl font-bold text-center">Надевайте наушники!</h2>
           {captain && (
-            <p className="text-yellow-400 text-sm">
+            <p className="text-amber-600 dark:text-yellow-400 text-sm">
               {isCaptain ? "Вы капитан!" : `Капитан: ${captain.name}`}
             </p>
           )}
@@ -969,10 +972,10 @@ export default function PlayerPage() {
           <button
             onClick={handleReady}
             disabled={isReady}
-            className={`w-full py-3 rounded-lg font-bold text-lg transition-colors ${
+            className={`w-full py-3 rounded-lg font-bold text-lg transition-all ${
               isReady
                 ? "bg-green-800 cursor-not-allowed text-green-300"
-                : "bg-green-700 hover:bg-green-600"
+                : "bg-emerald-600 hover:bg-emerald-500 text-white"
             }`}
           >
             {isReady ? "✓ Готов" : "Я готов!"}
@@ -982,9 +985,9 @@ export default function PlayerPage() {
             {gameState.players
               .filter((p) => p.teamId === gameState.activeTeamId && p.role === "player")
               .map((p) => (
-                <div key={p.id} className="flex items-center gap-2 text-gray-400">
+                <div key={p.id} className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                   <span>{p.isReady ? "✅" : "⭕"}</span>
-                  <span className={p.isReady ? "text-green-400" : "text-gray-500"}>
+                  <span className={p.isReady ? "text-emerald-600 dark:text-green-400" : "text-slate-400 dark:text-slate-500"}>
                     {p.name}
                     {p.id === gameState.captainId && (
                       <span className="text-yellow-600 text-xs ml-1">(капитан)</span>
@@ -1009,7 +1012,7 @@ export default function PlayerPage() {
 
       if (!isActiveTeam || isSpectator) {
         return (
-          <div key="round-pick-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
+          <div key="round-pick-other" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
             <div className="text-6xl">🎧</div>
             <div className="text-center">
               <h2 className="text-xl font-bold">Другая команда выбирает вопрос</h2>
@@ -1030,18 +1033,18 @@ export default function PlayerPage() {
 
       // All active team members see the same table; captain can pick
       return (
-        <div key="round-pick-active" className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-lg mx-auto gap-4 animate-fade-in">
+        <div key="round-pick-active" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-lg mx-auto gap-4 animate-fade-in">
           <div className="text-center">
             {isCaptain ? (
               <>
                 <h2 className="text-2xl font-bold">Выберите вопрос</h2>
-                <p className="text-yellow-400 font-semibold text-sm">Вы капитан! 🎧</p>
+                <p className="text-amber-600 dark:text-yellow-400 font-semibold text-sm">Вы капитан! 🎧</p>
               </>
             ) : (
               <>
                 <h2 className="text-xl font-bold">Выбор вопроса</h2>
                 {captainName && (
-                  <p className="text-yellow-400 text-sm mt-1">Капитан: {captainName}</p>
+                  <p className="text-amber-600 dark:text-yellow-400 text-sm mt-1">Капитан: {captainName}</p>
                 )}
               </>
             )}
@@ -1052,25 +1055,25 @@ export default function PlayerPage() {
               {!teamJokerUsed && !teamJokerActive && (
                 <button
                   onClick={() => sendMsg({ type: "activateJoker" })}
-                  className="w-full py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-sm font-semibold transition-colors"
+                  className="w-full py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg text-sm font-semibold transition-all"
                 >
                   Активировать Джокер (x2 очки)
                 </button>
               )}
               {teamJokerActive && (
-                <div className="bg-yellow-900/30 border border-yellow-700/50 rounded p-2 text-center">
-                  <p className="text-yellow-400 font-bold text-sm">Джокер активирован!</p>
+                <div className="bg-amber-50 dark:bg-yellow-900/30 border border-amber-200 dark:border-yellow-700/50 rounded-lg p-2 text-center">
+                  <p className="text-amber-600 dark:text-yellow-400 font-bold text-sm">Джокер активирован!</p>
                 </div>
               )}
               {teamJokerUsed && (
-                <p className="text-gray-600 text-sm text-center">Джокер уже использован</p>
+                <p className="text-slate-400 dark:text-slate-600 text-sm text-center">Джокер уже использован</p>
               )}
             </>
           )}
 
           {!isCaptain && teamJokerActive && (
-            <div className="bg-yellow-900/30 border border-yellow-700/50 rounded p-2 text-center">
-              <p className="text-yellow-400 font-bold text-sm">Джокер активирован!</p>
+            <div className="bg-amber-50 dark:bg-yellow-900/30 border border-amber-200 dark:border-yellow-700/50 rounded-lg p-2 text-center">
+              <p className="text-amber-600 dark:text-yellow-400 font-bold text-sm">Джокер активирован!</p>
             </div>
           )}
 
@@ -1097,23 +1100,36 @@ export default function PlayerPage() {
       if (isCaptain) {
         // Captain sees the question + can submit answer
         return (
-          <div key="round-active-captain" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
+          <div key="round-active-captain" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
             <div className="text-center">
-              <p className="text-yellow-400 font-bold mb-1">Вы капитан!</p>
-              <p className="text-gray-400 text-sm">Объясняйте жестами, не говорите слов</p>
+              <p className="text-amber-600 dark:text-yellow-400 font-bold mb-1">Вы капитан!</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">Объясняйте жестами, не говорите слов</p>
             </div>
             {currentRound && (
-              <div className="text-center text-gray-400 text-sm">
+              <div className="text-center text-slate-500 dark:text-slate-400 text-sm">
                 {currentRound.topicName} · {currentRound.difficulty} очков
               </div>
             )}
             {captainInfo ? (
-              <div className="bg-blue-900/40 border border-blue-700/60 rounded-xl p-6 text-center">
-                <p className="text-sm text-blue-300 mb-2">Ваш вопрос / слово:</p>
-                <p className="text-2xl font-bold text-white">{captainInfo.questionText}</p>
+              <div className="relative bg-slate-900 dark:bg-slate-950 border-2 border-dashed border-slate-600 dark:border-slate-500 rounded-xl p-6 text-center overflow-hidden">
+                {/* Scan-line overlay */}
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-[0.04]"
+                  style={{
+                    backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px)",
+                  }}
+                />
+                {/* СЕКРЕТНО stamp */}
+                <div className="absolute top-3 right-3 -rotate-12 pointer-events-none">
+                  <span className="text-red-500/50 font-black text-xs uppercase tracking-widest border-2 border-red-500/50 px-2 py-0.5 rounded">
+                    СЕКРЕТНО
+                  </span>
+                </div>
+                <p className="text-sm text-slate-400 mb-2 font-mono">Ваш вопрос / слово:</p>
+                <p className="text-2xl font-bold text-white font-mono relative z-10">{captainInfo.questionText}</p>
               </div>
             ) : (
-              <div className="text-gray-500 text-sm">Загружаем вопрос...</div>
+              <div className="text-slate-400 dark:text-slate-500 text-sm">Загружаем вопрос...</div>
             )}
             <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
             {!hasAnswered ? (
@@ -1125,20 +1141,20 @@ export default function PlayerPage() {
                   onKeyDown={(e) => e.key === "Enter" && !hasAnswered && handleSubmitAnswer()}
                   placeholder="Ваш ответ..."
                   maxLength={100}
-                  className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg px-4 py-3 text-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
                 <button
                   onClick={handleSubmitAnswer}
                   disabled={!answerInput.trim()}
-                  className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors"
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-all"
                 >
                   Ответить
                 </button>
               </div>
             ) : (
-              <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center w-full">
-                <p className="text-green-400 font-bold">Ответ отправлен!</p>
-                <p className="text-gray-400 text-sm mt-1">{answerInput}</p>
+              <div className="bg-emerald-50 dark:bg-green-900/30 border border-emerald-200 dark:border-green-700/50 rounded-lg p-4 text-center w-full">
+                <p className="text-emerald-600 dark:text-green-400 font-bold">Ответ отправлен!</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{answerInput}</p>
               </div>
             )}
           </div>
@@ -1148,12 +1164,12 @@ export default function PlayerPage() {
       if (!isActiveTeam || isSpectator) {
         const questionReveal = gameState.questionRevealText;
         return (
-          <div key="round-active-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
+          <div key="round-active-other" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
             <h2 className="text-xl font-bold text-center">Другая команда играет</h2>
             {questionReveal && (
-              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-center max-w-sm w-full">
-                <p className="text-sm text-gray-400 mb-1">Вопрос:</p>
-                <p className="text-white font-semibold">{questionReveal}</p>
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 text-center max-w-sm w-full">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Вопрос:</p>
+                <p className="text-slate-900 dark:text-white font-semibold">{questionReveal}</p>
               </div>
             )}
             <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
@@ -1163,11 +1179,11 @@ export default function PlayerPage() {
 
       // Active team non-captain player
       return (
-        <div key="round-active-player" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
+        <div key="round-active-player" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
           <div className="text-6xl">🎧</div>
           <h2 className="text-xl font-bold text-center">Следите за капитаном!</h2>
           {currentRound && (
-            <div className="text-center text-gray-400 text-sm">
+            <div className="text-center text-slate-500 dark:text-slate-400 text-sm">
               {currentRound.topicName} · {currentRound.difficulty} очков
             </div>
           )}
@@ -1182,20 +1198,20 @@ export default function PlayerPage() {
                 onKeyDown={(e) => e.key === "Enter" && !hasAnswered && handleSubmitAnswer()}
                 placeholder="Ваш ответ..."
                 maxLength={100}
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+                className="w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg px-4 py-3 text-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <button
                 onClick={handleSubmitAnswer}
                 disabled={!answerInput.trim()}
-                className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors"
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-all"
               >
                 Ответить
               </button>
             </div>
           ) : (
-            <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center">
-              <p className="text-green-400 font-bold">Ответ отправлен!</p>
-              <p className="text-gray-400 text-sm mt-1">{answerInput}</p>
+            <div className="bg-emerald-50 dark:bg-green-900/30 border border-emerald-200 dark:border-green-700/50 rounded-lg p-4 text-center">
+              <p className="text-emerald-600 dark:text-green-400 font-bold">Ответ отправлен!</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{answerInput}</p>
             </div>
           )}
         </div>
@@ -1210,12 +1226,12 @@ export default function PlayerPage() {
       // Non-active team or spectator: show question reveal only
       if (!isActiveTeam || isSpectator) {
         return (
-          <div key="round-answer-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
+          <div key="round-answer-other" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
             <h2 className="text-xl font-bold text-center">Время отвечать!</h2>
             {questionReveal && (
-              <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 text-center">
-                <p className="text-sm text-gray-400 mb-1">Вопрос:</p>
-                <p className="text-white font-semibold">{questionReveal}</p>
+              <div className="bg-indigo-50 dark:bg-blue-900/30 border border-indigo-200 dark:border-blue-700/50 rounded-lg p-4 text-center">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Вопрос:</p>
+                <p className="text-slate-900 dark:text-white font-semibold">{questionReveal}</p>
               </div>
             )}
             <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
@@ -1225,14 +1241,14 @@ export default function PlayerPage() {
 
       // Active team players (including captain) answer
       return (
-        <div key="round-answer-active" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
+        <div key="round-answer-active" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
           <h2 className="text-2xl font-bold text-center">
             {isCaptain ? "Ваш ответ!" : "Ваш ответ!"}
           </h2>
           {questionReveal && (
-            <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 text-center w-full">
-              <p className="text-sm text-gray-400 mb-1">Вопрос:</p>
-              <p className="text-white font-semibold">{questionReveal}</p>
+            <div className="bg-indigo-50 dark:bg-blue-900/30 border border-indigo-200 dark:border-blue-700/50 rounded-lg p-4 text-center w-full">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Вопрос:</p>
+              <p className="text-slate-900 dark:text-white font-semibold">{questionReveal}</p>
             </div>
           )}
           <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
@@ -1247,20 +1263,20 @@ export default function PlayerPage() {
                 placeholder="Ваш ответ..."
                 maxLength={100}
                 autoFocus
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+                className="w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg px-4 py-3 text-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <button
                 onClick={handleSubmitAnswer}
                 disabled={!answerInput.trim()}
-                className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors"
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-all"
               >
                 Ответить
               </button>
             </div>
           ) : (
-            <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center w-full">
-              <p className="text-green-400 font-bold">Ответ отправлен!</p>
-              <p className="text-gray-400 text-sm mt-1">{answerInput}</p>
+            <div className="bg-emerald-50 dark:bg-green-900/30 border border-emerald-200 dark:border-green-700/50 rounded-lg p-4 text-center w-full">
+              <p className="text-emerald-600 dark:text-green-400 font-bold">Ответ отправлен!</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{answerInput}</p>
             </div>
           )}
         </div>
@@ -1271,16 +1287,16 @@ export default function PlayerPage() {
     if (phase === "round-review") {
       const isAutoReviewing = gameState.isAutoReviewing ?? false;
       return (
-        <div key="round-review" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
+        <div key="round-review" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
           {isAutoReviewing ? (
             <>
-              <div className="w-8 h-8 border-3 border-yellow-400 border-t-transparent rounded-full animate-spin" />
-              <p className="text-yellow-400 font-semibold">ИИ проверяет ответы...</p>
+              <div className="w-8 h-8 border-3 border-amber-600 dark:border-yellow-400 border-t-transparent rounded-full animate-spin" />
+              <p className="text-amber-600 dark:text-yellow-400 font-semibold">ИИ проверяет ответы...</p>
             </>
           ) : (
             <>
-              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-gray-300 text-lg text-center">Ведущий проверяет ответы...</p>
+              <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-slate-600 dark:text-slate-300 text-lg text-center">Ведущий проверяет ответы...</p>
             </>
           )}
         </div>
@@ -1293,7 +1309,7 @@ export default function PlayerPage() {
       const scores = gameState.scores;
 
       return (
-        <div key="round-result" className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5 animate-fade-in">
+        <div key="round-result" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5 animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold">Результат раунда</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
@@ -1301,13 +1317,13 @@ export default function PlayerPage() {
 
           {result && (
             <>
-              <div className="bg-gray-800 rounded-lg p-4">
-                <p className="text-sm text-gray-400 mb-1">Вопрос:</p>
-                <p className="text-white font-semibold">{result.questionText}</p>
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-4">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Вопрос:</p>
+                <p className="text-slate-900 dark:text-white font-semibold">{result.questionText}</p>
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-gray-400 mb-2">Ответы:</h3>
+                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">Ответы:</h3>
                 <ul className="space-y-2">
                   {result.groups.map((g) => {
                     const groupPlayers = g.playerIds
@@ -1316,18 +1332,18 @@ export default function PlayerPage() {
                     return (
                       <li
                         key={g.id}
-                        className={`rounded border p-3 text-sm flex items-start gap-2 ${
+                        className={`rounded-lg border p-3 text-sm flex items-start gap-2 ${
                           g.accepted
-                            ? "bg-green-900/20 border-green-700/50"
-                            : "bg-red-900/10 border-red-800/30"
+                            ? "bg-emerald-50 dark:bg-green-900/20 border-emerald-200 dark:border-green-700/50"
+                            : "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800/30"
                         }`}
                       >
                         <span className="text-lg flex-shrink-0">
                           {g.accepted ? "✅" : "❌"}
                         </span>
                         <div>
-                          <p className="text-white font-medium">{g.canonicalAnswer}</p>
-                          <p className="text-gray-400 text-xs">{groupPlayers}</p>
+                          <p className="text-slate-900 dark:text-white font-medium">{g.canonicalAnswer}</p>
+                          <p className="text-slate-500 dark:text-slate-400 text-xs">{groupPlayers}</p>
                         </div>
                       </li>
                     );
@@ -1335,34 +1351,34 @@ export default function PlayerPage() {
                 </ul>
               </div>
 
-              <div className="bg-gray-800 rounded-lg p-4 text-center">
-                <p className="text-gray-400 text-sm">Очки за раунд:</p>
-                <p className="text-3xl font-bold text-yellow-400 animate-pop-in">
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-4 text-center">
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Очки за раунд:</p>
+                <p className="text-3xl font-bold text-amber-600 dark:text-yellow-400 animate-pop-in">
                   +{result.score}
                   {result.jokerApplied && (
-                    <span className="text-base text-yellow-300 ml-2">Джокер x2</span>
+                    <span className="text-base text-amber-700 dark:text-yellow-300 ml-2">Джокер x2</span>
                   )}
                 </p>
               </div>
 
               {result.commentary && (
-                <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3 text-sm text-blue-300">
+                <div className="bg-indigo-50 dark:bg-blue-900/20 border border-indigo-200 dark:border-blue-700/30 rounded-lg p-3 text-sm text-indigo-700 dark:text-blue-300">
                   {result.commentary}
                 </div>
               )}
             </>
           )}
 
-          <div className="bg-gray-800 rounded-lg p-3">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-3">
             <div className="flex justify-around">
               {Object.entries(scores).map(([teamId, score]) => (
                 <div key={teamId} className="text-center">
                   <p
-                    className={`font-bold text-lg ${teamId === "red" ? "text-red-400" : "text-blue-400"}`}
+                    className={`font-bold text-lg ${teamId === "red" ? "text-red-500 dark:text-red-400" : "text-blue-500 dark:text-blue-400"}`}
                   >
                     {score}
                   </p>
-                  <p className="text-gray-500 text-xs">
+                  <p className="text-slate-400 dark:text-slate-500 text-xs">
                     {teamId === "red" ? "Красные" : "Синие"}
                   </p>
                 </div>
@@ -1372,7 +1388,7 @@ export default function PlayerPage() {
 
           <button
             onClick={() => sendMsg({ type: "nextRound" })}
-            className="w-full py-3 bg-blue-700 hover:bg-blue-600 rounded-lg font-bold text-lg transition-colors"
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-lg transition-all"
           >
             Следующий раунд
           </button>
@@ -1397,13 +1413,13 @@ export default function PlayerPage() {
 
       if (!isActiveTeam || isSpectator) {
         return (
-          <div key="blitz-captain-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
+          <div key="blitz-captain-other" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
             <div className="text-6xl">🎧</div>
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-1">Блиц!</h2>
               {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
             </div>
-            <p className="text-gray-500 text-sm text-center">Команда выбирает капитана и порядок</p>
+            <p className="text-slate-400 dark:text-slate-500 text-sm text-center">Команда выбирает капитана и порядок</p>
           </div>
         );
       }
@@ -1411,20 +1427,20 @@ export default function PlayerPage() {
       // Phase 1: no captain yet — show become-captain button
       if (!captain) {
         return (
-          <div key="blitz-captain-pick" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
+          <div key="blitz-captain-pick" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-1">Блиц!</h2>
-              <p className="text-gray-400 mb-1">Выбор капитана</p>
+              <p className="text-slate-500 dark:text-slate-400 mb-1">Выбор капитана</p>
               {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
             </div>
-            <p className="text-gray-400 text-center">Кто будет капитаном в блице?</p>
+            <p className="text-slate-500 dark:text-slate-400 text-center">Кто будет капитаном в блице?</p>
             <button
               onClick={() => sendMsg({ type: "blitzBecomeCapitain" })}
               disabled={!canBecomeCaptain}
-              className={`w-full py-4 rounded-lg font-bold text-xl transition-colors ${
+              className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
                 canBecomeCaptain
-                  ? "bg-yellow-600 hover:bg-yellow-500"
-                  : "bg-gray-700 cursor-not-allowed text-gray-500"
+                  ? "bg-yellow-600 hover:bg-yellow-500 text-white"
+                  : "bg-slate-200 dark:bg-slate-700 cursor-not-allowed text-slate-400 dark:text-slate-500"
               }`}
             >
               {ownPlayer?.wasRecentCaptain ? "Я был капитаном" : "Буду капитаном!"}
@@ -1436,16 +1452,16 @@ export default function PlayerPage() {
       // Phase 2: captain chosen — captain waits, others pick blitz order
       if (isCaptain) {
         return (
-          <div key="blitz-captain-active" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 max-w-sm mx-auto animate-fade-in">
-            <p className="text-yellow-400 text-xl font-bold">Вы капитан блица!</p>
-            <p className="text-gray-400 text-sm text-center">Ждём, пока команда выберет порядок</p>
+          <div key="blitz-captain-active" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4 max-w-sm mx-auto animate-fade-in">
+            <p className="text-amber-600 dark:text-yellow-400 text-xl font-bold">Вы капитан блица!</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm text-center">Ждём, пока команда выберет порядок</p>
             <div className="w-full space-y-1 text-sm">
               {teamPlayersForBlitz.map((p) => (
-                <div key={p.id} className="flex items-center gap-2 py-1 text-gray-400">
+                <div key={p.id} className="flex items-center gap-2 py-1 text-slate-500 dark:text-slate-400">
                   <span className="w-5 text-center text-xs">
                     {(p.blitzOrder ?? 0) > 0 ? `${p.blitzOrder}.` : "?"}
                   </span>
-                  <span className={(p.blitzOrder ?? 0) > 0 ? "text-green-400" : ""}>{p.name}</span>
+                  <span className={(p.blitzOrder ?? 0) > 0 ? "text-emerald-600 dark:text-green-400" : ""}>{p.name}</span>
                 </div>
               ))}
             </div>
@@ -1455,18 +1471,18 @@ export default function PlayerPage() {
 
       // Non-captain active team: pick blitz order
       return (
-        <div key="blitz-captain-order" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-5 px-4 max-w-sm mx-auto animate-fade-in">
+        <div key="blitz-captain-order" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-5 px-4 max-w-sm mx-auto animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold">Блиц — ваша очередь</h2>
-            <p className="text-yellow-400 text-sm">Капитан: {captain.name}</p>
+            <p className="text-amber-600 dark:text-yellow-400 text-sm">Капитан: {captain.name}</p>
           </div>
 
           {(myBlitzOrder ?? 0) > 0 ? (
-            <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center">
-              <p className="text-green-400 font-bold">Вы выбрали позицию {myBlitzOrder}</p>
+            <div className="bg-emerald-50 dark:bg-green-900/30 border border-emerald-200 dark:border-green-700/50 rounded-lg p-4 text-center">
+              <p className="text-emerald-600 dark:text-green-400 font-bold">Вы выбрали позицию {myBlitzOrder}</p>
             </div>
           ) : (
-            <p className="text-gray-400 text-center">Выберите свою позицию в очереди ответов:</p>
+            <p className="text-slate-500 dark:text-slate-400 text-center">Выберите свою позицию в очереди ответов:</p>
           )}
 
           <div className="grid grid-cols-3 gap-2 w-full">
@@ -1478,12 +1494,12 @@ export default function PlayerPage() {
                   key={pos}
                   onClick={() => sendMsg({ type: "blitzSetOrder", position: pos })}
                   disabled={isTaken}
-                  className={`py-3 rounded-lg font-bold transition-colors ${
+                  className={`py-3 rounded-lg font-bold transition-all ${
                     isMyPos
-                      ? "bg-green-700 text-white"
+                      ? "bg-emerald-600 text-white"
                       : isTaken
-                        ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-                        : "bg-gray-700 hover:bg-gray-600"
+                        ? "bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                        : "bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600 shadow-sm"
                   }`}
                 >
                   {pos}
@@ -1494,11 +1510,11 @@ export default function PlayerPage() {
 
           <div className="w-full text-sm space-y-1">
             {teamPlayersForBlitz.map((p) => (
-              <div key={p.id} className="flex items-center gap-2 py-1 text-gray-400">
+              <div key={p.id} className="flex items-center gap-2 py-1 text-slate-500 dark:text-slate-400">
                 <span className="w-5 text-center text-xs">
                   {(p.blitzOrder ?? 0) > 0 ? `${p.blitzOrder}.` : "?"}
                 </span>
-                <span className={(p.blitzOrder ?? 0) > 0 ? "text-green-400" : ""}>{p.name}</span>
+                <span className={(p.blitzOrder ?? 0) > 0 ? "text-emerald-600 dark:text-green-400" : ""}>{p.name}</span>
               </div>
             ))}
           </div>
@@ -1517,7 +1533,7 @@ export default function PlayerPage() {
 
       if (!isActiveTeam || isSpectator) {
         return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
+          <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4">
             <div className="text-5xl">🎧</div>
             <h2 className="text-xl font-bold text-center">Другая команда готовится к блицу</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
@@ -1526,11 +1542,11 @@ export default function PlayerPage() {
       }
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
+        <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto">
           <div className="text-6xl">🎧</div>
           <h2 className="text-2xl font-bold text-center">Надевайте наушники!</h2>
           {captain && (
-            <p className="text-yellow-400 text-sm">
+            <p className="text-amber-600 dark:text-yellow-400 text-sm">
               {isCaptain ? "Вы капитан блица!" : `Капитан: ${captain.name}`}
             </p>
           )}
@@ -1538,10 +1554,10 @@ export default function PlayerPage() {
           <button
             onClick={handleReady}
             disabled={isReady}
-            className={`w-full py-3 rounded-lg font-bold text-lg transition-colors ${
+            className={`w-full py-3 rounded-lg font-bold text-lg transition-all ${
               isReady
                 ? "bg-green-800 cursor-not-allowed text-green-300"
-                : "bg-green-700 hover:bg-green-600"
+                : "bg-emerald-600 hover:bg-emerald-500 text-white"
             }`}
           >
             {isReady ? "✓ Готов" : "Я готов!"}
@@ -1549,9 +1565,9 @@ export default function PlayerPage() {
 
           <div className="w-full text-sm space-y-1">
             {activeTeamPlayers.map((p) => (
-              <div key={p.id} className="flex items-center gap-2 text-gray-400">
+              <div key={p.id} className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                 <span>{p.isReady ? "✅" : "⭕"}</span>
-                <span className={p.isReady ? "text-green-400" : "text-gray-500"}>
+                <span className={p.isReady ? "text-emerald-600 dark:text-green-400" : "text-slate-400 dark:text-slate-500"}>
                   {p.name}
                   {p.id === captainId && (
                     <span className="text-yellow-600 text-xs ml-1">(капитан)</span>
@@ -1568,7 +1584,7 @@ export default function PlayerPage() {
     if (phase === "blitz-pick") {
       if (!isCaptain) {
         return (
-          <div key="blitz-pick-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 max-w-sm mx-auto animate-fade-in">
+          <div key="blitz-pick-other" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4 max-w-sm mx-auto animate-fade-in">
             <h2 className="text-xl font-bold">Капитан выбирает вопрос...</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
           </div>
@@ -1579,16 +1595,16 @@ export default function PlayerPage() {
       const currentTask = blitzTaskList?.[0] ?? null;
 
       return (
-        <div key="blitz-pick-captain" className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-4 animate-fade-in">
+        <div key="blitz-pick-captain" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-4 animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold">Выберите вопрос</h2>
-            <p className="text-yellow-400 text-sm font-semibold">Вы капитан блица!</p>
+            <p className="text-amber-600 dark:text-yellow-400 text-sm font-semibold">Вы капитан блица!</p>
           </div>
 
           <div className="space-y-2">
             {currentTask === null && (
-              <div className="flex items-center justify-center gap-2 text-gray-400">
-                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400">
+                <div className="w-4 h-4 border-2 border-slate-400 dark:border-slate-400 border-t-transparent rounded-full animate-spin" />
                 <span className="text-sm">Загружаем задания...</span>
               </div>
             )}
@@ -1596,10 +1612,10 @@ export default function PlayerPage() {
               <button
                 key={idx}
                 onClick={() => sendMsg({ type: "blitzPickTask", itemIdx: idx })}
-                className="w-full flex items-center justify-between px-4 py-3 bg-blue-700 hover:bg-blue-600 rounded font-semibold transition-colors"
+                className="w-full flex items-center justify-between px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition-all"
               >
                 <span className="text-left">{item.text}</span>
-                <span className="text-blue-200 text-sm ml-4 flex-shrink-0">{item.difficulty}</span>
+                <span className="text-indigo-200 text-sm ml-4 flex-shrink-0">{item.difficulty}</span>
               </button>
             ))}
           </div>
@@ -1615,21 +1631,21 @@ export default function PlayerPage() {
 
       if (isCaptain) {
         return (
-          <div key="blitz-active-captain" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
-            <p className="text-yellow-400 font-bold">Вы капитан блица!</p>
-            <p className="text-gray-400 text-sm text-center">
+          <div key="blitz-active-captain" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
+            <p className="text-amber-600 dark:text-yellow-400 font-bold">Вы капитан блица!</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm text-center">
               Объясняйте жестами, пока команда отвечает по очереди
             </p>
             {blitzCaptainItem ? (
-              <div className="bg-blue-900/40 border border-blue-700/60 rounded-xl p-6 text-center">
-                <p className="text-sm text-blue-300 mb-2">Слово:</p>
-                <p className="text-3xl font-bold text-white">{blitzCaptainItem.text}</p>
-                <p className="text-gray-500 text-sm mt-1">
+              <div className="bg-indigo-50 dark:bg-blue-900/40 border border-indigo-200 dark:border-blue-700/60 rounded-xl p-6 text-center">
+                <p className="text-sm text-indigo-600 dark:text-blue-300 mb-2">Слово:</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">{blitzCaptainItem.text}</p>
+                <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">
                   Сложность: {blitzCaptainItem.difficulty}
                 </p>
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">Загружаем...</p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm">Загружаем...</p>
             )}
             <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
           </div>
@@ -1638,7 +1654,7 @@ export default function PlayerPage() {
 
       if (!isActiveTeam || isSpectator) {
         return (
-          <div key="blitz-active-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
+          <div key="blitz-active-other" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
             <h2 className="text-xl font-bold text-center">Блиц идёт!</h2>
             <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
           </div>
@@ -1653,17 +1669,17 @@ export default function PlayerPage() {
         : true;
 
       return (
-        <div key="blitz-active-player" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
+        <div key="blitz-active-player" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
           <div className="text-6xl">🎧</div>
           <h2 className="text-xl font-bold text-center">Блиц!</h2>
           {myPosition >= 0 && (
-            <p className="text-gray-400 text-sm">Ваша позиция: {myPosition + 1}</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Ваша позиция: {myPosition + 1}</p>
           )}
           <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
 
           {!hasAnswered && isMyTurn ? (
             <div className="w-full space-y-2">
-              <p className="text-yellow-400 font-bold text-center">Ваша очередь!</p>
+              <p className="text-amber-600 dark:text-yellow-400 font-bold text-center">Ваша очередь!</p>
               <input
                 type="text"
                 value={blitzAnswerInput}
@@ -1674,22 +1690,22 @@ export default function PlayerPage() {
                 placeholder="Ваш ответ..."
                 maxLength={100}
                 autoFocus
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+                className="w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg px-4 py-3 text-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <button
                 onClick={handleBlitzSubmitAnswer}
                 disabled={!blitzAnswerInput.trim()}
-                className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors"
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-all"
               >
                 Ответить
               </button>
             </div>
           ) : hasAnswered ? (
-            <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center">
-              <p className="text-green-400 font-bold">Ответ отправлен!</p>
+            <div className="bg-emerald-50 dark:bg-green-900/30 border border-emerald-200 dark:border-green-700/50 rounded-lg p-4 text-center">
+              <p className="text-emerald-600 dark:text-green-400 font-bold">Ответ отправлен!</p>
             </div>
           ) : (
-            <p className="text-gray-500 text-center">
+            <p className="text-slate-400 dark:text-slate-500 text-center">
               {previousAnswered ? "Ждём вашей очереди..." : "Ждём предыдущих игроков..."}
             </p>
           )}
@@ -1703,7 +1719,7 @@ export default function PlayerPage() {
 
       if (isCaptain || !isActiveTeam || isSpectator) {
         return (
-          <div key="blitz-answer-other" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
+          <div key="blitz-answer-other" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4 animate-fade-in">
             <h2 className="text-xl font-bold">Финальные ответы!</h2>
             <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
           </div>
@@ -1711,7 +1727,7 @@ export default function PlayerPage() {
       }
 
       return (
-        <div key="blitz-answer-active" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
+        <div key="blitz-answer-active" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-6 px-4 max-w-sm mx-auto animate-fade-in">
           <h2 className="text-2xl font-bold text-center">Финальный ответ!</h2>
           <PlayerTimerDisplay endsAt={gameState.timer?.endsAt} clockOffset={clockOffset} />
 
@@ -1727,26 +1743,26 @@ export default function PlayerPage() {
                 placeholder="Ваш ответ..."
                 maxLength={100}
                 autoFocus
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+                className="w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg px-4 py-3 text-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <button
                 onClick={handleBlitzSubmitAnswer}
                 disabled={!blitzAnswerInput.trim()}
-                className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors"
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-all"
               >
                 Ответить
               </button>
               <button
                 onClick={handleSurrender}
-                className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-gray-300 transition-colors"
+                className="w-full py-2 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-600 dark:text-slate-300 shadow-sm transition-all"
               >
                 Не знаю
               </button>
             </div>
           ) : (
-            <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center w-full">
-              <p className="text-green-400 font-bold">Ответ отправлен!</p>
-              <p className="text-gray-400 text-sm mt-1">
+            <div className="bg-emerald-50 dark:bg-green-900/30 border border-emerald-200 dark:border-green-700/50 rounded-lg p-4 text-center w-full">
+              <p className="text-emerald-600 dark:text-green-400 font-bold">Ответ отправлен!</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
                 {blitzAnswerInput || "Нет ответа"}
               </p>
             </div>
@@ -1762,23 +1778,23 @@ export default function PlayerPage() {
       const scores = gameState.scores;
 
       return (
-        <div key="blitz-result" className="min-h-screen bg-gray-900 text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5 animate-fade-in">
+        <div key="blitz-result" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5 animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold">Результат блица</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
           </div>
 
           {blitzTaskReveal && (
-            <div className="bg-gray-800 rounded-lg p-4 text-center">
-              <p className="text-sm text-gray-400 mb-1">Слово:</p>
-              <p className="text-3xl font-bold text-white">{blitzTaskReveal.text}</p>
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-4 text-center">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Слово:</p>
+              <p className="text-3xl font-bold text-slate-900 dark:text-white">{blitzTaskReveal.text}</p>
             </div>
           )}
 
           {result && (
             <>
               <div>
-                <h3 className="text-sm font-semibold text-gray-400 mb-2">Цепочка:</h3>
+                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">Цепочка:</h3>
                 <ul className="space-y-2">
                   {result.groups.map((g, i) => {
                     const playerName =
@@ -1787,21 +1803,21 @@ export default function PlayerPage() {
                     return (
                       <li
                         key={g.id}
-                        className={`rounded border p-3 text-sm flex items-start gap-2 ${
+                        className={`rounded-lg border p-3 text-sm flex items-start gap-2 ${
                           g.accepted
-                            ? "bg-green-900/20 border-green-700/50"
-                            : "bg-red-900/10 border-red-800/30"
+                            ? "bg-emerald-50 dark:bg-green-900/20 border-emerald-200 dark:border-green-700/50"
+                            : "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800/30"
                         }`}
                       >
-                        <span className="text-gray-500 w-5 text-center flex-shrink-0">
+                        <span className="text-slate-400 dark:text-slate-500 w-5 text-center flex-shrink-0">
                           {i + 1}.
                         </span>
                         <span className="text-lg flex-shrink-0">
                           {g.accepted ? "✅" : "❌"}
                         </span>
                         <div>
-                          <p className="text-white font-medium">{g.canonicalAnswer}</p>
-                          <p className="text-gray-400 text-xs">{playerName}</p>
+                          <p className="text-slate-900 dark:text-white font-medium">{g.canonicalAnswer}</p>
+                          <p className="text-slate-500 dark:text-slate-400 text-xs">{playerName}</p>
                         </div>
                       </li>
                     );
@@ -1809,25 +1825,25 @@ export default function PlayerPage() {
                 </ul>
               </div>
 
-              <div className="bg-gray-800 rounded-lg p-4 text-center">
-                <p className="text-gray-400 text-sm">Очки за блиц:</p>
-                <p className="text-3xl font-bold text-yellow-400 animate-pop-in">+{result.score}</p>
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-4 text-center">
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Очки за блиц:</p>
+                <p className="text-3xl font-bold text-amber-600 dark:text-yellow-400 animate-pop-in">+{result.score}</p>
               </div>
             </>
           )}
 
-          <div className="bg-gray-800 rounded-lg p-3">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-3">
             <div className="flex justify-around">
               {Object.entries(scores).map(([teamId, score]) => (
                 <div key={teamId} className="text-center">
                   <p
                     className={`font-bold text-lg ${
-                      teamId === "red" ? "text-red-400" : "text-blue-400"
+                      teamId === "red" ? "text-red-500 dark:text-red-400" : "text-blue-500 dark:text-blue-400"
                     }`}
                   >
                     {score}
                   </p>
-                  <p className="text-gray-500 text-xs">
+                  <p className="text-slate-400 dark:text-slate-500 text-xs">
                     {teamId === "red" ? "Красные" : "Синие"}
                   </p>
                 </div>
@@ -1837,7 +1853,7 @@ export default function PlayerPage() {
 
           <button
             onClick={() => sendMsg({ type: "nextRound" })}
-            className="w-full py-3 bg-blue-700 hover:bg-blue-600 rounded-lg font-bold text-lg transition-colors"
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-lg transition-all"
           >
             Продолжить
           </button>
@@ -1855,14 +1871,14 @@ export default function PlayerPage() {
       const iWon = myTeamId === winnerTeamId;
 
       return (
-        <div key="finale" className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-4 gap-6 max-w-md mx-auto animate-fade-in">
+        <div key="finale" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center px-4 gap-6 max-w-md mx-auto animate-fade-in">
           <div className="text-center">
             <div className="text-6xl mb-2">{iWon ? "🏆" : "🎉"}</div>
             <h2 className="text-3xl font-bold">Игра завершена!</h2>
             {myTeamId && (
               <p
                 className={`text-lg font-semibold mt-1 ${
-                  iWon ? "text-yellow-400" : "text-gray-400"
+                  iWon ? "text-amber-600 dark:text-yellow-400" : "text-slate-500 dark:text-slate-400"
                 }`}
               >
                 {iWon ? "Ваша команда победила!" : "Хорошая игра!"}
@@ -1876,17 +1892,17 @@ export default function PlayerPage() {
                 key={teamId}
                 className={`rounded-lg p-4 border flex items-center justify-between ${
                   i === 0
-                    ? "bg-yellow-900/20 border-yellow-600/50"
-                    : "bg-gray-800 border-gray-700"
+                    ? "bg-amber-50 dark:bg-yellow-900/20 border-amber-300 dark:border-yellow-600/50"
+                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                 }`}
               >
                 <span
                   className={`font-semibold ${
-                    teamId === "red" ? "text-red-400" : "text-blue-400"
+                    teamId === "red" ? "text-red-500 dark:text-red-400" : "text-blue-500 dark:text-blue-400"
                   }`}
                 >
                   {teamId === "red" ? "Красные" : "Синие"}
-                  {i === 0 && <span className="ml-2 text-yellow-400 inline-block animate-crown">👑</span>}
+                  {i === 0 && <span className="ml-2 text-amber-600 dark:text-yellow-400 inline-block animate-crown">👑</span>}
                 </span>
                 <span className="text-2xl font-bold">{score}</span>
               </div>
@@ -1894,18 +1910,18 @@ export default function PlayerPage() {
           </div>
 
           {gameStats && (
-            <div className="w-full bg-gray-800 rounded-lg p-4 space-y-2">
-              <h3 className="text-gray-400 text-sm font-semibold">Статистика:</h3>
+            <div className="w-full bg-white dark:bg-slate-800 rounded-lg p-4 space-y-2">
+              <h3 className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Статистика:</h3>
               {gameStats.topAnswererName && (
                 <p className="text-sm">
-                  <span className="text-gray-400">Лучший отвечающий: </span>
-                  <span className="text-green-400 font-medium">{gameStats.topAnswererName}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Лучший отвечающий: </span>
+                  <span className="text-emerald-600 dark:text-green-400 font-medium">{gameStats.topAnswererName}</span>
                 </p>
               )}
               {gameStats.topCaptainName && (
                 <p className="text-sm">
-                  <span className="text-gray-400">Лучший капитан: </span>
-                  <span className="text-yellow-400 font-medium">{gameStats.topCaptainName}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Лучший капитан: </span>
+                  <span className="text-amber-600 dark:text-yellow-400 font-medium">{gameStats.topCaptainName}</span>
                 </p>
               )}
             </div>
@@ -1913,7 +1929,7 @@ export default function PlayerPage() {
 
           <button
             onClick={() => sendMsg({ type: "restart" })}
-            className="w-full py-3 bg-green-700 hover:bg-green-600 rounded-lg font-bold text-lg transition-colors"
+            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-lg transition-all"
           >
             Перезапустить игру
           </button>
@@ -1923,26 +1939,29 @@ export default function PlayerPage() {
 
     // Fallback for any unknown phase
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4 px-4">
-        <p className="text-gray-500 text-sm font-mono">{phase}</p>
+      <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4 px-4">
+        <p className="text-slate-400 dark:text-slate-500 text-sm font-mono">{phase}</p>
       </div>
     );
   }
 
   // ── Form ───────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-4">
+    <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col items-center justify-center px-4 relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-bold mb-1">LoudQuiz</h1>
-          <p className="text-gray-400 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             Комната{" "}
-            <span className="font-mono font-bold text-blue-300">{roomId}</span>
+            <span className="font-mono font-bold text-indigo-600 dark:text-blue-300">{roomId}</span>
           </p>
         </div>
 
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Ваше имя</label>
+          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Ваше имя</label>
           <input
             type="text"
             value={name}
@@ -1951,14 +1970,14 @@ export default function PlayerPage() {
             placeholder="Введите имя"
             maxLength={30}
             autoFocus
-            className="w-full bg-gray-800 text-white rounded px-3 py-3 text-lg border border-gray-600 focus:outline-none focus:border-blue-500 text-center"
+            className="w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg px-3 py-3 text-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-center"
           />
         </div>
 
         <button
           onClick={handleJoin}
           disabled={!name.trim()}
-          className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded font-semibold text-lg transition-colors"
+          className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-all"
         >
           Войти как игрок
         </button>
@@ -1966,7 +1985,7 @@ export default function PlayerPage() {
         <button
           onClick={() => connectToRoom(name.trim() || "Зритель", "spectator")}
           disabled={!name.trim()}
-          className="w-full py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm text-gray-300 transition-colors"
+          className="w-full py-2 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm text-slate-600 dark:text-slate-300 shadow-sm transition-all"
         >
           Смотреть (зритель)
         </button>
@@ -1990,11 +2009,10 @@ function PlayerTimerDisplay({
   return (
     <div
       className={`text-5xl font-mono font-bold text-center ${
-        isWarning ? "text-red-400 animate-pulse" : "text-white"
+        isWarning ? "text-red-500 dark:text-red-400 animate-pulse" : "text-slate-900 dark:text-white"
       }`}
     >
       {seconds}
     </div>
   );
 }
-

@@ -3,12 +3,17 @@ import HomePage from "./pages/HomePage";
 import ConstructorPage from "./pages/ConstructorPage";
 import PlayerPage from "./pages/PlayerPage";
 import HostPage from "./pages/HostPage";
+import RulesPage from "./pages/RulesPage";
 
 export const router = createBrowserRouter(
   [
     {
       path: "/",
       element: <HomePage />,
+    },
+    {
+      path: "/rules",
+      element: <RulesPage />,
     },
     {
       path: "/constructor",

@@ -8,6 +8,11 @@ import type { PlayerToHostMsg, BlitzTaskPublic } from "../game/messages";
 import { QuestionTable } from "../components/shared/QuestionTable";
 import { ThemeToggle } from "../components/shared/ThemeToggle";
 import { vibrate, VIBRATION_PATTERNS } from "../utils/vibrate";
+import { PlayerAvatar } from "../components/shared/PlayerAvatar";
+import { motion } from "framer-motion";
+import { StickerWithAvatar } from "../components/shared/StickerWithAvatar";
+import { Stamp } from "../components/shared/Stamp";
+import { pickStampText } from "../components/shared/stampTexts";
 
 const sessionKey = (roomId: string) => `player:${roomId}`;
 
@@ -86,6 +91,30 @@ export default function PlayerPage() {
   // null = not kicked, "host" = kicked by host, "duplicate" = duplicate session
   const [kickReason, setKickReason] = useState<null | "host" | "duplicate">(null);
 
+  // Мок-инъекция для скриншотов (только в dev-режиме)
+  useEffect(() => {
+    function applyMock() {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mock = (window as any).__MOCK_PLAYER_STATE__;
+      if (!mock) return;
+      setGameState(mock.gameState);
+      setStatus("connected");
+      setName(mock.playerName ?? "Игрок");
+      setLocalRole(mock.localRole ?? "player");
+      if (mock.captainInfo) setCaptainInfo(mock.captainInfo);
+      if (mock.blitzCaptainItem) setBlitzCaptainItem(mock.blitzCaptainItem);
+      if (mock.answerSent) setAnswerSent(true);
+      if (mock.blitzAnswerSent) setBlitzAnswerSent(true);
+      if (mock.readySent) setReadySent(true);
+      if (mock.blitzTaskList) setBlitzTaskList(mock.blitzTaskList);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__MOCK_APPLIED__ = true;
+    }
+    applyMock();
+    window.addEventListener("__applyMock", applyMock);
+    return () => window.removeEventListener("__applyMock", applyMock);
+  }, []);
+
   function sendMsg(msg: PlayerToHostMsg) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (clientRef.current as any)?.send(msg);
@@ -118,6 +147,10 @@ export default function PlayerPage() {
         vibrate(VIBRATION_PATTERNS.ANSWER_TIME);
       } else if (phase === "round-result" || phase === "blitz-result") {
         vibrate(VIBRATION_PATTERNS.RESULT);
+      }
+      // Reset noIdeasSent when entering topic-suggest (fixes bug on game restart)
+      if (phase === "topic-suggest") {
+        setNoIdeasSent(false);
       }
       // Clear captain info when leaving captain phases
       if (!phase.includes("active") && !phase.includes("answer") && !phase.includes("pick")) {
@@ -490,47 +523,49 @@ export default function PlayerPage() {
             ? "Команды несбалансированы"
             : null;
 
+      const myTeamColor = ownPlayer?.teamId === "red" ? "text-red-500 dark:text-red-400" : ownPlayer?.teamId === "blue" ? "text-blue-500 dark:text-blue-400" : "text-white";
+      const isRedActive = ownPlayer?.teamId === "red";
+      const isBlueActive = ownPlayer?.teamId === "blue";
+
       return (
-        <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-6">
+        <div className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5 pb-24 relative">
           <div className="text-center">
             <h1 className="text-2xl font-bold">LoudQuiz</h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm">
               Комната{" "}
               <span className="font-mono font-bold text-indigo-600 dark:text-blue-300">{roomId}</span>
             </p>
-            <p className="text-lg font-medium mt-2">{myName}</p>
           </div>
 
+          {/* Player name + large avatar */}
+          <div className="flex flex-col items-center gap-3">
+            <p className={`text-lg font-semibold ${isOneTeam ? "text-slate-900 dark:text-white" : myTeamColor}`}>{myName}</p>
+            <PlayerAvatar
+              name={myName || "?"}
+              emoji={ownPlayer?.emoji}
+              teamId={isOneTeam ? undefined : ownPlayer?.teamId}
+              size="xl"
+              onClick={() => sendMsg({ type: "changeEmoji" })}
+            />
+            <p className="text-xs text-slate-400 dark:text-slate-500">Нажмите, чтобы сменить иконку</p>
+          </div>
+
+          {/* Team selection */}
           {!isSpectator && !isOneTeam && (
             <div className="space-y-3">
-              {ownPlayer?.teamId && (
-                <p className="text-center text-sm text-slate-500 dark:text-slate-400">
-                  Вы в команде:{" "}
-                  <span
-                    className={
-                      ownPlayer.teamId === "red"
-                        ? "text-red-500 dark:text-red-400 font-bold"
-                        : "text-blue-500 dark:text-blue-400 font-bold"
-                    }
-                  >
-                    {ownPlayer.teamId === "red" ? "Красных" : "Синих"}
-                  </span>
-                </p>
-              )}
               {!ownPlayer?.teamId && (
                 <p className="text-center text-sm text-amber-600 dark:text-yellow-400">Выберите команду</p>
               )}
-
-              <div className="flex gap-3">
+              <div className="flex gap-3 items-stretch">
                 <button
                   onClick={() => sendMsg({ type: "setTeam", teamId: "red" })}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-semibold transition-all"
+                  className={`py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-semibold transition-all duration-300 ${isRedActive ? "flex-[2] shadow-lg shadow-red-500/30" : "flex-1"}`}
                 >
                   Красные
                 </button>
                 <button
                   onClick={() => sendMsg({ type: "setTeam", teamId: "blue" })}
-                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition-all"
+                  className={`py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition-all duration-300 ${isBlueActive ? "flex-[2] shadow-lg shadow-blue-500/30" : "flex-1"}`}
                 >
                   Синие
                 </button>
@@ -539,7 +574,7 @@ export default function PlayerPage() {
                 onClick={() => sendMsg({ type: "setTeam", teamId: null })}
                 className="w-full py-2 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-600 dark:text-slate-300 shadow-sm transition-all"
               >
-                Смотреть (зритель)
+                Я только посмотрю
               </button>
             </div>
           )}
@@ -552,90 +587,93 @@ export default function PlayerPage() {
             <p className="text-center text-slate-500 dark:text-slate-400 text-sm">Режим зрителя</p>
           )}
 
+          {/* Player lists — 2 columns */}
           <div className="space-y-3 text-sm">
             {isOneTeam ? (
               allPlayers.length > 0 && (
                 <div>
-                  <p className="text-emerald-600 dark:text-green-400 font-semibold mb-1">Игроки ({allPlayers.length}):</p>
-                  <ul className="space-y-1">
+                  <p className="font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Игроки ({allPlayers.length})</p>
+                  <div className="grid grid-cols-2 gap-1.5">
                     {allPlayers.map((p) => (
-                      <li key={p.id} className="bg-emerald-50 dark:bg-green-900/20 rounded px-3 py-1">
-                        {p.name}
-                      </li>
+                      <div key={p.id} className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-800/60 rounded-lg px-2 py-1.5">
+                        <PlayerAvatar name={p.name} emoji={p.emoji} teamId={null} size="sm" />
+                        <span className="truncate text-slate-800 dark:text-slate-200">{p.name}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )
             ) : (
-              <>
-                {redPlayers.length > 0 && (
-                  <div>
-                    <p className="text-red-500 dark:text-red-400 font-semibold mb-1">Красные:</p>
-                    <ul className="space-y-1">
-                      {redPlayers.map((p) => (
-                        <li key={p.id} className="bg-red-50 dark:bg-red-900/20 rounded px-3 py-1">
-                          {p.name}
-                        </li>
-                      ))}
-                    </ul>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-red-500 dark:text-red-400 font-semibold mb-1.5">Красные ({redPlayers.length})</p>
+                  <div className="space-y-1.5">
+                    {redPlayers.map((p) => (
+                      <div key={p.id} className="flex items-center gap-1.5 bg-red-50 dark:bg-red-900/20 rounded-lg px-2 py-1.5">
+                        <PlayerAvatar name={p.name} emoji={p.emoji} teamId="red" size="sm" />
+                        <span className="truncate text-red-700 dark:text-red-300">{p.name}</span>
+                      </div>
+                    ))}
                   </div>
-                )}
-                {bluePlayers.length > 0 && (
-                  <div>
-                    <p className="text-blue-500 dark:text-blue-400 font-semibold mb-1">Синие:</p>
-                    <ul className="space-y-1">
-                      {bluePlayers.map((p) => (
-                        <li key={p.id} className="bg-blue-50 dark:bg-blue-900/20 rounded px-3 py-1">
-                          {p.name}
-                        </li>
-                      ))}
-                    </ul>
+                </div>
+                <div>
+                  <p className="text-blue-500 dark:text-blue-400 font-semibold mb-1.5">Синие ({bluePlayers.length})</p>
+                  <div className="space-y-1.5">
+                    {bluePlayers.map((p) => (
+                      <div key={p.id} className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg px-2 py-1.5">
+                        <PlayerAvatar name={p.name} emoji={p.emoji} teamId="blue" size="sm" />
+                        <span className="truncate text-blue-700 dark:text-blue-300">{p.name}</span>
+                      </div>
+                    ))}
                   </div>
-                )}
-                {unassigned.length > 0 && (
-                  <div>
-                    <p className="text-amber-600 dark:text-yellow-400 font-semibold mb-1">Не выбрали команду:</p>
-                    <ul className="space-y-1">
-                      {unassigned.map((p) => (
-                        <li key={p.id} className="bg-amber-50 dark:bg-yellow-900/10 rounded px-3 py-1 text-slate-500 dark:text-slate-400">
-                          {p.name}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </>
+                </div>
+              </div>
+            )}
+            {!isOneTeam && unassigned.length > 0 && (
+              <div>
+                <p className="text-amber-600 dark:text-yellow-400 font-semibold mb-1.5">Не выбрали команду ({unassigned.length})</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {unassigned.map((p) => (
+                    <div key={p.id} className="flex items-center gap-1.5 bg-amber-50 dark:bg-yellow-900/10 rounded-lg px-2 py-1.5">
+                      <PlayerAvatar name={p.name} emoji={p.emoji} size="sm" />
+                      <span className="truncate text-slate-500 dark:text-slate-400">{p.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
             {spectators.length > 0 && (
               <div>
-                <p className="text-slate-400 dark:text-slate-500 font-semibold mb-1">Зрители:</p>
-                <ul className="space-y-1">
+                <p className="text-slate-400 dark:text-slate-500 font-semibold mb-1.5">Зрители ({spectators.length})</p>
+                <div className="grid grid-cols-2 gap-1.5">
                   {spectators.map((p) => (
-                    <li key={p.id} className="bg-white dark:bg-slate-800 rounded px-3 py-1 text-slate-400 dark:text-slate-500">
-                      {p.name}
-                    </li>
+                    <div key={p.id} className="flex items-center gap-1.5 bg-white/50 dark:bg-slate-800/40 rounded-lg px-2 py-1.5">
+                      <PlayerAvatar name={p.name} emoji={p.emoji} size="sm" />
+                      <span className="truncate text-slate-400 dark:text-slate-500">{p.name}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
           </div>
 
-          {!isSpectator && (
-            <div className="space-y-2">
-              <button
-                onClick={() => sendMsg({ type: "startGame" })}
-                disabled={!canStart}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white disabled:bg-slate-100 dark:disabled:bg-slate-700 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-all"
-              >
-                Начать игру
-              </button>
-              {startDisabledReason && (
-                <p className="text-center text-xs text-slate-400 dark:text-slate-500">{startDisabledReason}</p>
-              )}
+          {/* Start game — pinned to bottom */}
+          {!isSpectator ? (
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface/90 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700">
+              <div className="max-w-md mx-auto space-y-1">
+                <button
+                  onClick={() => sendMsg({ type: "startGame" })}
+                  disabled={!canStart}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white disabled:bg-slate-200 disabled:border disabled:border-slate-300 dark:disabled:bg-slate-700 dark:disabled:border-slate-600 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-all"
+                >
+                  Начать игру
+                </button>
+                {startDisabledReason && (
+                  <p className="text-center text-xs text-slate-400 dark:text-slate-500">{startDisabledReason}</p>
+                )}
+              </div>
             </div>
-          )}
-
-          {isSpectator && (
+          ) : (
             <p className="text-center text-slate-400 dark:text-slate-600 text-sm">Ожидание начала игры...</p>
           )}
         </div>
@@ -715,6 +753,13 @@ export default function PlayerPage() {
             </div>
 
             <button
+              onClick={() => vibrate(VIBRATION_PATTERNS.ring)}
+              className="w-full py-3 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600 rounded-lg font-semibold shadow-sm transition-all"
+            >
+              Проверить вибрацию
+            </button>
+
+            <button
               onClick={handleReady}
               disabled={isReady}
               className={`w-full py-3 rounded-lg font-semibold text-lg transition-all ${
@@ -727,15 +772,30 @@ export default function PlayerPage() {
             </button>
           </div>
 
-          <div className="w-full text-sm space-y-1">
-            {gameState.players
-              .filter((p) => p.role === "player")
-              .map((p) => (
-                <div key={p.id} className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                  <span>{p.isReady ? "✅" : "⭕"}</span>
-                  <span className={p.isReady ? "text-emerald-600 dark:text-green-400" : "text-slate-400 dark:text-slate-500"}>{p.name}</span>
+          <div className="w-full text-sm">
+            {(() => {
+              const calPlayers = gameState.players.filter((p) => p.role === "player");
+              const hasTeams = gameState.settings?.teamCount === 2;
+              const col1 = hasTeams ? calPlayers.filter((p) => p.teamId === "red") : calPlayers.filter((_, i) => i % 2 === 0);
+              const col2 = hasTeams ? calPlayers.filter((p) => p.teamId === "blue") : calPlayers.filter((_, i) => i % 2 === 1);
+              const renderP = (p: typeof calPlayers[0]) => (
+                <div key={p.id} className="flex items-center gap-1.5 py-1">
+                  <PlayerAvatar name={p.name} emoji={p.emoji} teamId={p.teamId} size="sm" isReady={p.isReady} />
+                  <span className={`truncate ${
+                    p.teamId === "red" ? "text-red-600 dark:text-red-400"
+                    : p.teamId === "blue" ? "text-blue-600 dark:text-blue-400"
+                    : p.isReady ? "text-emerald-600 dark:text-green-400" : "text-slate-400 dark:text-slate-500"
+                  }`}>{p.name}</span>
+                  <span className="ml-auto">{p.isReady ? "✅" : "⭕"}</span>
                 </div>
-              ))}
+              );
+              return (
+                <div className="grid grid-cols-2 gap-x-3">
+                  <div>{col1.map(renderP)}</div>
+                  <div>{col2.map(renderP)}</div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       );
@@ -1050,27 +1110,6 @@ export default function PlayerPage() {
             )}
           </div>
 
-          {isCaptain && (
-            <>
-              {!teamJokerUsed && !teamJokerActive && (
-                <button
-                  onClick={() => sendMsg({ type: "activateJoker" })}
-                  className="w-full py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg text-sm font-semibold transition-all"
-                >
-                  Активировать Джокер (x2 очки)
-                </button>
-              )}
-              {teamJokerActive && (
-                <div className="bg-amber-50 dark:bg-yellow-900/30 border border-amber-200 dark:border-yellow-700/50 rounded-lg p-2 text-center">
-                  <p className="text-amber-600 dark:text-yellow-400 font-bold text-sm">Джокер активирован!</p>
-                </div>
-              )}
-              {teamJokerUsed && (
-                <p className="text-slate-400 dark:text-slate-600 text-sm text-center">Джокер уже использован</p>
-              )}
-            </>
-          )}
-
           {!isCaptain && teamJokerActive && (
             <div className="bg-amber-50 dark:bg-yellow-900/30 border border-amber-200 dark:border-yellow-700/50 rounded-lg p-2 text-center">
               <p className="text-amber-600 dark:text-yellow-400 font-bold text-sm">Джокер активирован!</p>
@@ -1088,6 +1127,33 @@ export default function PlayerPage() {
             }
             compact
           />
+
+          {/* Joker card — below table */}
+          {isCaptain && (
+            <div className="flex justify-center">
+              {!teamJokerUsed && !teamJokerActive && (
+                <button
+                  onClick={() => sendMsg({ type: "activateJoker" })}
+                  className="flex items-center gap-3 px-6 py-3 bg-amber-50 dark:bg-yellow-900/20 border-2 border-amber-300 dark:border-yellow-600/50 rounded-xl hover:shadow-neon-amber transition-all"
+                >
+                  <span className="text-2xl">🃏</span>
+                  <span className="font-bold text-amber-700 dark:text-yellow-300">бонус ×2</span>
+                </button>
+              )}
+              {teamJokerActive && (
+                <div className="flex items-center gap-3 px-6 py-3 bg-amber-100 dark:bg-yellow-900/40 border-2 border-amber-400 dark:border-yellow-500/60 rounded-xl animate-glow-pulse">
+                  <span className="text-2xl">🃏</span>
+                  <span className="font-bold text-amber-700 dark:text-yellow-300">Джокер активирован!</span>
+                </div>
+              )}
+              {teamJokerUsed && !teamJokerActive && (
+                <div className="flex items-center gap-3 px-6 py-3 bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl opacity-50">
+                  <span className="text-2xl grayscale">🃏</span>
+                  <span className="font-medium text-slate-400 dark:text-slate-500">Джокер использован</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       );
     }
@@ -1309,7 +1375,7 @@ export default function PlayerPage() {
       const scores = gameState.scores;
 
       return (
-        <div key="round-result" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5 animate-fade-in">
+        <div key="round-result" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 pb-24 max-w-md mx-auto gap-5 animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold">Результат раунда</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
@@ -1317,40 +1383,60 @@ export default function PlayerPage() {
 
           {result && (
             <>
-              <div className="bg-white dark:bg-slate-800 rounded-lg p-4">
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Вопрос:</p>
-                <p className="text-slate-900 dark:text-white font-semibold">{result.questionText}</p>
+              {/* Secret card with correct answer */}
+              <div className="relative bg-slate-800 dark:bg-slate-900 rounded-xl p-5 border-2 border-dashed border-slate-600 dark:border-slate-500 overflow-hidden">
+                <div className="absolute top-2 right-2 text-[10px] font-bold text-red-500 dark:text-red-400 tracking-widest uppercase opacity-80">СЕКРЕТНО</div>
+                <div className="absolute inset-0 pointer-events-none opacity-5" style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.1) 3px, rgba(255,255,255,0.1) 4px)" }} />
+                <p className="text-white font-semibold text-center relative z-10">{result.questionText}</p>
               </div>
 
-              <div>
-                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">Ответы:</h3>
-                <ul className="space-y-2">
-                  {result.groups.map((g) => {
-                    const groupPlayers = g.playerIds
-                      .map((pid) => gameState.players.find((p) => p.id === pid)?.name ?? pid)
-                      .join(", ");
-                    return (
-                      <li
-                        key={g.id}
-                        className={`rounded-lg border p-3 text-sm flex items-start gap-2 ${
-                          g.accepted
-                            ? "bg-emerald-50 dark:bg-green-900/20 border-emerald-200 dark:border-green-700/50"
-                            : "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800/30"
-                        }`}
+              {/* Answer stickers */}
+              <div className="space-y-4">
+                {result.groups.map((g, i) => {
+                  const player = gameState.players.find((p) => p.id === g.playerIds[0]);
+                  const playerName = player?.name ?? g.playerIds[0];
+                  const playerEmoji = player?.emoji;
+                  const teamId = player?.teamId ?? gameState.activeTeamId ?? undefined;
+                  const rotation = ((i % 3) - 1) * 2;
+                  const stickerColor = teamId === "red" ? "red" : teamId === "blue" ? "blue" : "yellow";
+
+                  return (
+                    <motion.div
+                      key={g.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.3, duration: 0.4 }}
+                    >
+                      <StickerWithAvatar
+                        playerName={playerName}
+                        playerEmoji={playerEmoji}
+                        teamId={teamId}
+                        color={stickerColor as "red" | "blue" | "yellow"}
+                        rotation={rotation}
                       >
-                        <span className="text-lg flex-shrink-0">
-                          {g.accepted ? "✅" : "❌"}
-                        </span>
-                        <div>
-                          <p className="text-slate-900 dark:text-white font-medium">{g.canonicalAnswer}</p>
-                          <p className="text-slate-500 dark:text-slate-400 text-xs">{groupPlayers}</p>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+                        <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">{g.canonicalAnswer || "—"}</p>
+                        {g.note && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-handwritten mt-1">{g.note}</p>
+                        )}
+                        {g.playerIds.length > 1 && (
+                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                            +{g.playerIds.length - 1} {g.playerIds.length - 1 === 1 ? "игрок" : "игрока"}
+                          </p>
+                        )}
+                        <Stamp
+                          text={g.accepted ? `+${result.score}` : pickStampText("incorrect")}
+                          variant={g.accepted ? "correct" : "incorrect"}
+                          animate
+                          delay={i * 0.3 + 0.5}
+                          size="sm"
+                        />
+                      </StickerWithAvatar>
+                    </motion.div>
+                  );
+                })}
               </div>
 
+              {/* Score */}
               <div className="bg-white dark:bg-slate-800 rounded-lg p-4 text-center">
                 <p className="text-slate-500 dark:text-slate-400 text-sm">Очки за раунд:</p>
                 <p className="text-3xl font-bold text-amber-600 dark:text-yellow-400 animate-pop-in">
@@ -1362,7 +1448,7 @@ export default function PlayerPage() {
               </div>
 
               {result.commentary && (
-                <div className="bg-indigo-50 dark:bg-blue-900/20 border border-indigo-200 dark:border-blue-700/30 rounded-lg p-3 text-sm text-indigo-700 dark:text-blue-300">
+                <div className="bg-indigo-50 dark:bg-blue-900/20 border border-indigo-200 dark:border-blue-700/30 rounded-lg p-3 text-sm text-indigo-700 dark:text-blue-300 font-handwritten">
                   {result.commentary}
                 </div>
               )}
@@ -1373,9 +1459,7 @@ export default function PlayerPage() {
             <div className="flex justify-around">
               {Object.entries(scores).map(([teamId, score]) => (
                 <div key={teamId} className="text-center">
-                  <p
-                    className={`font-bold text-lg ${teamId === "red" ? "text-red-500 dark:text-red-400" : "text-blue-500 dark:text-blue-400"}`}
-                  >
+                  <p className={`font-bold text-lg ${teamId === "red" ? "text-red-500 dark:text-red-400" : "text-blue-500 dark:text-blue-400"}`}>
                     {score}
                   </p>
                   <p className="text-slate-400 dark:text-slate-500 text-xs">
@@ -1386,12 +1470,15 @@ export default function PlayerPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => sendMsg({ type: "nextRound" })}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-lg transition-all"
-          >
-            Следующий раунд
-          </button>
+          {/* Fixed bottom button */}
+          <div className="fixed bottom-0 inset-x-0 p-4 bg-surface/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700">
+            <button
+              onClick={() => sendMsg({ type: "nextRound" })}
+              className="w-full max-w-md mx-auto block py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-lg transition-all"
+            >
+              Следующий раунд
+            </button>
+          </div>
         </div>
       );
     }
@@ -1637,10 +1724,13 @@ export default function PlayerPage() {
               Объясняйте жестами, пока команда отвечает по очереди
             </p>
             {blitzCaptainItem ? (
-              <div className="bg-indigo-50 dark:bg-blue-900/40 border border-indigo-200 dark:border-blue-700/60 rounded-xl p-6 text-center">
-                <p className="text-sm text-indigo-600 dark:text-blue-300 mb-2">Слово:</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white">{blitzCaptainItem.text}</p>
-                <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">
+              <div className="relative w-full max-w-xs bg-slate-800 dark:bg-slate-900 rounded-xl p-6 border-2 border-dashed border-slate-600 dark:border-slate-500 overflow-hidden">
+                <div className="absolute top-2 right-2 text-[10px] font-bold text-red-500 dark:text-red-400 tracking-widest uppercase opacity-80">
+                  СЕКРЕТНО
+                </div>
+                <div className="absolute inset-0 pointer-events-none opacity-5" style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.1) 3px, rgba(255,255,255,0.1) 4px)" }} />
+                <p className="text-3xl font-bold text-white text-center font-mono relative z-10">{blitzCaptainItem.text}</p>
+                <p className="text-slate-400 text-sm mt-2 text-center relative z-10">
                   Сложность: {blitzCaptainItem.difficulty}
                 </p>
               </div>
@@ -1778,53 +1868,78 @@ export default function PlayerPage() {
       const scores = gameState.scores;
 
       return (
-        <div key="blitz-result" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 max-w-md mx-auto gap-5 animate-fade-in">
+        <div key="blitz-result" className="min-h-[100dvh] bg-surface text-slate-900 dark:text-white flex flex-col px-4 py-6 pb-24 max-w-md mx-auto gap-5 animate-fade-in">
           <div className="text-center">
             <h2 className="text-2xl font-bold">Результат блица</h2>
             {gameState.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
           </div>
 
+          {/* Secret card with blitz word */}
           {blitzTaskReveal && (
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-4 text-center">
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Слово:</p>
-              <p className="text-3xl font-bold text-slate-900 dark:text-white">{blitzTaskReveal.text}</p>
+            <div className="relative bg-slate-800 dark:bg-slate-900 rounded-xl p-5 border-2 border-dashed border-slate-600 dark:border-slate-500 overflow-hidden">
+              <div className="absolute top-2 right-2 text-[10px] font-bold text-red-500 dark:text-red-400 tracking-widest uppercase opacity-80">СЕКРЕТНО</div>
+              <div className="absolute inset-0 pointer-events-none opacity-5" style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.1) 3px, rgba(255,255,255,0.1) 4px)" }} />
+              <p className="text-3xl font-bold text-white text-center font-mono relative z-10">{blitzTaskReveal.text}</p>
+              <p className="text-slate-400 text-sm text-center mt-1 relative z-10">Сложность: {blitzTaskReveal.difficulty}</p>
             </div>
           )}
 
           {result && (
             <>
-              <div>
-                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">Цепочка:</h3>
-                <ul className="space-y-2">
-                  {result.groups.map((g, i) => {
-                    const playerName =
-                      gameState.players.find((p) => p.id === g.playerIds[0])?.name ??
-                      g.playerIds[0];
-                    return (
-                      <li
-                        key={g.id}
-                        className={`rounded-lg border p-3 text-sm flex items-start gap-2 ${
-                          g.accepted
-                            ? "bg-emerald-50 dark:bg-green-900/20 border-emerald-200 dark:border-green-700/50"
-                            : "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800/30"
-                        }`}
+              {/* Answer chain as stickers */}
+              <div className="space-y-4">
+                {result.groups.map((g, i) => {
+                  const player = gameState.players.find((p) => p.id === g.playerIds[0]);
+                  const playerName = player?.name ?? g.playerIds[0];
+                  const playerEmoji = player?.emoji;
+                  const teamId = player?.teamId ?? gameState.activeTeamId ?? undefined;
+                  const rotation = ((i % 3) - 1) * 2;
+                  const stickerColor = teamId === "red" ? "red" : teamId === "blue" ? "blue" : "yellow";
+
+                  // Determine stamp variant for blitz
+                  const isLateCorrect = !g.accepted && g.note;
+                  const stampVariant = g.accepted ? "correct" as const : isLateCorrect ? "late-correct" as const : "incorrect" as const;
+                  const stampText = g.accepted
+                    ? `+${result.score}`
+                    : isLateCorrect
+                      ? pickStampText("late-correct")
+                      : pickStampText("incorrect");
+
+                  return (
+                    <motion.div
+                      key={g.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.3, duration: 0.4 }}
+                    >
+                      <StickerWithAvatar
+                        playerName={playerName}
+                        playerEmoji={playerEmoji}
+                        teamId={teamId}
+                        color={stickerColor as "red" | "blue" | "yellow"}
+                        rotation={rotation}
                       >
-                        <span className="text-slate-400 dark:text-slate-500 w-5 text-center flex-shrink-0">
-                          {i + 1}.
-                        </span>
-                        <span className="text-lg flex-shrink-0">
-                          {g.accepted ? "✅" : "❌"}
-                        </span>
-                        <div>
-                          <p className="text-slate-900 dark:text-white font-medium">{g.canonicalAnswer}</p>
-                          <p className="text-slate-500 dark:text-slate-400 text-xs">{playerName}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-400 dark:text-slate-500 text-xs font-mono">{i + 1}.</span>
+                          <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">{g.canonicalAnswer || "—"}</p>
                         </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+                        {g.note && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-handwritten mt-1">{g.note}</p>
+                        )}
+                        <Stamp
+                          text={stampText}
+                          variant={stampVariant}
+                          animate
+                          delay={i * 0.3 + 0.5}
+                          size="sm"
+                        />
+                      </StickerWithAvatar>
+                    </motion.div>
+                  );
+                })}
               </div>
 
+              {/* Score */}
               <div className="bg-white dark:bg-slate-800 rounded-lg p-4 text-center">
                 <p className="text-slate-500 dark:text-slate-400 text-sm">Очки за блиц:</p>
                 <p className="text-3xl font-bold text-amber-600 dark:text-yellow-400 animate-pop-in">+{result.score}</p>
@@ -1836,11 +1951,7 @@ export default function PlayerPage() {
             <div className="flex justify-around">
               {Object.entries(scores).map(([teamId, score]) => (
                 <div key={teamId} className="text-center">
-                  <p
-                    className={`font-bold text-lg ${
-                      teamId === "red" ? "text-red-500 dark:text-red-400" : "text-blue-500 dark:text-blue-400"
-                    }`}
-                  >
+                  <p className={`font-bold text-lg ${teamId === "red" ? "text-red-500 dark:text-red-400" : "text-blue-500 dark:text-blue-400"}`}>
                     {score}
                   </p>
                   <p className="text-slate-400 dark:text-slate-500 text-xs">
@@ -1851,12 +1962,15 @@ export default function PlayerPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => sendMsg({ type: "nextRound" })}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-lg transition-all"
-          >
-            Продолжить
-          </button>
+          {/* Fixed bottom button */}
+          <div className="fixed bottom-0 inset-x-0 p-4 bg-surface/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700">
+            <button
+              onClick={() => sendMsg({ type: "nextRound" })}
+              className="w-full max-w-md mx-auto block py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-lg transition-all"
+            >
+              Продолжить
+            </button>
+          </div>
         </div>
       );
     }

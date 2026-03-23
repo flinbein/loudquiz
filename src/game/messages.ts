@@ -19,7 +19,8 @@ export type PlayerToHostMsg =
   | { type: "blitzPickTask"; itemIdx: number }
   | { type: "blitzSubmitAnswer"; answer: string }
   | { type: "surrender" }
-  | { type: "proceed" };
+  | { type: "proceed" }
+  | { type: "changeEmoji" };
 
 export interface BlitzTaskPublic {
   id: string;

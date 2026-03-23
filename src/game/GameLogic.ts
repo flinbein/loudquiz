@@ -18,6 +18,7 @@ import {
   balanceQuestions,
   computeGameStats,
 } from "./scoring";
+import { pickUniqueEmoji } from "./emojiPool";
 
 const TOPIC_SUGGEST_DURATION_MS = 60_000;
 
@@ -215,11 +216,15 @@ export class GameLogic {
               : this.state.settings.teamCount === 1
                 ? "red"
                 : null;
+          const usedEmojis = new Set(
+            this.state.players.map((p) => p.emoji).filter(Boolean) as string[],
+          );
           const playerInfo: PublicPlayerInfo = {
             id: playerId,
             name: msg.name,
             role: msg.role,
             teamId,
+            emoji: pickUniqueEmoji(usedEmojis),
             hasAnswered: false,
             isReady: false,
             wasRecentCaptain: false,
@@ -247,6 +252,25 @@ export class GameLogic {
           ...this.state,
           players: this.state.players.map((p) =>
             p.id === playerId ? { ...p, teamId } : p,
+          ),
+        };
+        this.broadcastState();
+        return null;
+      }
+
+      case "changeEmoji": {
+        if (this.state.phase !== "lobby") return null;
+        const usedEmojis = new Set(
+          this.state.players
+            .filter((p) => p.id !== playerId)
+            .map((p) => p.emoji)
+            .filter(Boolean) as string[],
+        );
+        const newEmoji = pickUniqueEmoji(usedEmojis);
+        this.state = {
+          ...this.state,
+          players: this.state.players.map((p) =>
+            p.id === playerId ? { ...p, emoji: newEmoji } : p,
           ),
         };
         this.broadcastState();
@@ -297,6 +321,8 @@ export class GameLogic {
         ];
         this.state = { ...this.state, suggestions: this.suggestionsList };
         this.broadcastState();
+        // Auto-complete when all active players have sent 3 ideas
+        this.checkAllSuggestedMax();
         return null;
       }
 
@@ -742,6 +768,15 @@ export class GameLogic {
     }
   }
 
+  private checkAllSuggestedMax(): void {
+    if (this.state.phase !== "topic-suggest") return;
+    const active = this.activeNonSpectators();
+    if (active.length === 0) return;
+    if (active.every((p) => (this.suggestCounts.get(p.id) ?? 0) >= 3)) {
+      this.endTopicSuggestEarly();
+    }
+  }
+
   private transitionFromCalibration(): void {
     // Blitz mode always goes to question-setup (no topic-suggest needed)
     if (this.state.settings.gameMode === "blitz") {
@@ -983,17 +1018,21 @@ export class GameLogic {
         playerAnswers,
       });
 
-      const groups: AnswerGroup[] = result.groups.map((g) => ({
-        ...g,
-        playerIds: g.playerIds.map((label) => {
+      const groups: AnswerGroup[] = result.groups.map((g) => {
+        const resolvedIds = g.playerIds.map((label) => {
           const match = /^Игрок\s+(\d+)$/.exec(label);
           if (match) {
             const idx = parseInt(match[1]) - 1;
             return playerAnswerPairs[idx]?.playerId ?? label;
           }
           return label;
-        }),
-      }));
+        });
+        const rawAnswers: Record<string, string> = {};
+        for (const pid of resolvedIds) {
+          rawAnswers[pid] = this.state.allAnswers[pid] ?? "";
+        }
+        return { ...g, playerIds: resolvedIds, rawAnswers };
+      });
 
       this.state = { ...this.state, isAutoReviewing: false };
       this.finalizeRound(groups, result.commentary);
@@ -1038,9 +1077,20 @@ export class GameLogic {
       commentary,
     };
 
+    const captainPlayer = this.state.players.find((p) => p.id === this.state.captainId);
+    const allAnswered = groups.length > 0 && groups.every((g) => g.accepted || g.playerIds.length > 0);
     const questionHistory = [
       ...(this.state.questionHistory ?? []),
-      { questionId: q?.id ?? "", teamId: activeTeam, score },
+      {
+        questionId: q?.id ?? "",
+        teamId: activeTeam,
+        score,
+        captainId: this.state.captainId ?? undefined,
+        captainEmoji: captainPlayer?.emoji,
+        captainName: captainPlayer?.name,
+        jokerUsed: jokerApplied || undefined,
+        allAnswered: allAnswered || undefined,
+      },
     ];
 
     this.state = {

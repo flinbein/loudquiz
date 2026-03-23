@@ -3,6 +3,7 @@ import { PlayerAvatar } from "../shared/PlayerAvatar";
 
 interface AnswerBubbleProps {
   playerName: string;
+  playerEmoji?: string;
   teamId?: string;
   answer: string;
   accepted: boolean;
@@ -12,6 +13,7 @@ interface AnswerBubbleProps {
 
 export function AnswerBubble({
   playerName,
+  playerEmoji,
   teamId,
   answer,
   accepted,
@@ -25,7 +27,7 @@ export function AnswerBubble({
       transition={{ delay: index * 0.3, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="flex items-start gap-3"
     >
-      <PlayerAvatar name={playerName} teamId={teamId} size="md" />
+      <PlayerAvatar name={playerName} emoji={playerEmoji} teamId={teamId} size="md" />
       <div className="flex-1 min-w-0">
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{playerName}</p>
         <div

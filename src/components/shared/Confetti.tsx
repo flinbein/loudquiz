@@ -3,9 +3,10 @@ import confetti from "canvas-confetti";
 
 interface ConfettiProps {
   trigger: boolean;
+  delay?: number;
 }
 
-export function Confetti({ trigger }: ConfettiProps) {
+export function Confetti({ trigger, delay = 0 }: ConfettiProps) {
   const firedRef = useRef(false);
 
   useEffect(() => {
@@ -14,33 +15,36 @@ export function Confetti({ trigger }: ConfettiProps) {
 
     firedRef.current = true;
 
-    // Gold confetti burst from bottom center
-    const duration = 2500;
-    const end = Date.now() + duration;
+    const timeout = setTimeout(() => {
+      const duration = 2500;
+      const end = Date.now() + duration;
 
-    const frame = () => {
-      confetti({
-        particleCount: 3,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0, y: 1 },
-        colors: ["#fbbf24", "#f59e0b", "#d97706", "#fcd34d", "#ffffff"],
-      });
-      confetti({
-        particleCount: 3,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1, y: 1 },
-        colors: ["#fbbf24", "#f59e0b", "#d97706", "#fcd34d", "#ffffff"],
-      });
+      const frame = () => {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 1 },
+          colors: ["#fbbf24", "#f59e0b", "#d97706", "#fcd34d", "#ffffff"],
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 1 },
+          colors: ["#fbbf24", "#f59e0b", "#d97706", "#fcd34d", "#ffffff"],
+        });
 
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    };
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      };
 
-    frame();
-  }, [trigger]);
+      frame();
+    }, delay);
+
+    return () => clearTimeout(timeout);
+  }, [trigger, delay]);
 
   return null;
 }

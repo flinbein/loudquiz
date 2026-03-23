@@ -61,6 +61,7 @@ export interface PublicPlayerInfo {
   name: string;
   role: "player" | "spectator";
   teamId: string | null;
+  emoji?: string;
   hasAnswered: boolean;
   isReady: boolean;
   wasRecentCaptain: boolean;
@@ -93,6 +94,7 @@ export interface AnswerGroup {
   canonicalAnswer: string;
   playerIds: string[];
   note?: string | null;
+  rawAnswers?: Record<string, string>;
 }
 
 export interface GameStats {
@@ -133,7 +135,16 @@ export interface PublicGameState {
   blitzTaskReveal?: { text: string; difficulty: number };
   gameStats?: GameStats;
   publicBlitzTasks?: Array<{ id: string; itemDifficulties: number[]; used: boolean; word?: string }>;
-  questionHistory?: Array<{ questionId: string; teamId: string; score: number }>;
+  questionHistory?: Array<{
+    questionId: string;
+    teamId: string;
+    score: number;
+    captainId?: string;
+    captainEmoji?: string;
+    captainName?: string;
+    jokerUsed?: boolean;
+    allAnswered?: boolean;
+  }>;
 }
 
 export interface CaptainPrivateInfo {

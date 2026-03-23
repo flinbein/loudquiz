@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "../shared/ThemeToggle";
 import { AnimatedScore } from "../shared/AnimatedScore";
 
 interface HostLayoutProps {
   roomId: string;
+  roomUrl?: string;
   modeLabel: string;
   teamsLabel: string;
   hostLabel: string;
@@ -14,6 +18,7 @@ interface HostLayoutProps {
 
 export function HostLayout({
   roomId,
+  roomUrl,
   modeLabel,
   teamsLabel,
   hostLabel,
@@ -21,6 +26,9 @@ export function HostLayout({
   sidebar,
   children,
 }: HostLayoutProps) {
+  const [showQR, setShowQR] = useState(false);
+  const url = roomUrl || `${window.location.origin}/${roomId}`;
+
   return (
     <div className="min-h-[100dvh] bg-game text-slate-900 dark:text-white">
       {/* Header */}
@@ -41,7 +49,12 @@ export function HostLayout({
           <span>·</span>
           <span>{hostLabel}</span>
           <span>·</span>
-          <span className="font-mono text-indigo-600 dark:text-indigo-400">{roomId}</span>
+          <button
+            onClick={() => setShowQR(true)}
+            className="font-mono text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+          >
+            {roomId}
+          </button>
           <span>·</span>
           <div className="flex gap-3">
             {Object.entries(scores).map(([teamId, score]) => (
@@ -60,6 +73,49 @@ export function HostLayout({
           <ThemeToggle />
         </div>
       </header>
+
+      {/* QR Popup */}
+      <AnimatePresence>
+        {showQR && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowQR(false)}
+          >
+            <motion.div
+              className="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-2xl relative max-w-sm w-full mx-4 flex flex-col items-center gap-4"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowQR(false)}
+                className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl leading-none transition-colors"
+              >
+                &times;
+              </button>
+              <div className="bg-white p-4 rounded-xl">
+                <QRCodeSVG value={url} size={240} />
+              </div>
+              <p className="text-4xl font-mono font-bold tracking-widest text-slate-900 dark:text-white">
+                {roomId}
+              </p>
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline break-all text-center"
+              >
+                {url}
+              </a>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Content */}
       <main className="p-6 max-w-6xl mx-auto">

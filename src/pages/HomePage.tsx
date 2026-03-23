@@ -318,6 +318,12 @@ export default function HomePage() {
         >
           Редактор вопросов
         </Link>
+        <Link
+          to="/rules"
+          className="py-3 text-center text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-sm font-medium transition-colors"
+        >
+          Правила игры
+        </Link>
       </div>
     </div>
   );

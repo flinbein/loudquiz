@@ -40,6 +40,7 @@ export function TeamStatusBlock({
           >
             <PlayerAvatar
               name={p.name}
+              emoji={p.emoji}
               teamId={p.teamId}
               isCaptain={isCaptain}
               isOnline={p.online}

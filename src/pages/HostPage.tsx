@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { useParams, Link } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { Players } from "@flinbein/varhub-web-client";
@@ -15,11 +16,14 @@ import { HostSidebar } from "../components/host/HostSidebar";
 import { CircularTimer } from "../components/shared/CircularTimer";
 import { Equalizer } from "../components/shared/Equalizer";
 import { AnswerBubble } from "../components/host/AnswerBubble";
-import { EnvelopeReveal } from "../components/host/EnvelopeReveal";
 import { Confetti } from "../components/shared/Confetti";
 import { LEDScore } from "../components/shared/LEDScore";
 import { PlayerAvatar } from "../components/shared/PlayerAvatar";
-import type { FullGameState, QuestionsFile, AnswerGroup, PublicPlayerInfo } from "../game/types";
+import { Sticker } from "../components/shared/Sticker";
+import { StickerWithAvatar } from "../components/shared/StickerWithAvatar";
+import { Stamp } from "../components/shared/Stamp";
+import { pickStampText } from "../components/shared/stampTexts";
+import type { FullGameState, QuestionsFile, AnswerGroup, PublicPlayerInfo, GameSettings } from "../game/types";
 import type { PlayerToHostMsg } from "../game/messages";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -89,12 +93,31 @@ export default function HostPage() {
   const [ringVolume, setRingVolumeState] = useState(() => audioManager.getRingVolume());
 
   // Envelope animation state
-  const [showEnvelope, setShowEnvelope] = useState(false);
-  const lastEnvelopeQuestionRef = useRef<string | null>(null);
 
   // Review state: groups built from allAnswers when entering round-review
   const [reviewGroups, setReviewGroups] = useState<AnswerGroup[]>([]);
   const reviewInitializedForRef = useRef<string | null>(null); // questionId
+
+  // Мок-инъекция для скриншотов (только в dev-режиме)
+  const [mockMode, setMockMode] = useState(false);
+  const [mockSettings, setMockSettings] = useState<GameSettings | null>(null);
+  useEffect(() => {
+    function applyMock() {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mock = (window as any).__MOCK_HOST_STATE__;
+      if (!mock) return;
+      setMockMode(true);
+      setGameState(mock.gameState);
+      if (mock.questionsPreview) setQuestionsPreview(mock.questionsPreview);
+      if (mock.reviewGroups) setReviewGroups(mock.reviewGroups);
+      if (mock.settings) setMockSettings(mock.settings);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__MOCK_APPLIED__ = true;
+    }
+    applyMock();
+    window.addEventListener("__applyMock", applyMock);
+    return () => window.removeEventListener("__applyMock", applyMock);
+  }, []);
 
   // Create GameLogic once
   useEffect(() => {
@@ -262,18 +285,6 @@ export default function HostPage() {
     }
   }, [gameState?.phase]);
 
-  // Trigger envelope animation on round-active
-  useEffect(() => {
-    if (!gameState) return;
-    if (gameState.phase === "round-active") {
-      const qId = gameState.currentRound?.questionId;
-      if (qId && lastEnvelopeQuestionRef.current !== qId) {
-        lastEnvelopeQuestionRef.current = qId;
-        setShowEnvelope(true);
-      }
-    }
-  }, [gameState?.phase, gameState?.currentRound?.questionId]);
-
   // Initialize review groups when entering round-review
   useEffect(() => {
     if (!gameState) return;
@@ -297,11 +308,12 @@ export default function HostPage() {
       canonicalAnswer: allAnswers[p.id] ?? "",
       playerIds: [p.id],
       note: null,
+      rawAnswers: { [p.id]: allAnswers[p.id] ?? "" },
     }));
     setReviewGroups(groups);
   }, [gameState?.phase, gameState?.currentRound?.questionId]);
 
-  if (!stored) {
+  if (!stored && !mockMode) {
     return (
       <div className="min-h-[100dvh] bg-game text-slate-900 dark:text-white flex flex-col items-center justify-center gap-4">
         <p className="text-xl text-slate-500 dark:text-slate-400">Комната не найдена</p>
@@ -335,7 +347,7 @@ export default function HostPage() {
   }
 
   const roomUrl = buildRoomUrl(roomId!);
-  const { settings } = stored;
+  const settings = mockSettings ?? stored!.settings;
 
   const modeLabel =
     settings.gameMode === "standard"
@@ -353,7 +365,9 @@ export default function HostPage() {
   const bluePlayers = players.filter((p) => p.teamId === "blue");
   const spectators = players.filter((p) => p.role === "spectator");
   const unassigned = players.filter((p) => p.teamId === null && p.role === "player");
-  const activePlayers = gameLogicRef.current?.activePlayers() ?? [];
+  const activePlayers = mockMode
+    ? (gameState?.players.filter(p => p.teamId !== null) ?? [])
+    : (gameLogicRef.current?.activePlayers() ?? []);
 
   function handleStartGame() {
     gameLogicRef.current?.startGame();
@@ -371,12 +385,10 @@ export default function HostPage() {
     void audioManager.playRing();
   }
 
-  function handleQuestionsFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function processQuestionsFile(file: File) {
     setQuestionsError(null);
     setQuestionsPreview(null);
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const isBlitzMode = stored?.settings.gameMode === "blitz";
+    const isBlitzMode = settings.gameMode === "blitz";
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
@@ -398,6 +410,22 @@ export default function HostPage() {
       }
     };
     reader.readAsText(file);
+  }
+
+  function handleQuestionsFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) processQuestionsFile(file);
+  }
+
+  function handleQuestionsDrop(e: React.DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.name.endsWith(".json")) {
+      processQuestionsFile(file);
+    } else {
+      setQuestionsError("Перетащите файл .json");
+    }
   }
 
   function handleStartWithQuestions() {
@@ -448,13 +476,13 @@ export default function HostPage() {
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">Код комнаты</p>
               <p className="text-3xl font-mono font-bold tracking-widest">{roomId}</p>
             </div>
-            <p className="text-xs text-slate-400 dark:text-slate-500 max-w-[220px] text-center break-all">{roomUrl}</p>
+            <a href={roomUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline max-w-[220px] text-center break-all">{roomUrl}</a>
           </div>
 
           {/* Players */}
           <div className="flex-1 space-y-4">
             {settings.teamCount === 2 ? (
-              <>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h2 className="text-base font-semibold text-red-500 dark:text-red-400 mb-2">
                     Красные ({redPlayers.length})
@@ -466,18 +494,11 @@ export default function HostPage() {
                       {redPlayers.map((p) => (
                         <div
                           key={p.id}
-                          className={`flex items-center gap-2.5 bg-white/80 dark:bg-slate-800/80 border border-red-200 dark:border-red-800/40 rounded-xl px-3 py-2.5 text-sm animate-slide-up ${!p.online ? "opacity-50" : ""}`}
+                          className={`flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 border border-red-200 dark:border-red-800/40 rounded-xl px-2.5 py-2 text-sm animate-slide-up ${!p.online ? "opacity-50" : ""}`}
                         >
-                          <PlayerAvatar name={p.name} teamId="red" isOnline={p.online} size="sm" />
-                          <span className={`flex-1 font-medium ${!p.online ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-200"}`}>{p.name}</span>
-                          {!p.online && <span className="text-slate-400 dark:text-slate-500 text-xs">офлайн</span>}
-                          <button
-                            onClick={() => handleKickPlayer(p.id)}
-                            className="text-red-400 hover:text-red-500 text-xs transition-all opacity-60 hover:opacity-100"
-                            title="Кикнуть игрока"
-                          >
-                            ✕
-                          </button>
+                          <PlayerAvatar name={p.name} emoji={p.emoji} teamId="red" isOnline={p.online} size="sm" />
+                          <span className={`flex-1 font-medium truncate ${!p.online ? "text-slate-400 dark:text-slate-500" : "text-red-600 dark:text-red-300"}`}>{p.name}</span>
+                          <button onClick={() => handleKickPlayer(p.id)} className="text-red-400 hover:text-red-500 text-xs transition-all opacity-60 hover:opacity-100" title="Кикнуть игрока">✕</button>
                         </div>
                       ))}
                     </div>
@@ -494,48 +515,34 @@ export default function HostPage() {
                       {bluePlayers.map((p) => (
                         <div
                           key={p.id}
-                          className={`flex items-center gap-2.5 bg-white/80 dark:bg-slate-800/80 border border-blue-200 dark:border-blue-800/40 rounded-xl px-3 py-2.5 text-sm animate-slide-up ${!p.online ? "opacity-50" : ""}`}
+                          className={`flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 border border-blue-200 dark:border-blue-800/40 rounded-xl px-2.5 py-2 text-sm animate-slide-up ${!p.online ? "opacity-50" : ""}`}
                         >
-                          <PlayerAvatar name={p.name} teamId="blue" isOnline={p.online} size="sm" />
-                          <span className={`flex-1 font-medium ${!p.online ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-200"}`}>{p.name}</span>
-                          {!p.online && <span className="text-slate-400 dark:text-slate-500 text-xs">офлайн</span>}
-                          <button
-                            onClick={() => handleKickPlayer(p.id)}
-                            className="text-red-400 hover:text-red-500 text-xs transition-all opacity-60 hover:opacity-100"
-                            title="Кикнуть игрока"
-                          >
-                            ✕
-                          </button>
+                          <PlayerAvatar name={p.name} emoji={p.emoji} teamId="blue" isOnline={p.online} size="sm" />
+                          <span className={`flex-1 font-medium truncate ${!p.online ? "text-slate-400 dark:text-slate-500" : "text-blue-600 dark:text-blue-300"}`}>{p.name}</span>
+                          <button onClick={() => handleKickPlayer(p.id)} className="text-red-400 hover:text-red-500 text-xs transition-all opacity-60 hover:opacity-100" title="Кикнуть игрока">✕</button>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-              </>
+              </div>
             ) : (
               <div>
-                <h2 className="text-base font-semibold text-red-500 dark:text-red-400 mb-2">
-                  Команда ({redPlayers.length})
+                <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  Игроки ({redPlayers.length})
                 </h2>
                 {redPlayers.length === 0 ? (
                   <p className="text-slate-400 dark:text-slate-600 text-sm">Нет игроков</p>
                 ) : (
-                  <div className="space-y-1.5">
+                  <div className="grid grid-cols-2 gap-1.5">
                     {redPlayers.map((p) => (
                       <div
                         key={p.id}
-                        className={`flex items-center gap-2.5 bg-white/80 dark:bg-slate-800/80 border border-red-200 dark:border-red-800/40 rounded-xl px-3 py-2.5 text-sm animate-slide-up ${!p.online ? "opacity-50" : ""}`}
+                        className={`flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/40 rounded-xl px-2.5 py-2 text-sm animate-slide-up ${!p.online ? "opacity-50" : ""}`}
                       >
-                        <PlayerAvatar name={p.name} teamId="red" isOnline={p.online} size="sm" />
-                        <span className={`flex-1 font-medium ${!p.online ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-200"}`}>{p.name}</span>
-                        {!p.online && <span className="text-slate-400 dark:text-slate-500 text-xs">офлайн</span>}
-                        <button
-                          onClick={() => handleKickPlayer(p.id)}
-                          className="text-red-400 hover:text-red-500 text-xs transition-all opacity-60 hover:opacity-100"
-                          title="Кикнуть игрока"
-                        >
-                          ✕
-                        </button>
+                        <PlayerAvatar name={p.name} emoji={p.emoji} teamId={null} isOnline={p.online} size="sm" />
+                        <span className={`flex-1 font-medium truncate ${!p.online ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-200"}`}>{p.name}</span>
+                        <button onClick={() => handleKickPlayer(p.id)} className="text-red-400 hover:text-red-500 text-xs transition-all opacity-60 hover:opacity-100" title="Кикнуть игрока">✕</button>
                       </div>
                     ))}
                   </div>
@@ -548,22 +555,15 @@ export default function HostPage() {
                 <h2 className="text-base font-semibold text-amber-600 dark:text-yellow-400 mb-2">
                   Не выбрали команду ({unassigned.length})
                 </h2>
-                <div className="space-y-1.5">
+                <div className="grid grid-cols-2 gap-1.5">
                   {unassigned.map((p) => (
                     <div
                       key={p.id}
-                      className={`flex items-center gap-2.5 bg-white/80 dark:bg-slate-800/80 border border-amber-200 dark:border-yellow-800/30 rounded-xl px-3 py-2.5 text-sm animate-slide-up ${!p.online ? "opacity-50" : ""}`}
+                      className={`flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 border border-amber-200 dark:border-yellow-800/30 rounded-xl px-2.5 py-2 text-sm animate-slide-up ${!p.online ? "opacity-50" : ""}`}
                     >
-                      <PlayerAvatar name={p.name} isOnline={p.online} size="sm" />
-                      <span className={`flex-1 font-medium ${!p.online ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-200"}`}>{p.name}</span>
-                      {!p.online && <span className="text-slate-400 dark:text-slate-500 text-xs">офлайн</span>}
-                      <button
-                        onClick={() => handleKickPlayer(p.id)}
-                        className="text-red-400 hover:text-red-500 text-xs transition-all opacity-60 hover:opacity-100"
-                        title="Кикнуть игрока"
-                      >
-                        ✕
-                      </button>
+                      <PlayerAvatar name={p.name} emoji={p.emoji} isOnline={p.online} size="sm" />
+                      <span className={`flex-1 font-medium truncate ${!p.online ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-200"}`}>{p.name}</span>
+                      <button onClick={() => handleKickPlayer(p.id)} className="text-red-400 hover:text-red-500 text-xs transition-all opacity-60 hover:opacity-100" title="Кикнуть игрока">✕</button>
                     </div>
                   ))}
                 </div>
@@ -575,22 +575,15 @@ export default function HostPage() {
                 <h2 className="text-base font-semibold text-slate-500 dark:text-slate-400 mb-2">
                   Зрители ({spectators.length})
                 </h2>
-                <div className="space-y-1.5">
+                <div className="grid grid-cols-2 gap-1.5">
                   {spectators.map((p) => (
                     <div
                       key={p.id}
-                      className={`flex items-center gap-2.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/30 rounded-xl px-3 py-2.5 text-sm animate-slide-up ${!p.online ? "opacity-50" : ""}`}
+                      className={`flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/30 rounded-xl px-2.5 py-2 text-sm animate-slide-up ${!p.online ? "opacity-50" : ""}`}
                     >
-                      <PlayerAvatar name={p.name} isOnline={p.online} size="sm" />
-                      <span className={`flex-1 font-medium ${!p.online ? "text-slate-400 dark:text-slate-500" : "text-slate-600 dark:text-slate-400"}`}>{p.name}</span>
-                      {!p.online && <span className="text-slate-400 dark:text-slate-500 text-xs">офлайн</span>}
-                      <button
-                        onClick={() => handleKickPlayer(p.id)}
-                        className="text-red-400 hover:text-red-500 text-xs transition-all opacity-60 hover:opacity-100"
-                        title="Кикнуть игрока"
-                      >
-                        ✕
-                      </button>
+                      <PlayerAvatar name={p.name} emoji={p.emoji} isOnline={p.online} size="sm" />
+                      <span className={`flex-1 font-medium truncate ${!p.online ? "text-slate-400 dark:text-slate-500" : "text-slate-600 dark:text-slate-400"}`}>{p.name}</span>
+                      <button onClick={() => handleKickPlayer(p.id)} className="text-red-400 hover:text-red-500 text-xs transition-all opacity-60 hover:opacity-100" title="Кикнуть игрока">✕</button>
                     </div>
                   ))}
                 </div>
@@ -609,7 +602,7 @@ export default function HostPage() {
             <button
               onClick={handleStartGame}
               disabled={activePlayers.length === 0}
-              className="mt-4 w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-100 dark:disabled:bg-slate-700 disabled:cursor-not-allowed rounded-xl font-semibold text-lg text-white transition-all"
+              className="mt-4 w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed rounded-xl font-semibold text-lg text-white transition-all"
             >
               Начать игру
             </button>
@@ -640,6 +633,7 @@ export default function HostPage() {
 
   const layoutProps = {
     roomId: roomId!,
+    roomUrl,
     modeLabel,
     teamsLabel,
     hostLabel,
@@ -722,26 +716,31 @@ export default function HostPage() {
             {players.filter((p) => p.role === "player").length === 0 ? (
               <p className="text-slate-400 dark:text-slate-600 text-sm">Нет активных игроков</p>
             ) : (
-              <ul className="space-y-2">
-                {players
-                  .filter((p) => p.role === "player")
-                  .map((p) => (
-                    <li
-                      key={p.id}
-                      className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-lg px-4 py-3"
-                    >
-                      <span className="text-xl">{p.isReady ? "✅" : "⭕"}</span>
-                      <span className={p.isReady ? "text-emerald-600 dark:text-green-400" : "text-slate-500 dark:text-slate-400"}>
-                        {p.name}
-                      </span>
-                      {p.teamId && (
-                        <span className="ml-auto">
-                          <TeamBadge teamId={p.teamId} />
-                        </span>
-                      )}
-                    </li>
-                  ))}
-              </ul>
+              (() => {
+                const activePlayers = players.filter((p) => p.role === "player");
+                const hasTeams = settings.teamCount === 2;
+                const col1 = hasTeams ? activePlayers.filter((p) => p.teamId === "red") : activePlayers.filter((_, i) => i % 2 === 0);
+                const col2 = hasTeams ? activePlayers.filter((p) => p.teamId === "blue") : activePlayers.filter((_, i) => i % 2 === 1);
+                const renderPlayer = (p: typeof activePlayers[0]) => (
+                  <li key={p.id} className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg px-3 py-2">
+                    <PlayerAvatar name={p.name} emoji={p.emoji} teamId={p.teamId} size="sm" isReady={p.isReady} />
+                    <span className={`truncate font-medium ${
+                      p.teamId === "red" ? "text-red-600 dark:text-red-400"
+                      : p.teamId === "blue" ? "text-blue-600 dark:text-blue-400"
+                      : p.isReady ? "text-emerald-600 dark:text-green-400" : "text-slate-500 dark:text-slate-400"
+                    }`}>
+                      {p.name}
+                    </span>
+                    <span className="ml-auto text-lg">{p.isReady ? "✅" : "⭕"}</span>
+                  </li>
+                );
+                return (
+                  <div className="grid grid-cols-2 gap-3">
+                    <ul className="space-y-1.5">{col1.map(renderPlayer)}</ul>
+                    <ul className="space-y-1.5">{col2.map(renderPlayer)}</ul>
+                  </div>
+                );
+              })()
             )}
           </div>
         </main>
@@ -779,21 +778,7 @@ export default function HostPage() {
               {suggestions.length === 0 ? (
                 <p className="text-slate-400 dark:text-slate-600 text-sm">Ждём предложений от игроков...</p>
               ) : (
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {suggestions.map((s, i) => {
-                    const player = players.find((p) => p.name === s.playerName);
-                    return (
-                      <AnswerBubble
-                        key={i}
-                        playerName={s.playerName}
-                        teamId={player?.teamId ?? undefined}
-                        answer={s.text}
-                        accepted={true}
-                        index={i}
-                      />
-                    );
-                  })}
-                </div>
+                <SuggestionsGrid suggestions={suggestions} players={players} />
               )}
             </div>
           )}
@@ -850,7 +835,7 @@ export default function HostPage() {
 
     return (
       <HostLayout {...layoutProps}>
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-2xl mx-auto space-y-6 pb-20">
           <h2 className="text-2xl font-bold">
             {isBlitzMode ? "Настройка блица" : "Загрузка вопросов"}
           </h2>
@@ -890,58 +875,73 @@ export default function HostPage() {
             </div>
           )}
 
-          {(!isBlitzMode || !isAI) && (
-            <div>
-              <label className="block text-sm text-slate-500 dark:text-slate-400 mb-2">
-                {isBlitzMode ? "Файл блиц-заданий (JSON с blitzTasks[])" : "Файл вопросов (JSON)"}
-              </label>
+          {(!isBlitzMode || !isAI) && !questionsPreview && (
+            <label
+              className="relative flex flex-col items-center justify-center gap-4 p-10 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-all"
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={handleQuestionsDrop}
+            >
+              <svg className="w-16 h-16 text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+              </svg>
+              <div className="text-center">
+                <p className="text-lg font-semibold text-slate-700 dark:text-slate-200">
+                  {isBlitzMode ? "Загрузите блиц-задания" : "Загрузите вопросы"}
+                </p>
+                <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
+                  Перетащите JSON-файл сюда или нажмите для выбора
+                </p>
+              </div>
               <input
                 type="file"
                 accept=".json"
                 onChange={handleQuestionsFile}
-                className="block w-full text-sm text-slate-600 dark:text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-            </div>
+            </label>
           )}
 
           {questionsError && <p className="text-red-500 dark:text-red-400 text-sm">{questionsError}</p>}
 
           {questionsPreview && (
-            <div>
+            <div className="space-y-4">
               {isBlitzMode ? (
-                <h3 className="text-base font-semibold mb-3 text-slate-600 dark:text-slate-300">
-                  Заданий: {questionsPreview.blitzTasks?.length ?? 0}
-                </h3>
-              ) : (
-                <>
-                  <h3 className="text-base font-semibold mb-3 text-slate-600 dark:text-slate-300">
-                    Предпросмотр ({questionsPreview.topics.length} тем):
+                <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                  <h3 className="text-base font-semibold text-emerald-600 dark:text-green-400">
+                    Заданий: {questionsPreview.blitzTasks?.length ?? 0}
                   </h3>
-                  <table className="w-full text-sm border-collapse">
-                    <thead>
-                      <tr className="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                        <th className="pb-2 pr-4">Тема</th>
-                        <th className="pb-2 text-right">Вопросов</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {questionsPreview.topics.map((t, i) => (
-                        <tr key={i} className="border-b border-slate-100 dark:border-slate-800">
-                          <td className="py-2 pr-4">{t.name}</td>
-                          <td className="py-2 text-right text-slate-500 dark:text-slate-400">{t.questions.length}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </>
+                </div>
+              ) : (
+                <QuestionTable
+                  questionTable={questionsPreview.topics.map((t) => ({
+                    topicName: t.name,
+                    questions: t.questions.map((q) => ({ id: q.id, difficulty: q.difficulty, used: false })),
+                  }))}
+                  compact
+                />
               )}
 
-              <button
-                onClick={handleStartWithQuestions}
-                className="mt-4 w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold text-lg transition-all"
-              >
-                Начать игру
-              </button>
+              <label className="flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-400 cursor-pointer hover:underline">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Загрузить другой файл
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleQuestionsFile}
+                  className="sr-only"
+                />
+              </label>
+
+              <div className="fixed bottom-0 inset-x-0 p-4 bg-surface/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700 z-20">
+                <button
+                  onClick={handleStartWithQuestions}
+                  className="w-full max-w-2xl mx-auto block py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold text-lg transition-all"
+                >
+                  Начать игру
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1071,14 +1071,6 @@ export default function HostPage() {
     const questionTable = publicQuestionTable;
 
     return (
-      <>
-      {showEnvelope && currentRound && (
-        <EnvelopeReveal
-          topicName={currentRound.topicName}
-          difficulty={currentRound.difficulty}
-          onComplete={() => setShowEnvelope(false)}
-        />
-      )}
       <HostLayout
         {...layoutProps}
         sidebar={
@@ -1092,9 +1084,9 @@ export default function HostPage() {
           </HostSidebar>
         }
       >
-        <div className="animate-fade-in space-y-4 relative">
+        <div className="animate-fade-in space-y-4 relative overflow-hidden">
           {/* Equalizer background decoration */}
-          <div className="absolute inset-0 flex items-end justify-center opacity-[0.06] dark:opacity-[0.08] pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 flex items-end justify-center opacity-[0.06] dark:opacity-[0.08] pointer-events-none">
             <Equalizer bars={7} className="h-full w-full text-indigo-500 dark:text-purple-400" />
           </div>
 
@@ -1122,7 +1114,6 @@ export default function HostPage() {
           </div>
         </div>
       </HostLayout>
-      </>
     );
   }
 
@@ -1183,6 +1174,7 @@ export default function HostPage() {
         const merged: AnswerGroup = {
           ...target,
           playerIds: [...target.playerIds, ...source.playerIds],
+          rawAnswers: { ...target.rawAnswers, ...source.rawAnswers },
         };
         return prev.filter((g) => g.id !== sourceId).map((g) => (g.id === targetId ? merged : g));
       });
@@ -1323,35 +1315,21 @@ export default function HostPage() {
 
           {result && (
             <>
-              <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4">
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Вопрос:</p>
-                <p className="text-slate-900 dark:text-white font-semibold">{result.questionText}</p>
+              {/* Secret card — correct answer */}
+              <div className="bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/40 dark:to-purple-900/30 border border-indigo-200 dark:border-indigo-700/40 rounded-xl p-5 text-center">
+                <p className="text-xs text-indigo-500 dark:text-indigo-400 uppercase tracking-wider mb-1">Правильный ответ</p>
+                <p className="text-lg font-bold text-indigo-900 dark:text-indigo-200">{result.questionText}</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{gameState?.currentRound?.difficulty ?? ""} очков</p>
               </div>
 
               {captain && (
                 <p className="text-amber-600 dark:text-yellow-400 text-sm">Капитан: {captain.name}</p>
               )}
 
+              {/* Answer stickers */}
               <div>
                 <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3">Ответы:</h3>
-                <div className="space-y-3">
-                  {result.groups.flatMap((g, gi) =>
-                    g.playerIds.map((pid, pi) => {
-                      const p = players.find((pl) => pl.id === pid);
-                      return (
-                        <AnswerBubble
-                          key={`${g.id}-${pid}`}
-                          playerName={p?.name ?? pid}
-                          teamId={p?.teamId ?? undefined}
-                          answer={g.canonicalAnswer}
-                          accepted={g.accepted}
-                          note={pi === 0 ? g.note : undefined}
-                          index={gi + pi}
-                        />
-                      );
-                    }),
-                  )}
-                </div>
+                <AnswerStickerGrid groups={result.groups} players={players} score={result.score} />
               </div>
 
               <div className={`bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-6 text-center ${result.score === 0 ? "animate-shake" : ""}`}>
@@ -1408,8 +1386,15 @@ export default function HostPage() {
           </div>
 
           {!captainId ? (
-            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-6 text-center">
-              <p className="text-slate-500 dark:text-slate-400">Ждём, кто возьмёт роль капитана...</p>
+            <div className="text-center space-y-4">
+              <svg viewBox="0 0 120 120" className="w-32 h-32 mx-auto opacity-80">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-400 dark:text-yellow-500" />
+                <text x="60" y="45" textAnchor="middle" fontSize="32">🎩</text>
+                <text x="60" y="80" textAnchor="middle" fontSize="12" fill="currentColor" className="text-slate-500 dark:text-slate-400">?</text>
+              </svg>
+              <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-6">
+                <p className="text-slate-500 dark:text-slate-400">Ждём, кто возьмёт роль капитана...</p>
+              </div>
             </div>
           ) : (
             <div className="bg-emerald-50/80 dark:bg-green-900/30 border border-emerald-200 dark:border-green-700/50 rounded-xl p-6 text-center">
@@ -1478,15 +1463,23 @@ export default function HostPage() {
             )}
           </div>
 
-          <div className="space-y-2">
+          <div>
             {availableTasks.length === 0 ? (
               <p className="text-slate-400 dark:text-slate-500 text-sm">Нет доступных заданий</p>
             ) : (
               availableTasks.map((task) => (
-                <div key={task.id} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-3">
-                  <p className="text-slate-500 dark:text-slate-400 text-xs mb-1">
-                    Сложности: {task.items.map((i: { difficulty: number }) => i.difficulty).join(" / ")}
-                  </p>
+                <div key={task.id} className="mb-4">
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {task.items.map((item: { difficulty: number }, idx: number) => {
+                      const teamColor = gameState?.activeTeamId === "blue" ? "blue" as const : "red" as const;
+                      const rotations = [-2, 1, -1.5, 2, -0.5];
+                      return (
+                        <Sticker key={idx} color={teamColor} rotation={rotations[idx % rotations.length]} className="w-24 text-center">
+                          <p className="text-2xl font-bold text-slate-800">{item.difficulty}</p>
+                        </Sticker>
+                      );
+                    })}
+                  </div>
                 </div>
               ))
             )}
@@ -1535,11 +1528,12 @@ export default function HostPage() {
             {gameState?.activeTeamId && <TeamBadge teamId={gameState.activeTeamId} />}
           </div>
 
+          {/* Secret card — blitz word */}
           {blitzTaskReveal && (
-            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 text-center">
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Слово:</p>
-              <p className="text-3xl font-bold text-slate-900 dark:text-white">{blitzTaskReveal.text}</p>
-              <p className="text-slate-400 dark:text-slate-500 text-sm">Сложность: {blitzTaskReveal.difficulty}</p>
+            <div className="bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/40 dark:to-purple-900/30 border border-indigo-200 dark:border-indigo-700/40 rounded-xl p-5 text-center">
+              <p className="text-xs text-indigo-500 dark:text-indigo-400 uppercase tracking-wider mb-1">Правильный ответ</p>
+              <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-200">{blitzTaskReveal.text}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{blitzTaskReveal.difficulty} очков</p>
             </div>
           )}
 
@@ -1547,19 +1541,44 @@ export default function HostPage() {
             <>
               <div>
                 <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3">Цепочка ответов:</h3>
-                <div className="space-y-3">
+                <div className="flex flex-wrap gap-4">
                   {result.groups.map((g, i) => {
                     const p = players.find((pl) => pl.id === g.playerIds[0]);
+                    const teamColor = p?.teamId === "blue" ? "blue" as const : p?.teamId === "red" ? "red" as const : "yellow" as const;
+                    const rotations = [-2, 1.5, -1, 2.5, -0.5, 1];
+                    const stampDelay = 0.3 + i * 0.4;
+                    // blitz: chain-based — if rejected but correct (chain broken), use late-correct
+                    const stampVariant = g.accepted ? "correct" as const : "incorrect" as const;
                     return (
-                      <AnswerBubble
+                      <motion.div
                         key={g.id}
-                        playerName={p?.name ?? g.playerIds[0]}
-                        teamId={p?.teamId ?? undefined}
-                        answer={g.canonicalAnswer}
-                        accepted={g.accepted}
-                        note={g.note}
-                        index={i}
-                      />
+                        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ delay: i * 0.3, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative"
+                      >
+                        <StickerWithAvatar
+                          playerName={p?.name ?? g.playerIds[0]}
+                          playerEmoji={p?.emoji}
+                          teamId={p?.teamId}
+                          color={teamColor}
+                          rotation={rotations[i % rotations.length]}
+                          className="w-44"
+                        >
+                          <p className="font-semibold text-slate-800 text-base">{g.canonicalAnswer || "—"}</p>
+                          {g.note && (
+                            <p className="text-xs font-handwritten text-slate-500 mt-1">{g.note}</p>
+                          )}
+                        </StickerWithAvatar>
+                        <div className="absolute bottom-2 right-2">
+                          <Stamp
+                            text={g.accepted ? pickStampText("correct", result.score) : pickStampText(stampVariant)}
+                            variant={stampVariant}
+                            delay={stampDelay}
+                            size="sm"
+                          />
+                        </div>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -1588,7 +1607,7 @@ export default function HostPage() {
 
     return (
       <HostLayout {...layoutProps}>
-        <Confetti trigger />
+        <Confetti trigger delay={2200} />
         <div className="max-w-2xl mx-auto space-y-6 text-center animate-fade-in">
           <div>
             <div className="text-6xl mb-4 animate-bounce">🏆</div>
@@ -1597,59 +1616,87 @@ export default function HostPage() {
             </h2>
           </div>
 
-          <div className="space-y-4">
+          {/* Teams in a row */}
+          <div className="flex gap-4 justify-center">
             {sortedTeams.map(([teamId, score], i) => (
-              <div
+              <motion.div
                 key={teamId}
-                className={`rounded-xl p-6 border-2 transition-all ${
+                initial={{ opacity: 1 }}
+                animate={i === 0 ? {
+                  boxShadow: [
+                    "0 0 0px rgba(245,180,50,0)",
+                    "0 0 30px rgba(245,180,50,0.4)",
+                    "0 0 15px rgba(245,180,50,0.2)",
+                    "0 0 30px rgba(245,180,50,0.4)",
+                  ],
+                } : {}}
+                transition={i === 0 ? { delay: 2, duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
+                className={`flex-1 max-w-xs rounded-xl p-6 border-2 transition-all ${
                   i === 0
-                    ? "bg-amber-50/80 dark:bg-yellow-900/20 border-amber-400 dark:border-yellow-600/50 shadow-neon-amber"
+                    ? "bg-amber-50/80 dark:bg-yellow-900/20 border-amber-400 dark:border-yellow-600/50"
                     : "bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`font-semibold text-lg ${
-                      teamId === "red" ? "text-red-500 dark:text-red-400" : "text-blue-500 dark:text-blue-400"
-                    }`}
-                  >
-                    {teamId === "red" ? "Красные" : "Синие"}
-                    {i === 0 && <span className="ml-2 text-amber-600 dark:text-yellow-400 inline-block animate-bounce">👑</span>}
-                  </span>
-                  <LEDScore value={score} teamId={teamId} size="md" />
-                </div>
-              </div>
+                <p
+                  className={`font-semibold text-lg mb-2 ${
+                    teamId === "red" ? "text-red-500 dark:text-red-400" : "text-blue-500 dark:text-blue-400"
+                  }`}
+                >
+                  {teamId === "red" ? "Красные" : "Синие"}
+                  {i === 0 && <span className="ml-2 inline-block animate-crown">👑</span>}
+                </p>
+                <AnimatedScore value={score} className="text-4xl font-bold" duration={2000} />
+              </motion.div>
             ))}
           </div>
 
+          {/* Stats stickers */}
           {gameStats && (
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-4 text-left space-y-2">
-              <h3 className="text-slate-500 dark:text-slate-400 text-sm font-semibold mb-3">Статистика:</h3>
+            <div className="flex flex-wrap gap-4 justify-center mt-4">
               {gameStats.topAnswererName && (
-                <p className="text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">Лучший отвечающий: </span>
-                  <span className="text-emerald-600 dark:text-green-400 font-medium">{gameStats.topAnswererName}</span>
-                  {gameStats.topAnswererCount && (
-                    <span className="text-slate-400 dark:text-slate-500 ml-1">({gameStats.topAnswererCount} правильных)</span>
-                  )}
-                </p>
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 2.5, duration: 0.4 }}
+                  className="relative"
+                >
+                  <Sticker color="green" rotation={-2} className="w-48 text-center">
+                    <p className="font-semibold text-slate-800">{gameStats.topAnswererName}</p>
+                    {gameStats.topAnswererCount && (
+                      <p className="text-xs text-slate-500">{gameStats.topAnswererCount} правильных</p>
+                    )}
+                  </Sticker>
+                  <div className="absolute bottom-1 right-1">
+                    <Stamp text="Лучший игрок" variant="correct" delay={3} size="sm" />
+                  </div>
+                </motion.div>
               )}
               {gameStats.topCaptainName && (
-                <p className="text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">Лучший капитан: </span>
-                  <span className="text-amber-600 dark:text-yellow-400 font-medium">{gameStats.topCaptainName}</span>
-                  {gameStats.topCaptainCount && (
-                    <span className="text-slate-400 dark:text-slate-500 ml-1">({gameStats.topCaptainCount} раз)</span>
-                  )}
-                </p>
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 3, duration: 0.4 }}
+                  className="relative"
+                >
+                  <Sticker color="yellow" rotation={1.5} className="w-48 text-center">
+                    <p className="font-semibold text-slate-800">{gameStats.topCaptainName}</p>
+                    {gameStats.topCaptainCount && (
+                      <p className="text-xs text-slate-500">{gameStats.topCaptainCount} раз капитан</p>
+                    )}
+                  </Sticker>
+                  <div className="absolute bottom-1 right-1">
+                    <Stamp text="Лучший капитан" variant="correct" delay={3.5} size="sm" />
+                  </div>
+                </motion.div>
               )}
             </div>
           )}
 
-          <div className="flex gap-3 justify-center">
+          {/* Restart button — pinned */}
+          <div className="pt-4">
             <button
               onClick={() => gameLogicRef.current?.restartGame()}
-              className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold text-lg transition-all"
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold text-lg transition-all"
             >
               Начать заново
             </button>
@@ -1670,6 +1717,167 @@ export default function HostPage() {
 }
 
 // ── Sub-views ─────────────────────────────────────────────────────────────────
+
+function AnswerStickerGrid({ groups, players, score }: { groups: AnswerGroup[]; players: PublicPlayerInfo[]; score: number }) {
+  const [topOfStack, setTopOfStack] = useState<Record<string, number>>({});
+  const rotations = [-2, 1.5, -1, 2.5, -0.5, 1];
+  const perGroupScore = score > 0 ? Math.round(score / groups.filter((g) => g.accepted).length) : 0;
+  let stickerIdx = 0;
+
+  return (
+    <div className="flex flex-wrap gap-4">
+      {groups.map((g, gi) => {
+        const firstPlayer = players.find((pl) => pl.id === g.playerIds[0]);
+        const teamColor = firstPlayer?.teamId === "blue" ? "blue" as const : firstPlayer?.teamId === "red" ? "red" as const : "yellow" as const;
+        const isStack = g.playerIds.length > 1;
+        const currentTop = topOfStack[g.id] ?? 0;
+        const baseIdx = stickerIdx;
+        stickerIdx += g.playerIds.length;
+        const stampDelay = 0.3 + baseIdx * 0.4;
+
+        if (!isStack) {
+          // Single answer — simple sticker
+          const p = firstPlayer;
+          return (
+            <motion.div
+              key={g.id}
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: baseIdx * 0.3, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="relative"
+            >
+              <StickerWithAvatar
+                playerName={p?.name ?? g.playerIds[0]}
+                playerEmoji={p?.emoji}
+                teamId={p?.teamId}
+                color={teamColor}
+                rotation={rotations[baseIdx % rotations.length]}
+                className="w-44"
+              >
+                <p className="font-semibold text-slate-800 text-base">{g.canonicalAnswer || "—"}</p>
+                {g.note && <p className="text-xs font-handwritten text-slate-500 mt-1">{g.note}</p>}
+              </StickerWithAvatar>
+              <div className="absolute bottom-2 right-2">
+                <Stamp
+                  text={g.accepted ? pickStampText("correct", perGroupScore) : pickStampText("incorrect")}
+                  variant={g.accepted ? "correct" : "incorrect"}
+                  delay={stampDelay}
+                  size="sm"
+                />
+              </div>
+            </motion.div>
+          );
+        }
+
+        // Stack of duplicate answers — overlapping cards
+        const orderedPids = [
+          g.playerIds[currentTop],
+          ...g.playerIds.filter((_, i) => i !== currentTop),
+        ];
+
+        return (
+          <motion.div
+            key={g.id}
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: baseIdx * 0.3, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="relative cursor-pointer"
+            style={{ width: 176 + (orderedPids.length - 1) * 6, height: "auto" }}
+            onClick={() => setTopOfStack((prev) => ({ ...prev, [g.id]: ((prev[g.id] ?? 0) + 1) % g.playerIds.length }))}
+            title="Нажмите, чтобы показать следующую карточку"
+          >
+            {orderedPids.map((pid, stackIdx) => {
+              const p = players.find((pl) => pl.id === pid);
+              const isOnTop = stackIdx === 0;
+              return (
+                <div
+                  key={pid}
+                  className="transition-all duration-300"
+                  style={{
+                    position: stackIdx === 0 ? "relative" : "absolute",
+                    top: stackIdx * 4,
+                    left: stackIdx * 6,
+                    zIndex: orderedPids.length - stackIdx,
+                    opacity: isOnTop ? 1 : 0.7,
+                    pointerEvents: isOnTop ? "auto" : "none",
+                  }}
+                >
+                  <StickerWithAvatar
+                    playerName={p?.name ?? pid}
+                    playerEmoji={p?.emoji}
+                    teamId={p?.teamId}
+                    color={teamColor}
+                    rotation={rotations[(baseIdx + stackIdx) % rotations.length]}
+                    className="w-44"
+                  >
+                    <p className="font-semibold text-slate-800 text-base">{(g.rawAnswers?.[pid] ?? g.canonicalAnswer) || "—"}</p>
+                    {isOnTop && g.note && <p className="text-xs font-handwritten text-slate-500 mt-1">{g.note}</p>}
+                  </StickerWithAvatar>
+                  {isOnTop && (
+                    <div className="absolute bottom-2 right-2">
+                      <Stamp
+                        text={g.accepted ? pickStampText("correct", perGroupScore) : pickStampText("incorrect")}
+                        variant={g.accepted ? "correct" : "incorrect"}
+                        delay={stampDelay}
+                        size="sm"
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {/* Stack indicator */}
+            <div className="absolute -top-1 -right-1 bg-indigo-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center z-30">
+              {g.playerIds.length}
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SuggestionsGrid({ suggestions, players }: { suggestions: Array<{ playerName: string; text: string }>; players: PublicPlayerInfo[] }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const prevCountRef = useRef(suggestions.length);
+
+  useEffect(() => {
+    if (suggestions.length > prevCountRef.current && containerRef.current) {
+      containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: "smooth" });
+    }
+    prevCountRef.current = suggestions.length;
+  }, [suggestions.length]);
+
+  const rotations = [-1.5, 1, -0.5, 2, -2, 1.5];
+
+  return (
+    <div ref={containerRef} className="flex flex-wrap gap-3 max-h-96 overflow-y-auto pt-4 pl-4 pr-1 pb-1">
+      {suggestions.map((s, i) => {
+        const player = players.find((p) => p.name === s.playerName);
+        const teamColor = player?.teamId === "blue" ? "blue" as const : player?.teamId === "red" ? "red" as const : "yellow" as const;
+        return (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: i * 0.15, duration: 0.3 }}
+          >
+            <StickerWithAvatar
+              playerName={s.playerName}
+              playerEmoji={player?.emoji}
+              teamId={player?.teamId}
+              color={teamColor}
+              rotation={rotations[i % rotations.length]}
+              className="w-40"
+            >
+              <p className="text-sm text-slate-800">{s.text}</p>
+            </StickerWithAvatar>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
 
 function HostTimer({ endsAt, totalSeconds, label }: { endsAt: number | undefined; totalSeconds: number; label?: string }) {
   const remaining = useTimer(endsAt);
@@ -1705,9 +1913,11 @@ function BlitzActiveView({
           {activeTeamId && <TeamBadge teamId={activeTeamId} />}
         </div>
         <HostTimer endsAt={gameState?.timer?.endsAt} totalSeconds={Math.ceil((gameState?.blitzTotalTimeMs ?? 30000) / 1000)} label="Блиц" />
-        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-8 text-center">
-          <p className="text-slate-400 dark:text-slate-500 text-sm mb-2">Слово капитана:</p>
-          <p className="text-4xl font-bold tracking-widest text-slate-400 dark:text-slate-600">* * *</p>
+        <div className="flex justify-center">
+          <Sticker color={gameState?.activeTeamId === "blue" ? "blue" : "red"} rotation={-1} className="text-center">
+            <p className="text-xs text-slate-500 mb-1">Стоимость задания</p>
+            <p className="text-3xl font-bold text-slate-800">{gameState?.currentRound?.difficulty ?? "?"}</p>
+          </Sticker>
         </div>
       </div>
     </HostLayout>

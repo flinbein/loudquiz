@@ -8,12 +8,12 @@ interface StickerProps {
 }
 
 const colorMap = {
-  yellow: { bg: "bg-yellow-100 dark:bg-yellow-200", tape: "rgba(253,230,138,0.7)" },
-  red:    { bg: "bg-red-100 dark:bg-red-200",       tape: "rgba(254,202,202,0.7)" },
-  blue:   { bg: "bg-blue-100 dark:bg-blue-200",     tape: "rgba(191,219,254,0.7)" },
-  green:  { bg: "bg-green-100 dark:bg-green-200",   tape: "rgba(187,247,208,0.7)" },
-  pink:   { bg: "bg-pink-100 dark:bg-pink-200",     tape: "rgba(251,207,232,0.7)" },
-  white:  { bg: "bg-white dark:bg-slate-100",       tape: "rgba(241,245,249,0.7)" },
+  yellow: { bg: "bg-yellow-200", tape: "rgba(253,230,138,0.7)" },
+  red:    { bg: "bg-red-200",       tape: "rgba(254,202,202,0.7)" },
+  blue:   { bg: "bg-blue-200",     tape: "rgba(191,219,254,0.7)" },
+  green:  { bg: "bg-green-200",   tape: "rgba(187,247,208,0.7)" },
+  pink:   { bg: "bg-pink-200",     tape: "rgba(251,207,232,0.7)" },
+  white:  { bg: "bg-slate-100",       tape: "rgba(241,245,249,0.7)" },
 };
 
 export function Sticker({
@@ -26,7 +26,7 @@ export function Sticker({
 
   return (
     <div
-      className={`relative ${colors.bg} rounded-sm p-4 pt-6 sticker-texture sticker-corner shadow-md ${className}`}
+      className={`relative ${colors.bg} rounded-sm p-6 pt-6 sticker-texture sticker-corner shadow-md ${className}`}
       style={{
         transform: rotation ? `rotate(${rotation}deg)` : undefined,
         boxShadow: "0 2px 8px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.3)",
@@ -36,7 +36,7 @@ export function Sticker({
       <div
         className="absolute -top-1 left-3 right-3 h-3 rounded-sm"
         style={{
-          background: `linear-gradient(90deg, transparent, ${colors.tape} 8%, ${colors.tape} 92%, transparent)`,
+          background: `linear-gradient(180deg, transparent, ${colors.tape} 8%, ${colors.tape} 92%, transparent)`,
           opacity: 0.6,
         }}
       />

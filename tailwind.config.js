@@ -6,6 +6,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Rubik", "system-ui", "sans-serif"],
+        handwritten: ["Caveat", "cursive"],
       },
       colors: {
         surface: {

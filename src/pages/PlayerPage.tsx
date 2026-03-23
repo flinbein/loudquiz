@@ -1414,9 +1414,9 @@ export default function PlayerPage() {
                         color={stickerColor as "red" | "blue" | "yellow"}
                         rotation={rotation}
                       >
-                        <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">{g.canonicalAnswer || "—"}</p>
+                        <p className="font-medium text-slate-800 text-sm">{g.canonicalAnswer || "—"}</p>
                         {g.note && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-handwritten mt-1">{g.note}</p>
+                          <p className="text-xs text-slate-500 font-handwritten mt-1">{g.note}</p>
                         )}
                         {g.playerIds.length > 1 && (
                           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
@@ -1920,11 +1920,10 @@ export default function PlayerPage() {
                         rotation={rotation}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-slate-400 dark:text-slate-500 text-xs font-mono">{i + 1}.</span>
-                          <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">{g.canonicalAnswer || "—"}</p>
+                          <p className="font-medium text-slate-800 text-sm">{g.canonicalAnswer || "—"}</p>
                         </div>
                         {g.note && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-handwritten mt-1">{g.note}</p>
+                          <p className="text-lg text-slate-600  font-handwritten mt-1">{g.note}</p>
                         )}
                         <Stamp
                           text={stampText}

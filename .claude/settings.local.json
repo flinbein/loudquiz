@@ -5,7 +5,8 @@
       "WebFetch(*)",
       "Read(*)",
       "WebSearch",
-      "Agent(*)"
+      "Agent(*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

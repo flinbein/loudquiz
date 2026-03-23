@@ -12,25 +12,22 @@ interface StampProps {
 
 const variantStyles = {
   correct: {
-    border: "border-green-700 dark:border-green-400",
-    text: "text-green-800 dark:text-green-300",
-    bg: "bg-green-700/20 dark:bg-green-500/20",
+    border: "border-green-700",
+    text: "text-green-800",
   },
   incorrect: {
-    border: "border-red-700 dark:border-red-400",
-    text: "text-red-800 dark:text-red-300",
-    bg: "bg-red-700/20 dark:bg-red-500/20",
+    border: "border-red-700",
+    text: "text-red-800",
   },
   "late-correct": {
-    border: "border-slate-800 dark:border-slate-300",
-    text: "text-slate-900 dark:text-slate-200",
-    bg: "bg-slate-800/20 dark:bg-slate-400/20",
+    border: "border-slate-800",
+    text: "text-slate-900",
   },
 };
 
 const sizeStyles = {
-  sm: "px-3 py-1.5 text-[9px] border-2",
-  md: "px-4 py-2 text-xs border-[3px]",
+  sm: "px-1 py-1 text-lg border-2",
+  md: "px-1 py-2 text-md border-[3px]",
 };
 
 export function Stamp({
@@ -49,7 +46,7 @@ export function Stamp({
     </span>
   );
 
-  const className = `inline-flex items-center justify-center rounded-sm ${sizeStyles[size]} ${styles.border} ${styles.bg} ${styles.text} mix-blend-multiply dark:mix-blend-screen font-bold uppercase tracking-wider select-none pointer-events-none`;
+  const className = `inline-flex items-center justify-center rounded-sm ${sizeStyles[size]} ${styles.border} ${styles.text} mix-blend-multiply font-bold uppercase tracking-wider select-none pointer-events-none`;
 
   if (!animate) {
     return (

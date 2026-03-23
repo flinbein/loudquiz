@@ -8,14 +8,12 @@ import { buildRoomUrl } from "../varhub/hubUtils";
 import { GameLogic } from "../game/GameLogic";
 import { audioManager } from "../audio/AudioManager";
 import { QuestionTable } from "../components/shared/QuestionTable";
-import { TeamStatusBlock } from "../components/shared/TeamStatusBlock";
 import { ThemeToggle } from "../components/shared/ThemeToggle";
 import { AnimatedScore } from "../components/shared/AnimatedScore";
 import { HostLayout } from "../components/host/HostLayout";
 import { HostSidebar } from "../components/host/HostSidebar";
 import { CircularTimer } from "../components/shared/CircularTimer";
 import { Equalizer } from "../components/shared/Equalizer";
-import { AnswerBubble } from "../components/host/AnswerBubble";
 import { Confetti } from "../components/shared/Confetti";
 import { LEDScore } from "../components/shared/LEDScore";
 import { PlayerAvatar } from "../components/shared/PlayerAvatar";
@@ -1762,6 +1760,7 @@ function AnswerStickerGrid({ groups, players, score }: { groups: AnswerGroup[]; 
                   text={g.accepted ? pickStampText("correct", perGroupScore) : pickStampText("incorrect")}
                   variant={g.accepted ? "correct" : "incorrect"}
                   delay={stampDelay}
+                  animate
                   size="sm"
                 />
               </div>

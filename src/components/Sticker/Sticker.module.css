@@ -1,0 +1,110 @@
+.sticker {
+  position: relative;
+  padding: 32px 16px 20px;
+  border-radius: 2px;
+  box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.2);
+  cursor: default;
+  /* Crumpled paper texture */
+  background-image: conic-gradient(from 75deg, transparent, rgba(0, 0, 0, 0.04)),
+    conic-gradient(from 200deg, transparent 60%, rgba(0, 0, 0, 0.03)),
+    conic-gradient(from 320deg, transparent 40%, rgba(0, 0, 0, 0.02));
+  background-size: 100% 100%, 80% 80%, 120% 120%;
+  background-position: center, 30% 70%, 60% 20%;
+}
+
+.sticker[data-clickable="true"] {
+  cursor: pointer;
+}
+
+/* Team backgrounds */
+.teamRed { background-color: var(--color-team-red-bg); }
+.teamBlue { background-color: var(--color-team-blue-bg); }
+.teamBeige { background-color: var(--color-team-beige-bg); }
+
+/* Adhesive tape strip */
+.tape {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 60%;
+  height: 20px;
+  background: rgba(255, 255, 200, 0.5);
+  border: 1px solid rgba(200, 200, 150, 0.3);
+  z-index: 1;
+}
+
+/* Folded corner */
+.foldedCorner {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(
+    135deg,
+    transparent 50%,
+    rgba(0, 0, 0, 0.05) 50%,
+    rgba(0, 0, 0, 0.1)
+  );
+  box-shadow: -2px -2px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Player avatar overlay */
+.playerOverlay {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  z-index: 2;
+}
+
+/* Answer text */
+.answerText {
+  font-family: var(--font-handwriting);
+  font-size: 1.3em;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.teamRed .answerText { color: var(--color-team-red-text); }
+.teamBlue .answerText { color: var(--color-team-blue-text); }
+.teamBeige .answerText { color: var(--color-team-beige-text); }
+
+/* AI comment */
+.aiComment {
+  font-family: var(--font-display);
+  font-size: 0.75em;
+  margin-top: var(--spacing-sm);
+  opacity: 0.7;
+  color: var(--color-text-secondary);
+}
+
+/* Stamp */
+.stamp {
+  position: absolute;
+  bottom: 20px;
+  right: 16px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1em;
+  padding: 4px 10px;
+  border: 3px solid;
+  border-radius: 3px;
+  text-transform: uppercase;
+  /* Ink irregularity via mask */
+  mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.85'/%3E%3Crect width='100%25' height='100%25' opacity='0.6'/%3E%3C/svg%3E");
+  mask-size: cover;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.85'/%3E%3Crect width='100%25' height='100%25' opacity='0.6'/%3E%3C/svg%3E");
+  -webkit-mask-size: cover;
+  animation: stampAppear var(--duration-stamp) ease-out forwards;
+}
+
+.stampGreen {
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.stampRed {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}

@@ -16,7 +16,7 @@ Components are pure visual — data comes through props, actions through callbac
 New CSS variables for team-specific backgrounds and text:
 - `--color-team-red-bg` / `--color-team-red-text`
 - `--color-team-blue-bg` / `--color-team-blue-text`
-- `--color-team-neutral-bg` / `--color-team-neutral-text`
+- `--color-team-beige-bg` / `--color-team-beige-text`
 - `--color-envelope` (beige) / `--color-envelope-dark` (dark brown for labels)
 
 ### Animations (shared keyframes in theme.css or dedicated animations.css)
@@ -43,7 +43,7 @@ New CSS variables for team-specific backgrounds and text:
   size: "small" | "medium" | "large";
   emoji: string;
   playerName?: string;
-  team?: "red" | "blue" | "neutral";
+  team?: "red" | "blue" | "beige";
   online?: boolean; // default true
   onClick?: () => void;
 }
@@ -75,9 +75,9 @@ New CSS variables for team-specific backgrounds and text:
   open: boolean;
   label: string;
   paperText?: string;
-  paperColor?: "red" | "blue" | "neutral";
+  paperColor?: "red" | "blue" | "beige";
   active?: boolean;
-  player?: { emoji: string; playerName: string; team: "red" | "blue" | "neutral" };
+  player?: { emoji: string; playerName: string; team: "red" | "blue" | "beige" };
   jokerUsed?: boolean;
   onClick?: () => void;
 }
@@ -111,7 +111,7 @@ New CSS variables for team-specific backgrounds and text:
 ```ts
 {
   active?: boolean;
-  teamColor?: "red" | "blue" | "neutral";
+  teamColor?: "red" | "blue" | "beige";
   text?: string; // default "?"
   onClick?: () => void;
 }
@@ -139,7 +139,7 @@ New CSS variables for team-specific backgrounds and text:
 **Props:**
 ```ts
 {
-  player?: { emoji: string; playerName: string; team: "red" | "blue" | "neutral" };
+  player?: { emoji: string; playerName: string; team: "red" | "blue" | "beige" };
   answerText: string;
   aiComment?: string;
   stampText?: string;
@@ -207,7 +207,7 @@ New CSS variables for team-specific backgrounds and text:
 ```ts
 {
   topic?: string;
-  player?: { emoji: string; playerName: string; team: "red" | "blue" | "neutral" };
+  player?: { emoji: string; playerName: string; team: "red" | "blue" | "beige" };
   difficulty: number;
   questionText: string;
   hidden?: boolean;
@@ -242,16 +242,16 @@ New CSS variables for team-specific backgrounds and text:
     questions: Array<{
       open: boolean;
       active: boolean;
-      player?: { emoji: string; playerName: string; team: "red" | "blue" | "neutral" };
+      player?: { emoji: string; playerName: string; team: "red" | "blue" | "beige" };
       jokerUsed: boolean;
       label: string;
       paperText?: string;
-      paperColor?: "red" | "blue" | "neutral";
+      paperColor?: "red" | "blue" | "beige";
     }>;
   }>;
   blitzRounds: Array<{
     active: boolean;
-    teamColor?: "red" | "blue" | "neutral";
+    teamColor?: "red" | "blue" | "beige";
     text?: string;
   }>;
   onSelectQuestion?: (topicIndex: number, questionIndex: number) => void;
@@ -285,7 +285,7 @@ New CSS variables for team-specific backgrounds and text:
   players: Array<{
     emoji: string;
     playerName: string;
-    team: "red" | "blue" | "neutral";
+    team: "red" | "blue" | "beige";
     online: boolean;
     role: "captain" | "player" | "blitz-player" | "undefined";
     blitzOrder?: number; // 1-10 for blitz-player

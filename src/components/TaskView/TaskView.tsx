@@ -54,34 +54,40 @@ export function TaskView({
       )}
 
       {topics.length > 0 && (
-        <>
+        <div className={styles.questionsArea}>
           {Array.from({ length: maxRows }, (_, row) => (
-            <div key={row} className={styles.grid} style={{ gridTemplateColumns: gridCols }}>
+            <div
+              key={row}
+              className={styles.row}
+              style={{ gridTemplateColumns: gridCols, "--cols": colCount } as React.CSSProperties}
+            >
               {topics.map((topic, ti) => {
                 const q = topic.questions[row];
                 if (!q) return <div key={ti} className={styles.cell} />;
                 return (
                   <div key={ti} className={styles.cell}>
-                    <Envelope
-                      open={q.open}
-                      difficulty={q.difficulty}
-                      totalScore={q.totalScore}
-                      paperColor={q.paperColor}
-                      active={q.active}
-                      player={q.player}
-                      jokerUsed={q.jokerUsed}
-                      onClick={
-                        onSelectQuestion
-                          ? () => onSelectQuestion(ti, row)
-                          : undefined
-                      }
-                    />
+                    <div className={styles.envelopeFit}>
+                      <Envelope
+                        open={q.open}
+                        difficulty={q.difficulty}
+                        totalScore={q.totalScore}
+                        paperColor={q.paperColor}
+                        active={q.active}
+                        player={q.player}
+                        jokerUsed={q.jokerUsed}
+                        onClick={
+                          onSelectQuestion
+                            ? () => onSelectQuestion(ti, row)
+                            : undefined
+                        }
+                      />
+                    </div>
                   </div>
                 );
               })}
             </div>
           ))}
-        </>
+        </div>
       )}
 
       {blitzRounds.length > 0 && (

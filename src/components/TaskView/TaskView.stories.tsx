@@ -59,6 +59,34 @@ export const FullGrid: Story = () => (
   </div>
 );
 
+export const Sizes: Story = () => (
+  <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+    <div style={{ width: 600, height: 600, display: "flex", border: "1px dashed #888" }}>
+      <TaskView topics={topics} blitzRounds={blitz} />
+    </div>
+    <div style={{ width: 400, height: 400, display: "flex", border: "1px dashed #888" }}>
+      <TaskView topics={topics} blitzRounds={blitz} />
+    </div>
+    <div style={{ width: 300, height: 300, display: "flex", border: "1px dashed #888" }}>
+      <TaskView topics={topics} blitzRounds={blitz} />
+    </div>
+  </div>
+);
+
+export const HeightConstrained: Story = () => (
+  <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+    <div style={{ width: 400, height: 800, display: "flex", border: "1px dashed #888" }}>
+      <TaskView topics={topics} blitzRounds={blitz} />
+    </div>
+    <div style={{ width: 400, height: 500, display: "flex", border: "1px dashed #888" }}>
+      <TaskView topics={topics} blitzRounds={blitz} />
+    </div>
+    <div style={{ width: 400, height: 300, display: "flex", border: "1px dashed #888" }}>
+      <TaskView topics={topics} blitzRounds={blitz} />
+    </div>
+  </div>
+);
+
 export const ActiveBlitz: Story = () => (
   <div style={{ width: 400 }}>
     <TaskView
@@ -73,7 +101,7 @@ export const ActiveBlitz: Story = () => (
 );
 
 export const QuestionsOnly: Story = () => (
-  <div style={{ width: 400 }}>
+  <div style={{ width: 400, height: 400, display: "flex", border: "1px dashed #888" }}>
     <TaskView topics={topics} blitzRounds={[]} />
   </div>
 );
@@ -111,7 +139,7 @@ export const WithPlayerAndJoker: Story = () => {
 };
 
 export const Empty: Story = () => (
-  <div style={{ width: 400 }}>
+  <div style={{ width: 400, height: 300, display: "flex", border: "1px dashed #888" }}>
     <TaskView topics={[]} blitzRounds={[]} />
   </div>
 );

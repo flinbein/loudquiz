@@ -47,7 +47,8 @@ export const SingleTeam: Story = () => {
     { emoji: "👻", playerName: "Алексей", team: "red", online: true, role: "captain", status: "waiting" },
     { emoji: "🤖", playerName: "Мария", team: "red", online: true, role: "player", status: "answered" },
     { emoji: "🦊", playerName: "Иван", team: "red", online: true, role: "player", status: "answered" },
-    { emoji: "👽", playerName: "Ольга", team: "red", online: true, role: "player", status: "skipped" },
+    { emoji: "👽", playerName: "Ольга", team: "red", online: true, role: "player", status: "wrong" },
+    { emoji: "🦄", playerName: "Игорь", team: "none", online: true, role: "player", status: "right" },
   ];
   return (
     <div style={{ width: 320 }}>
@@ -65,7 +66,7 @@ export const ManyPlayers: Story = () => {
     team: i < 5 ? "red" as const : "blue" as const,
     online: i !== 4 && i !== 9,
     role: i === 0 ? "captain" as const : "player" as const,
-    status: (["answered", "typing", "waiting", "skipped"] as const)[i % 4],
+    status: (["answered", "typing", "waiting", "wrong", "right"] as const)[i % 5],
   }));
   return (
     <div style={{ width: 320 }}>
@@ -76,8 +77,8 @@ export const ManyPlayers: Story = () => {
 
 export const UndefinedRoles: Story = () => {
   const players: PlayerStatusRow[] = [
-    { emoji: "👻", playerName: "Новый 1", team: "beige", online: true, role: "undefined", status: "waiting" },
-    { emoji: "🤖", playerName: "Новый 2", team: "beige", online: true, role: "undefined", status: "waiting" },
+    { emoji: "👻", playerName: "Новый 1", team: "none", online: true, role: "undefined", status: "waiting" },
+    { emoji: "🤖", playerName: "Новый 2", team: "none", online: true, role: "undefined", status: "waiting" },
   ];
   return (
     <div style={{ width: 320 }}>

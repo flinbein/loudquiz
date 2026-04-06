@@ -1,7 +1,26 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { fileURLToPath, URL } from "url";
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   plugins: [react()],
-  base: mode === "production" ? "/loudquiz/" : "/",
-}));
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+  server: {
+    host: "0.0.0.0",
+  },
+  css: {
+    modules: {
+      localsConvention: "camelCase",
+    },
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["src/test-setup.ts"],
+  },
+});

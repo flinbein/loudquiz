@@ -3,28 +3,28 @@ import styles from "./BlitzBox.module.css";
 
 export interface BlitzBoxProps {
   active?: boolean;
-  teamColor?: TeamColor;
-  text?: string;
+  team?: TeamColor;
+  score?: number | null;
   onClick?: () => void;
 }
 
 const textColorClass: Record<TeamColor, string> = {
   red: styles.textRed,
   blue: styles.textBlue,
-  beige: styles.textBeige,
+  none: styles.textNone,
 };
 
 export function BlitzBox({
   active = false,
-  teamColor,
-  text = "?",
+  team,
+  score,
   onClick,
 }: BlitzBoxProps) {
   const boxCls = [styles.box, active && styles.active]
     .filter(Boolean)
     .join(" ");
 
-  const textCls = [styles.text, teamColor && textColorClass[teamColor]]
+  const textCls = [styles.text, team && textColorClass[team]]
     .filter(Boolean)
     .join(" ");
 
@@ -34,7 +34,16 @@ export function BlitzBox({
       data-clickable={onClick ? "true" : undefined}
       onClick={onClick}
     >
-      <span className={textCls}>{text}</span>
+      <div className={`${styles.plank} ${styles.plankDiag}`}></div>
+      <div className={`${styles.plank} ${styles.plankLeft}`}></div>
+      <div className={`${styles.plank} ${styles.plankRight}`}></div>
+      <div className={`${styles.plank} ${styles.plankBottom}`}></div>
+      <div className={`${styles.plank} ${styles.plankTop}`}></div>
+      <span className={textCls}>
+        {(score == null) ? "?" : (
+          score === 0 ? "—" : `+${score}`
+        )}
+      </span>
     </div>
   );
 }

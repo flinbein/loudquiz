@@ -1,36 +1,70 @@
+.wrapper {
+  display: grid;
+  perspective: 800px;
+}
+
 .card {
+  grid-row: 1;
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  --card-bg-color: var(#ec8);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-md);
   background: linear-gradient(
-    160deg,
-    rgba(255, 255, 255, 0.15) 0%,
+    150deg,
+    transparent -140%,
+    var(--color-taskcard-spot) 0%,
     transparent 40%,
     transparent 100%
-  ), var(--color-bg);
+  ), var(--color-taskcard);
+  background-repeat: no-repeat;
   cursor: default;
+  backface-visibility: hidden;
+  transition: transform var(--duration-open), background-position var(--duration-open);
 }
 
-.card[data-clickable="true"] {
+.card.back {
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+}
+
+.wrapper[data-clickable="true"] .card {
   cursor: pointer;
 }
 
+.wrapper[data-hidden="true"] .card {
+  transform: rotateY(180deg);
+}
+
+.wrapper[data-hidden="true"] .card.back {
+  transform: rotateY(360deg);
+}
+
+
 .header {
-  background: var(--color-team-beige-bg);
+  background: var(--color-taskcard-header);
   padding: var(--spacing-sm) var(--spacing-md);
   text-align: center;
-  font-family: var(--font-display);
+  font-family: var(--font-display), serif;
   font-size: var(--font-size-sm);
   font-weight: 700;
-  color: var(--color-team-beige-text);
+  color: var(--color-team-none-text);
   border-bottom: 1px solid var(--color-border);
 }
 
 .body {
+  flex-grow: 1;
+  justify-content: space-between;
   display: flex;
   padding: var(--spacing-md);
   gap: var(--spacing-md);
   min-height: 80px;
+}
+
+.wrapper .card.back .body {
+  justify-content: center;
 }
 
 .captain {
@@ -51,7 +85,7 @@
 
 .captainNameRed { color: var(--color-team-red); }
 .captainNameBlue { color: var(--color-team-blue); }
-.captainNameBeige { color: var(--color-team-beige); }
+.captainNameNone { color: var(--color-team-none); }
 
 .question {
   flex: 1;
@@ -62,9 +96,10 @@
   word-break: break-word;
 }
 
-.hidden {
+.wrapper[data-hidden="true"] .question {
   color: transparent;
   user-select: none;
+  transition: all var(--duration-open);
 }
 
 .footer {
@@ -72,6 +107,6 @@
   text-align: right;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   color: var(--color-text-secondary);
 }

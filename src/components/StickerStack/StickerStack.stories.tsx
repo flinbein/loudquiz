@@ -7,7 +7,7 @@ const makeSticker = (
   name: string,
   emoji: string,
   answer: string,
-  team: "red" | "blue" | "beige" = "red",
+  team: "red" | "blue" | undefined = "red",
 ): ComponentProps<typeof Sticker> => ({
   player: { emoji, playerName: name, team },
   answerText: answer,
@@ -26,7 +26,7 @@ export const TwoStickers: Story = () => (
     <StickerStack
       stickers={[
         makeSticker("Алексей", "👻", "Гепард"),
-        makeSticker("Мария", "🤖", "Гепард"),
+        makeSticker("Мария", "🤖", "Гепардик"),
       ]}
     />
   </div>
@@ -37,12 +37,12 @@ export const FiveStickers: Story = () => (
     <StickerStack
       stickers={[
         makeSticker("Алексей", "👻", "Гепард"),
-        makeSticker("Мария", "🤖", "Гепард"),
-        makeSticker("Иван", "🦊", "Гепард"),
-        makeSticker("Ольга", "👽", "Гепард"),
-        makeSticker("Пётр", "🐙", "Гепард"),
+        makeSticker("Мария", "🤖", "Гепардик"),
+        makeSticker("Иван", "🦊", "Герпад"),
+        makeSticker("Ольга", "👽", "Геопард"),
+        makeSticker("Пётр", "🐙", "Гипард"),
       ]}
-      onSplit={() => alert("Split!")}
+      onClickBadge={(n) => alert(`Click on Badge, index:${n}`)}
     />
   </div>
 );
@@ -52,8 +52,8 @@ export const MixedTeams: Story = () => (
     <StickerStack
       stickers={[
         makeSticker("Красный", "👻", "Ответ", "red"),
-        makeSticker("Синий", "🤖", "Ответ", "blue"),
-        makeSticker("Бежевый", "🦊", "Ответ", "beige"),
+        makeSticker("Синий", "🤖", "Более развернутый ответ о том же", "blue"),
+        makeSticker("Без команды", "🦊", "Другой ответ", undefined),
       ]}
     />
   </div>

@@ -29,7 +29,7 @@
 
 .nameRed { color: var(--color-team-red); }
 .nameBlue { color: var(--color-team-blue); }
-.nameBeige { color: var(--color-team-beige); }
+.nameNone { color: var(--color-team-none); }
 
 .roleCell {
   flex-shrink: 0;
@@ -64,4 +64,17 @@
 
 .typingDots span:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+@keyframes typingDots {
+  0%, 20% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+    transform: translateY(-3px);
+  }
+  100% {
+    opacity: 1;
+  }
 }

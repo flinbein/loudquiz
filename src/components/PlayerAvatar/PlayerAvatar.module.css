@@ -1,16 +1,29 @@
+.container {
+  user-select: none;
+  container-type: inline-size;
+  aspect-ratio: 1 / 1;
+  height: 100%;
+}
+
+/* Outer ring — border stays colored even when offline */
 .avatar {
+  box-sizing: border-box;
   position: relative;
   border-radius: 50%;
-  overflow: hidden;
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   cursor: default;
-  border: 3px solid var(--color-team-beige);
-  background: var(--color-team-beige-light);
-  user-select: none;
+  border: max(3cqw, 2px) solid var(--color-team-none);
+  transition: transform 300ms linear, all var(--duration-all) ease;
+
+}
+
+.avatar-animate {
+  transform: rotateY(90deg);
+}
+
+.avatar.offline {
+  opacity: 0.5;
 }
 
 .avatar[data-clickable="true"] {
@@ -18,14 +31,28 @@
 }
 
 /* Team border colors */
-.teamRed { border-color: var(--color-team-red); background: var(--color-team-red-light); }
-.teamBlue { border-color: var(--color-team-blue); background: var(--color-team-blue-light); }
-.teamBeige { border-color: var(--color-team-beige); background: var(--color-team-beige-light); }
+.teamRed { border-color: var(--color-team-red); }
+.teamBlue { border-color: var(--color-team-blue); }
+.teamNone { border-color: var(--color-team-none); }
 
-/* Sizes */
-.small { width: 32px; font-size: 28px; border-width: 2px; }
-.medium { width: 48px; font-size: 40px; border-width: 3px; }
-.large { width: 72px; font-size: 60px; border-width: 3px; }
+/* Inner content — gets grayscale when offline */
+.inner {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-team-none-light);
+}
+
+.teamRed .inner { background: var(--color-team-red-light); }
+.teamBlue .inner { background: var(--color-team-blue-light); }
+.teamNone .inner { background: var(--color-team-none-light); }
 
 /* Emoji container */
 .emojiWrap {
@@ -41,44 +68,63 @@
   left: 50%;
   transform: translate(-50%, -50%);
   line-height: 1;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  font-size: 80cqw;
 }
 
-/* Slide animation for emoji change */
+/* Slide animation for emoji change — horizontal */
 .emojiEnter {
-  animation: slideInUp 0.3s ease forwards;
+  animation: slideInRight 0.3s ease forwards;
 }
 
 .emojiExit {
-  animation: slideOutUp 0.3s ease forwards;
+  animation: slideOutLeft 0.3s ease forwards;
 }
 
-/* Name label */
+@keyframes slideOutLeft {
+  from { transform: translate(-50%, -50%); opacity: 1; }
+  to { transform: translate(-150%, -50%); opacity: 0; }
+}
+
+@keyframes slideInRight {
+  from { transform: translate(50%, -50%); opacity: 0; }
+  to { transform: translate(-50%, -50%); opacity: 1; }
+}
+
+/* Name label — centered on the bottom border of avatar */
 .name {
   position: absolute;
-  bottom: 2px;
-  left: 0;
-  right: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 50%);
   text-align: center;
-  font-size: 0.5em;
+  font-size: 30cqw;
   font-weight: 700;
-  color: var(--color-text);
   line-height: 1;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 2px;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 0 0 50% 50%;
+  padding: 1cqw 2cqw;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1cqw solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-sm);
+  color: var(--color-team-none);
+  text-shadow: 0 0 2cqw black;
 }
+
+
+.teamRed .name { color: var(--color-team-red); }
+.teamBlue .name { color: var(--color-team-blue); }
 
 [data-theme="dark"] .name {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(30, 30, 30, 0.5);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* Offline state — grayscale on inner content, border stays */
-.offline .emojiWrap,
-.offline .name {
-  opacity: 0.5;
+/* Offline state — grayscale + dim on inner content, border stays colored */
+.offline .inner {
   filter: grayscale(100%);
+}
+
+@container (width <= 40px) {
+  .name {
+    display: none;
+  }
 }

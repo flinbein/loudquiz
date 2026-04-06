@@ -1,15 +1,15 @@
-import type { TeamColor } from "@/types/game";
-import { Envelope, type EnvelopePlayer } from "@/components/Envelope/Envelope";
+import type { TeamColor, PlayerDisplay } from "@/types/game";
+import { Envelope } from "@/components/Envelope/Envelope";
 import { BlitzBox } from "@/components/BlitzBox/BlitzBox";
 import styles from "./TaskView.module.css";
 
 export interface TaskViewQuestion {
   open: boolean;
   active: boolean;
-  player?: EnvelopePlayer;
+  player?: PlayerDisplay;
   jokerUsed: boolean;
-  label: string;
-  paperText?: string;
+  difficulty: number;
+  totalScore?: number;
   paperColor?: TeamColor;
 }
 
@@ -20,8 +20,8 @@ export interface TaskViewTopic {
 
 export interface TaskViewBlitz {
   active: boolean;
-  teamColor?: TeamColor;
-  text?: string;
+  team?: TeamColor;
+  score?: number;
 }
 
 export interface TaskViewProps {
@@ -64,8 +64,8 @@ export function TaskView({
                   <div key={ti} className={styles.cell}>
                     <Envelope
                       open={q.open}
-                      label={q.label}
-                      paperText={q.paperText}
+                      difficulty={q.difficulty}
+                      totalScore={q.totalScore}
                       paperColor={q.paperColor}
                       active={q.active}
                       player={q.player}
@@ -90,8 +90,8 @@ export function TaskView({
             <div key={bi} className={styles.blitzCell}>
               <BlitzBox
                 active={blitz.active}
-                teamColor={blitz.teamColor}
-                text={blitz.text}
+                team={blitz.team}
+                score={blitz.score}
                 onClick={onSelectBlitz ? () => onSelectBlitz(bi) : undefined}
               />
             </div>

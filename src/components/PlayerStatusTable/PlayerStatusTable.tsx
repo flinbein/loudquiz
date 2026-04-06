@@ -3,7 +3,7 @@ import { PlayerAvatar } from "@/components/PlayerAvatar/PlayerAvatar";
 import styles from "./PlayerStatusTable.module.css";
 
 export type PlayerRole = "captain" | "player" | "blitz-player" | "undefined";
-export type PlayerStatus = "answered" | "skipped" | "typing" | "waiting";
+export type PlayerStatus = "answered" | "wrong" | "right" | "typing" | "waiting";
 
 export interface PlayerStatusRow {
   emoji: string;
@@ -35,8 +35,9 @@ function roleIcon(role: PlayerRole, blitzOrder?: number): string {
 
 function StatusDisplay({ status }: { status: PlayerStatus }) {
   switch (status) {
-    case "answered": return <>✅</>;
-    case "skipped": return <>❌</>;
+    case "answered": return <>✔️</>;
+    case "right": return <>✅</>;
+    case "wrong": return <>❌</>;
     case "typing":
       return (
         <span className={styles.typingDots}>
@@ -52,7 +53,7 @@ function StatusDisplay({ status }: { status: PlayerStatus }) {
 const nameColorClass: Record<TeamColor, string> = {
   red: styles.nameRed,
   blue: styles.nameBlue,
-  beige: styles.nameBeige,
+  none: styles.nameNone,
 };
 
 export function PlayerStatusTable({ players }: PlayerStatusTableProps) {
@@ -62,13 +63,13 @@ export function PlayerStatusTable({ players }: PlayerStatusTableProps) {
         <div key={i} className={styles.row}>
           <div className={styles.avatarCell}>
             <PlayerAvatar
-              size="small"
+              size={30}
               emoji={p.emoji}
               team={p.team}
               online={p.online}
             />
           </div>
-          <div className={`${styles.nameCell} ${nameColorClass[p.team]}`}>
+          <div className={`${styles.nameCell} ${p.team && nameColorClass[p.team]}`}>
             {p.playerName}
           </div>
           <div className={styles.roleCell}>

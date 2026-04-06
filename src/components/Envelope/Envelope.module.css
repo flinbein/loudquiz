@@ -1,0 +1,200 @@
+.envelope {
+  position: relative;
+  margin-top: 40%;
+  display: flex;
+  justify-content: center;
+  aspect-ratio: 3 / 2;
+  z-index: 0;
+  cursor: default;
+  background-color: var(--color-envelope-lid);
+  filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, 0.5));
+  container-type: inline-size;
+}
+
+.envelope[data-clickable="true"] {
+  transition: all var(--duration-all) linear;
+  cursor: pointer;
+}
+.envelope:hover[data-clickable="true"] {
+  transform: translate(-3px, -3px);
+  filter: drop-shadow(6px 6px 6px rgba(0, 0, 0, 0.5));
+}
+
+/* Active state */
+.active {
+  animation:
+    rock var(--duration-rock) ease-in-out infinite,
+    glowPulse var(--duration-rock) ease-in-out infinite;
+  animation-composition: add;
+}
+
+@keyframes rock {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 200, 50, 0.4); }
+  50% { box-shadow: 0 0 16px rgba(255, 200, 50, 0.7); }
+}
+
+/* Lid layers — based on .tmp/envelope.html technique */
+.lid {
+  box-sizing: content-box;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  transform-origin: top;
+  backface-visibility: hidden;
+  transition: transform var(--duration-open) ease, all var(--duration-open) linear;
+  transition-delay: calc(var(--duration-open) * 0.5), 0s;
+  color: var(--color-envelope-lid);
+}
+.open .lid {
+  transition-delay: 0s, 0s;
+}
+
+.lid-bottom, .lid-back {
+  background-color: color-mix(currentColor, var(--color-envelope-dark) 20%);
+  transform-origin: bottom;
+  clip-path: shape(
+          from 0 100%,
+          arc to 10% 80% of 25% cw,
+          line to 40% 50%,
+          arc to 60% 50% of 20% cw,
+          line to 90% 80%,
+          arc to 100% 100% of 25% cw,
+          close
+  )
+}
+.lid-back {
+  background-color: currentColor;
+  top: calc(-100% + 1px);
+  transform: rotateX(180deg);
+}
+
+.lid-left {
+  background-color: color-mix(currentColor, var(--color-envelope-dark) 15%);
+  clip-path: shape(
+          from 0 0,
+          arc to 10% 5% of 25% cw,
+          line to 50% 40%,
+          arc to 50% 60% of 10% cw,
+          line to 10% 95%,
+          arc to 0% 100% of 25% cw,
+          close
+  );
+}
+
+.lid-right {
+  background-color: color-mix(currentColor, var(--color-envelope-dark) 10%);
+  clip-path: shape(
+          from 100% 0,
+          arc to 90% 5% of 25%,
+          line to 50% 40%,
+          arc to 50% 60% of 10%,
+          line to 90% 95%,
+          arc to 100% 100% of 25%,
+          close
+  );
+}
+
+.lid-top {
+  background-color: color-mix(currentColor, var(--color-envelope-dark) 5%);
+  transform-origin: top;
+  clip-path: shape(
+          from 0 0%,
+          arc to 10% 20% of 25%,
+          line to 40% 50%,
+          arc to 60% 50% of 20%,
+          line to 90% 20%,
+          arc to 100% 0% of 25%,
+          close
+  )
+}
+
+/* Letter/paper */
+.letter {
+  position: absolute;
+  top: 10%;
+  width: 80%;
+  height: 75%;
+  border-radius: 6px;
+  transition: all var(--duration-all) linear, transform var(--duration-open) ease;
+  transition-delay: 0s, 0s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm);
+  box-shadow: var(--shadow-md);
+  background: var(--color-team-none-bg);
+  white-space: nowrap;
+}
+
+.open .letter {
+  transform: translateY(-70%) rotate(-3deg);
+  transition-delay: 0s, calc(var(--duration-open) * 0.5);
+}
+
+.open .lid-top {
+  transition: transform 0.25s linear;
+  transform: rotateX(180deg);
+}
+
+.open .lid-back {
+  transition: transform 0.25s linear;
+  transform: rotateX(0deg);
+}
+
+/* Paper team colors */
+.paperRed { background: var(--color-team-red-bg); }
+.paperBlue { background: var(--color-team-blue-bg); }
+.paperNone { background: var(--color-team-none-bg); }
+
+.paperText {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 25cqw;
+  text-align: center;
+  word-break: break-word;
+}
+
+.paperRed .paperText { color: var(--color-team-red-text); }
+.paperBlue .paperText { color: var(--color-team-blue-text); }
+.paperNone .paperText { color: var(--color-team-none-text); }
+
+/* Label on front of envelope */
+.label {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: 25cqw;
+  color: var(--color-envelope-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80%;
+  text-align: center;
+}
+
+/* Player avatar overlay */
+.playerOverlay {
+  position: absolute;
+  top: 20%;
+  left: 5%;
+  height: 40%;
+  z-index: 5;
+}
+
+/* Joker icon overlay */
+.jokerOverlay {
+  position: absolute;
+  top: 20%;
+  right: 5%;
+  height: 40%;
+  font-size: 20cqw;
+}

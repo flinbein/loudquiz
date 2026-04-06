@@ -8,5 +8,8 @@
       "Agent(*)",
       "mcp__ide__getDiagnostics"
     ]
+  },
+  "env": {
+    "EDITOR": "\"C:\\SOFT\\WebStorm\\bin\\webstorm64.exe\" --wait"
   }
 }

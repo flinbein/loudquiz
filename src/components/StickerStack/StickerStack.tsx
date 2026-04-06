@@ -1,40 +1,45 @@
-import { useState, type ComponentProps } from "react";
+import { useState, type ComponentProps, useMemo } from "react";
 import { Sticker } from "@/components/Sticker/Sticker";
 import styles from "./StickerStack.module.css";
 
 export interface StickerStackProps {
   stickers: ComponentProps<typeof Sticker>[];
-  onSplit?: () => void;
+  onClickBadge?: (index: number) => void;
+  onClickSticker?: () => void;
 }
 
-export function StickerStack({ stickers, onSplit }: StickerStackProps) {
+export function StickerStack({ stickers, onClickBadge, onClickSticker }: StickerStackProps) {
   const [topIndex, setTopIndex] = useState(0);
 
   if (stickers.length === 0) return null;
 
   if (stickers.length === 1) {
-    return <Sticker {...stickers[0]} />;
+    return <Sticker {...stickers[0]} onClickSticker={onClickSticker} />;
   }
 
   const current = stickers[topIndex % stickers.length];
 
-  function handleCycle(e: React.MouseEvent) {
-    if ((e.target as HTMLElement).closest(`.${styles.badge}`)) return;
-    setTopIndex((i) => i + 1);
+  function handleCycle() {
+    setTopIndex((i) => (i + 1) % stickers.length);
   }
 
-  function handleBadgeClick(e: React.MouseEvent) {
-    e.stopPropagation();
-    onSplit?.();
+  function handleBadgeClick() {
+    onClickBadge?.(topIndex)
   }
+  
+  const nextBgStickers = useMemo(() => {
+    return [...stickers, ...stickers].slice(topIndex, topIndex + Math.min(stickers.length - 1, 2))
+  }, [stickers, topIndex]);
 
   return (
-    <div className={styles.stack} onClick={handleCycle}>
-      {stickers.slice(0, 2).map((_, i) => (
-        <div key={i} className={styles.backdrop} />
+    <div className={styles.stack}>
+      {nextBgStickers.map((stickerProps, i) => (
+        <div key={i} className={styles.backdrop} >
+          <Sticker {...stickerProps} hideAvatar />
+        </div>
       ))}
       <div className={styles.top}>
-        <Sticker {...current} />
+        <Sticker key={topIndex} {...current} onClickAvatar={handleCycle} onClickSticker={onClickSticker} />
       </div>
       <div className={styles.badge} onClick={handleBadgeClick}>
         {stickers.length}

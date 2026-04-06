@@ -1,5 +1,6 @@
 import type { Story } from "@ladle/react";
 import { Sticker } from "./Sticker";
+import { useState } from "react";
 
 const redPlayer = { emoji: "👻", playerName: "Алексей", team: "red" as const };
 const bluePlayer = { emoji: "🤖", playerName: "Мария", team: "blue" as const };
@@ -28,11 +29,23 @@ export const WithAIComment: Story = () => (
   </div>
 );
 
-export const NoStamp: Story = () => (
-  <div style={{ width: 220 }}>
-    <Sticker player={redPlayer} answerText="Жду проверки..." />
+const stamps = [
+  {stampText: undefined, stampColor: undefined},
+  {stampText: "+200", stampColor: "green"},
+  {stampText: undefined, stampColor: undefined},
+  {stampText: "Плохо", stampColor: "red"},
+] as const;
+export const ChangeStamp: Story = () => {
+  const [stampId, setStampId] = useState(0);
+  return <div style={{ width: 220 }}>
+    <Sticker
+      player={redPlayer}
+      onClickSticker={() => setStampId(v => (v+1) % stamps.length)}
+      answerText="Жду проверки..."
+      {...stamps[stampId]}
+    />
   </div>
-);
+};
 
 export const NoPlayer: Story = () => (
   <div style={{ width: 220 }}>
@@ -61,7 +74,7 @@ export const TeamColors: Story = () => (
     </div>
     <div style={{ width: 200 }}>
       <Sticker
-        player={{ emoji: "🦊", playerName: "Лиса", team: "beige" }}
+        player={{ emoji: "🦊", playerName: "Лиса", team: "none" }}
         answerText="Без команды"
         stampText="+50"
         stampColor="green"

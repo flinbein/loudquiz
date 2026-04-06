@@ -1,0 +1,19 @@
+{
+  "app": {
+    "title": "Loud Quiz"
+  },
+  "home": {
+    "newGame": "Новая игра",
+    "constructor": "Редактор вопросов",
+    "rules": "Правила"
+  },
+  "constructor": {
+    "title": "Редактор вопросов"
+  },
+  "rules": {
+    "title": "Правила игры"
+  },
+  "play": {
+    "title": "Игра"
+  }
+}

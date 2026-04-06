@@ -1,0 +1,49 @@
+import type { GameState } from "./game";
+
+// Transport interface
+
+export interface RoomInfo {
+  roomId: string;
+  joinUrl: string;
+}
+
+export interface Transport {
+  createRoom(): Promise<RoomInfo>;
+  joinRoom(roomId: string): Promise<void>;
+  send(peerId: string, message: Message): void;
+  broadcast(message: Message): void;
+  onMessage(handler: (peerId: string, message: Message) => void): void;
+  onPeerConnect(handler: (peerId: string) => void): void;
+  onPeerDisconnect(handler: (peerId: string) => void): void;
+  close(): void;
+}
+
+// Messages: Host → Player
+
+export interface StateUpdateMessage {
+  type: "state-update";
+  state: GameState;
+}
+
+// Messages: Player → Host
+
+export interface PlayerActionMessage {
+  type: "player-action";
+  action: PlayerAction;
+}
+
+export type PlayerAction =
+  | { kind: "join"; name: string; emoji: string }
+  | { kind: "set-team"; team: string }
+  | { kind: "set-ready"; ready: boolean }
+  | { kind: "claim-captain" }
+  | { kind: "select-question"; questionIndex: number }
+  | { kind: "activate-joker" }
+  | { kind: "submit-answer"; text: string }
+  | { kind: "claim-blitz-captain" }
+  | { kind: "select-blitz-task"; taskId: string }
+  | { kind: "submit-blitz-answer"; text: string }
+  | { kind: "skip-blitz-answer" }
+  | { kind: "suggest-topic"; text: string };
+
+export type Message = StateUpdateMessage | PlayerActionMessage;

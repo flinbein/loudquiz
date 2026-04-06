@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { TeamColor } from "@/types/game";
 import styles from "./PlayerAvatar.module.css";
+import cn from "classnames";
+import { Property } from "csstype";
 
 export interface PlayerAvatarProps {
-  size: "small" | "medium" | "large";
   emoji: string;
   playerName?: string;
   team?: TeamColor;
+  size?: Property.Height<string | number>; // size in px
   online?: boolean;
   onClick?: () => void;
 }
@@ -23,63 +25,76 @@ function formatName(name: string): string {
 const teamClass: Record<TeamColor, string> = {
   red: styles.teamRed,
   blue: styles.teamBlue,
-  beige: styles.teamBeige,
+  none: styles.teamNone,
 };
 
 export function PlayerAvatar({
-  size,
   emoji,
+  size,
   playerName,
-  team = "beige",
+  team,
   online = true,
   onClick,
 }: PlayerAvatarProps) {
   const [displayedEmoji, setDisplayedEmoji] = useState(emoji);
-  const [animating, setAnimating] = useState(false);
+  const [animatingEmoji, setAnimatingEmoji] = useState(false);
   const prevEmojiRef = useRef(emoji);
 
   useEffect(() => {
     if (emoji !== prevEmojiRef.current) {
-      setAnimating(true);
+      setAnimatingEmoji(true);
       const timer = setTimeout(() => {
         setDisplayedEmoji(emoji);
-        setAnimating(false);
+        setAnimatingEmoji(false);
       }, 300);
       prevEmojiRef.current = emoji;
       return () => clearTimeout(timer);
     }
   }, [emoji]);
-
-  const showName = size !== "small" && playerName;
-  const cls = [
-    styles.avatar,
-    styles[size],
-    teamClass[team],
-    !online && styles.offline,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
+  
+  const [teamStatus, setTeamStatus] = useState({team, online});
+  const [animatingTeamStatus, setAnimatingTeamStatus] = useState(false);
+  useEffect(() => {
+    if (teamStatus.team === team && teamStatus.online === online) {
+      setAnimatingTeamStatus(false);
+      return;
+    }
+    setAnimatingTeamStatus(true);
+    const timer = setTimeout(() => {
+      setTeamStatus({team, online});
+      setAnimatingTeamStatus(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [team, online]);
+  
   return (
-    <div
-      className={cls}
-      data-clickable={onClick ? "true" : undefined}
-      onClick={onClick}
-    >
-      <div className={styles.emojiWrap}>
-        <span
-          className={`${styles.emoji} ${animating ? styles.emojiExit : ""}`}
-          key={`prev-${displayedEmoji}`}
-        >
-          {displayedEmoji}
-        </span>
-        {animating && (
-          <span className={`${styles.emoji} ${styles.emojiEnter}`}>
-            {emoji}
-          </span>
+    <div className={styles.container} style={{height: size || undefined, width: size || undefined}}>
+      <div
+        className={cn(
+          styles.avatar,
+          teamStatus.team && teamClass[teamStatus.team],
+          {
+            [styles.offline]:!teamStatus.online,
+            [styles.avatarAnimate]: animatingTeamStatus,
+          }
         )}
+        data-clickable={onClick ? "true" : undefined}
+        onClick={onClick}
+      >
+        <div className={cn(styles.inner)}>
+          <div className={styles.emojiWrap}>
+            <span className={`${styles.emoji} ${animatingEmoji ? styles.emojiExit : ""}`}>
+              {displayedEmoji}
+            </span>
+            {animatingEmoji && (
+              <span className={`${styles.emoji} ${styles.emojiEnter}`}>
+                {emoji}
+              </span>
+            )}
+          </div>
+        </div>
+        {playerName && <span className={styles.name}>{formatName(playerName)}</span>}
       </div>
-      {showName && <span className={styles.name}>{formatName(playerName)}</span>}
     </div>
   );
 }

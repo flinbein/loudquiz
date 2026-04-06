@@ -8,7 +8,7 @@
 ```typescript
 interface BlitzBoxProps {
   active: boolean;
-  teamColor?: "red" | "blue" | "beige";
+  teamColor?: "red" | "blue" | "none";
   text?: string;
 }
 ```

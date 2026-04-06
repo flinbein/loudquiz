@@ -3,13 +3,60 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(145deg, #d4b896, #c4a67a);
+  background: linear-gradient(90deg, #b59c7c 0%, #b59c7c 20%, #d4b896 20%, #d4b896 80%, #e8caa6 80%) repeat-x;
+  background-size: 10px;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   position: relative;
   overflow: visible;
   cursor: default;
   user-select: none;
+  container-type: inline-size;
+}
+
+[data-theme="dark"] .box {
+  background: linear-gradient(90deg, #5d3e33 0%, #5d3e33 20%, #6d4e43 20%, #6d4e43 80%, #856053 80%) repeat-x;
+  background-size: 10px;
+}
+
+.plank {
+  position: absolute;
+  background: #a68f72;
+  border: 2px solid #817059;
+}
+[data-theme="dark"] .plank {
+  background: #432f28;
+  border-color: #392822;
+}
+
+.plank-top {
+  top: 0;
+  width: 100%;
+  height: 10px;
+}
+
+.plank-bottom {
+  bottom: 0;
+  width: 100%;
+  height: 10px;
+}
+
+.plank-left {
+  left: 0;
+  height: 100%;
+  width: 10px;
+}
+
+.plank-right {
+  right: 0;
+  height: 100%;
+  width: 10px;
+}
+.plank-diag {
+  height: 130%;
+  width: 10px;
+  transform: rotate(45deg);
+  border-radius: 5px;
 }
 
 .box[data-clickable="true"] {
@@ -23,27 +70,35 @@
     glowPulse var(--duration-rock) ease-in-out infinite;
 }
 
+@keyframes rock {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(255, 200, 50, 0.4); }
+  50% { box-shadow: 0 0 16px 6px rgba(255, 200, 50, 0.7); }
+}
+
 /* Text */
 .text {
+  position: absolute;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 2em;
+  font-size: 37cqw;
   white-space: nowrap;
   color: white;
 }
 
 /* Text glow effect */
 .text {
-  text-shadow:
-    0 0 8px currentColor,
-    0 0 16px currentColor;
+  text-shadow: 0 0 3px white, 3cqw 3cqw 4cqw black;
+}
+[data-theme="dark"] .text {
+  text-shadow: 0 0 2px black, 3cqw 3cqw 4cqw black;
 }
 
 /* Team text colors */
 .textRed { color: var(--color-team-red); }
 .textBlue { color: var(--color-team-blue); }
-.textBeige { color: var(--color-team-beige); }
-
-[data-theme="dark"] .box {
-  background: linear-gradient(145deg, #6d4e43, #5d3e33);
-}
+.textNone { color: var(--color-team-none); }

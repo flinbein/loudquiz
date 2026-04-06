@@ -85,7 +85,7 @@ interface PlayerData {
 ```typescript
 interface TeamData {
   id: string;
-  color: "red" | "blue" | "beige";
+  color: "red" | "blue" | undefined;
   score: number;
   jokerUsed: boolean;
 }

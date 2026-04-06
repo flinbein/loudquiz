@@ -6,6 +6,7 @@ dist/
 
 # Environment variables
 .env
+.tmp/
 .env.local
 .env.*.local
 
@@ -21,6 +22,7 @@ npm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+*.local.json
 
 # OS
 .DS_Store

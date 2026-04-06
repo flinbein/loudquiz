@@ -13,6 +13,8 @@
   --color-team-blue-light: #bbdefb;
   --color-team-neutral: #d7ccc8;
   --color-team-neutral-light: #efebe9;
+  --color-team-none: #4c7347;
+  --color-team-none-light: #a5aea3;
 
   /* Accent */
   --color-primary: #6200ea;
@@ -56,8 +58,8 @@
   --color-team-red-text: #8b1a1a;
   --color-team-blue-bg: #e0ecff;
   --color-team-blue-text: #1a3a6b;
-  --color-team-beige-bg: #f5f0e8;
-  --color-team-beige-text: #5d4037;
+  --color-team-none-bg: #ebf5e8;
+  --color-team-none-text: #3b5d37;
 
   /* Envelope colors */
   --color-envelope: #d4b896;
@@ -66,7 +68,12 @@
   --color-envelope-lid-shadow: #b8956a;
   --color-envelope-inner: #e8d5b8;
 
+  --color-taskcard: #ffe75e;
+  --color-taskcard-spot: #fff9ee;
+  --color-taskcard-header: #cfae7f;
+
   /* Animation durations */
+  --duration-all: 0.2s;
   --duration-open: 0.5s;
   --duration-rock: 1.5s;
   --duration-stamp: 0.3s;
@@ -85,6 +92,8 @@
   --color-team-blue-light: #1a3a4e;
   --color-team-neutral: #8d6e63;
   --color-team-neutral-light: #3e2723;
+  --color-team-none: #409539;
+  --color-team-none-light: #253e23;
 
   --color-primary: #bb86fc;
   --color-primary-light: #6200ea;
@@ -97,12 +106,16 @@
   --color-team-red-text: #ffcdd2;
   --color-team-blue-bg: #1a2a4e;
   --color-team-blue-text: #bbdefb;
-  --color-team-beige-bg: #3e2723;
-  --color-team-beige-text: #d7ccc8;
+  --color-team-none-bg: #273e23;
+  --color-team-none-text: #cad7c8;
 
   --color-envelope: #8d6e63;
   --color-envelope-dark: #d7ccc8;
   --color-envelope-lid: #7d5e53;
   --color-envelope-lid-shadow: #6d4e43;
   --color-envelope-inner: #5d4037;
+
+  --color-taskcard: #292100;
+  --color-taskcard-spot: #514300;
+  --color-taskcard-header: #000000;
 }

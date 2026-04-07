@@ -81,15 +81,28 @@ export function submitAnswer(playerName: string, text: string): void {
   if (state.currentRound.captainName === playerName) return;
   if (state.currentRound.answers[playerName]) return;
 
+  const newAnswers = {
+    ...state.currentRound.answers,
+    [playerName]: { text, timestamp: Date.now() },
+  };
+
   useGameStore.getState().setState({
     currentRound: {
       ...state.currentRound,
-      answers: {
-        ...state.currentRound.answers,
-        [playerName]: { text, timestamp: Date.now() },
-      },
+      answers: newAnswers,
     },
   });
+
+  // Auto-transition to review when all responders have answered
+  const teamPlayers = state.players.filter((p) => p.team === state.currentRound!.teamId);
+  const respondersCount = teamPlayers.length - 1;
+  if (Object.keys(newAnswers).length >= respondersCount) {
+    useGameStore.getState().setState({
+      phase: "round-review",
+      timer: null,
+    });
+    initReview();
+  }
 }
 
 export function handleTimerExpire(phase: RoundPhase): void {

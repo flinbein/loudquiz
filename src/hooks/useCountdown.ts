@@ -25,10 +25,12 @@ export function useCountdown(
   const [remaining, setRemaining] = useState(time);
   const totalRef = useRef(time);
 
-  // Reset when time prop changes
+  // Reset when time prop changes; only update total when a new timer starts
   useEffect(() => {
+    if (time >= totalRef.current) {
+      totalRef.current = time;
+    }
     setRemaining(time);
-    totalRef.current = time;
   }, [time]);
 
   // Tick every second

@@ -64,6 +64,7 @@
   "team": {
     "red": "Red",
     "blue": "Blue",
+    "none": "Team",
     "noTeam": "No team",
     "players": "Players"
   },

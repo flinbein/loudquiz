@@ -43,6 +43,36 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
   const myPlayer = players.find((p) => p.name === playerName);
   const captainPlayer = players.find((p) => p.name === round.captainName);
 
+  const playedIndices = getPlayedQuestionIndices(history);
+
+  const buildTaskView = (showText: boolean): { taskViewTopics: TaskViewTopic[]; taskViewBlitz: TaskViewBlitz[] } => {
+    const taskViewTopics: TaskViewTopic[] = topics.map((topic, topicIdx) => ({
+      name: topic.name,
+      questions: topic.questions.map((q, qIdx) => {
+        const linearIdx = toLinearQuestionIndex(
+          useGameStore.getState(),
+          topicIdx,
+          qIdx,
+        );
+        const isPlayed = playedIndices.includes(linearIdx);
+        const isActive = round.questionIndex === linearIdx;
+        return {
+          open: isPlayed || isActive,
+          active: isActive,
+          player: undefined,
+          jokerUsed: false,
+          difficulty: q.difficulty,
+        };
+      }),
+    }));
+    const taskViewBlitz: TaskViewBlitz[] = blitzTasks.map(() => ({
+      active: false,
+      team: undefined,
+      score: undefined,
+    }));
+    return { taskViewTopics, taskViewBlitz };
+  };
+
   const currentQuestion = (() => {
     if (round.questionIndex == null) return undefined;
     let remaining = round.questionIndex;
@@ -142,9 +172,11 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
 
   // -- round-ready --
   if (phase === "round-ready") {
+    const { taskViewTopics, taskViewBlitz } = buildTaskView(false);
     return (
       <div className={styles.container}>
         <div className={styles.phaseInfo}>{t("round.ready")}</div>
+        <TaskView topics={taskViewTopics} blitzRounds={taskViewBlitz} />
         <TaskCard
           topic={currentQuestion?.topic.name}
           player={
@@ -172,11 +204,13 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
     const remainingTime = timer ? getRemainingTime(timer) : 0;
 
     if (isCaptain) {
+      const { taskViewTopics, taskViewBlitz } = buildTaskView(false);
       return (
         <div className={styles.container}>
           <div className={styles.phaseInfo}>
             {phase === "round-active" ? t("round.active") : t("round.answer")}
           </div>
+          <TaskView topics={taskViewTopics} blitzRounds={taskViewBlitz} />
           <TaskCard
             topic={currentQuestion?.topic.name}
             player={
@@ -192,6 +226,8 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
       );
     }
 
+    const { taskViewTopics: responderTopics, taskViewBlitz: responderBlitz } = buildTaskView(false);
+
     // Responder who already answered or gave up
     if (myAnswer !== undefined) {
       if (myAnswer.text === "") {
@@ -200,6 +236,7 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
             <div className={styles.phaseInfo}>
               {phase === "round-active" ? t("round.active") : t("round.answer")}
             </div>
+            <TaskView topics={responderTopics} blitzRounds={responderBlitz} />
             <div className={styles.phaseInfo}>{t("round.gaveUp")}</div>
           </div>
         );
@@ -210,6 +247,7 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
           <div className={styles.phaseInfo}>
             {phase === "round-active" ? t("round.active") : t("round.answer")}
           </div>
+          <TaskView topics={responderTopics} blitzRounds={responderBlitz} />
           <Sticker
             player={myPlayer ? { emoji: myPlayer.emoji, name: myPlayer.name, team: myPlayer.team } : undefined}
             answerText={myAnswer.text}
@@ -224,6 +262,7 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
         <div className={styles.phaseInfo}>
           {phase === "round-active" ? t("round.active") : t("round.answer")}
         </div>
+        <TaskView topics={responderTopics} blitzRounds={responderBlitz} />
         <div className={styles.answerForm}>
           <TimerInput
             time={remainingTime}
@@ -280,9 +319,12 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
     const stampColor: "green" | "red" =
       myEvaluation?.correct === false ? "red" : "green";
 
+    const { taskViewTopics: reviewTopics, taskViewBlitz: reviewBlitz } = buildTaskView(true);
+
     return (
       <div className={styles.container}>
         <div className={styles.phaseInfo}>{t("round.review")}</div>
+        <TaskView topics={reviewTopics} blitzRounds={reviewBlitz} />
         <TaskCard
           topic={currentQuestion?.topic.name}
           player={

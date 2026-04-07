@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useGameStore } from "@/store/gameStore";
 import {
@@ -17,6 +17,7 @@ import {
   disputeReview,
   selectQuestion,
   activateJoker,
+  handleTimerExpire,
 } from "@/store/actions/round";
 import { getRemainingTime } from "@/logic/timer";
 import { getActiveTimerDuration } from "@/logic/timer";
@@ -87,6 +88,20 @@ export function HostRound() {
   const history = useGameStore((s) => s.history);
 
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
+
+  // Handle timer expiry
+  useEffect(() => {
+    if (!timer) return;
+    const remaining = getRemainingTime(timer);
+    if (remaining <= 0) {
+      handleTimerExpire(phase);
+      return;
+    }
+    const id = setTimeout(() => {
+      handleTimerExpire(phase);
+    }, remaining * 1000);
+    return () => clearTimeout(id);
+  }, [timer, phase]);
 
   if (!round) return null;
 
@@ -388,7 +403,7 @@ export function HostRound() {
     } else {
       // round-ready / round-active / round-answer: show TaskCard
       const questionText =
-        phase === "round-active" || phase === "round-answer"
+        phase === "round-answer"
           ? currentQuestion?.question.text ?? ""
           : "• • •";
 

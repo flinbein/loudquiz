@@ -1,0 +1,35 @@
+.container {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.team {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--font-size-xl);
+  transition: all 0.3s ease;
+}
+
+.red { background: var(--color-team-red-light); color: var(--color-team-red); }
+.blue { background: var(--color-team-blue-light); color: var(--color-team-blue); }
+.none { background: var(--color-team-neutral-light); color: var(--color-team-none); }
+
+.leader {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+}
+
+.score {
+  transition: all 0.3s ease;
+}
+
+.coin {
+  font-size: var(--font-size-md);
+}

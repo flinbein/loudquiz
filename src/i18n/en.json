@@ -15,5 +15,86 @@
   },
   "play": {
     "title": "Game"
+  },
+  "setup": {
+    "title": "New Game",
+    "teamMode": "Team Mode",
+    "single": "One Team",
+    "singleDesc": "Cooperative mode",
+    "dual": "Two Teams",
+    "dualDesc": "Competitive mode",
+    "source": "Question Source",
+    "manual": "Custom Questions",
+    "manualDesc": "Upload JSON",
+    "ai": "AI Generation",
+    "aiDesc": "OpenRouter API",
+    "uploadJson": "Drop JSON file here",
+    "uploadJsonClick": "or click to select",
+    "replaceJson": "Replace file",
+    "preview": "Preview",
+    "topics": "topics",
+    "questions": "questions",
+    "blitzTasks": "blitz tasks",
+    "apiKey": "API Key (OpenRouter)",
+    "topicCount": "Number of topics",
+    "questionsPerTopic": "Questions per topic",
+    "blitzRounds": "Blitz rounds",
+    "createGame": "Create Game",
+    "fromConstructor": "Loaded from editor"
+  },
+  "lobby": {
+    "scanQr": "Scan to connect",
+    "room": "Room",
+    "start": "Start",
+    "calibration": "Calibration",
+    "notReady": "Not all players are ready",
+    "needMorePlayers": "Need at least 2 players per team",
+    "needTeams": "All players must choose a team",
+    "unevenTeams": "Teams have unequal player counts",
+    "kickZone": "Remove player",
+    "enterName": "Your name",
+    "join": "Join",
+    "chooseTeam": "choose a team",
+    "ready": "Ready",
+    "waiting": "Waiting for others",
+    "changeAvatar": "Click avatar to change",
+    "connecting": "Connecting...",
+    "locked": "Locked"
+  },
+  "team": {
+    "red": "Red",
+    "blue": "Blue",
+    "noTeam": "No team",
+    "players": "Players"
+  },
+  "round": {
+    "captain": "Captain Selection",
+    "captainHint": "Press to become captain",
+    "beCaptain": "I'll be captain!",
+    "pick": "Question Selection",
+    "pickHint": "Captain is choosing a question...",
+    "ready": "Preparation",
+    "readyBtn": "I'm ready",
+    "readyCount": "Ready: {{count}}/{{total}}",
+    "active": "Round",
+    "activeHint": "Explain with gestures!",
+    "answeredCount": "Answered: {{count}}/{{total}}",
+    "answer": "Answer time",
+    "answerHint": "Enter your answer",
+    "giveUp": "Give up",
+    "submit": "Submit",
+    "gaveUp": "You didn't answer",
+    "review": "Round Results",
+    "next": "Next",
+    "dispute": "Dispute",
+    "nextRound": "Next Round"
+  },
+  "joker": {
+    "use": "Use joker (×2)",
+    "used": "Joker used",
+    "active": "Joker activated! ×2"
+  },
+  "score": {
+    "total": "Total"
   }
 }

@@ -15,5 +15,86 @@
   },
   "play": {
     "title": "Игра"
+  },
+  "setup": {
+    "title": "Новая игра",
+    "teamMode": "Режим команд",
+    "single": "Одна команда",
+    "singleDesc": "Кооперативный режим",
+    "dual": "Две команды",
+    "dualDesc": "Соревновательный режим",
+    "source": "Источник вопросов",
+    "manual": "Свои вопросы",
+    "manualDesc": "Загрузить JSON",
+    "ai": "AI генерация",
+    "aiDesc": "OpenRouter API",
+    "uploadJson": "Перетащите JSON-файл сюда",
+    "uploadJsonClick": "или нажмите для выбора",
+    "replaceJson": "Заменить файл",
+    "preview": "Предпросмотр",
+    "topics": "тем",
+    "questions": "вопросов",
+    "blitzTasks": "блиц-заданий",
+    "apiKey": "API Key (OpenRouter)",
+    "topicCount": "Количество тем",
+    "questionsPerTopic": "Вопросов на тему",
+    "blitzRounds": "Блиц-раундов",
+    "createGame": "Создать игру",
+    "fromConstructor": "Загружено из редактора"
+  },
+  "lobby": {
+    "scanQr": "Отсканируйте для подключения",
+    "room": "Комната",
+    "start": "Старт",
+    "calibration": "Калибровка",
+    "notReady": "Не все игроки готовы",
+    "needMorePlayers": "Нужно минимум 2 игрока в команде",
+    "needTeams": "Все игроки должны выбрать команду",
+    "unevenTeams": "В командах разное число игроков",
+    "kickZone": "Удалить игрока",
+    "enterName": "Ваше имя",
+    "join": "Присоединиться",
+    "chooseTeam": "выбери команду",
+    "ready": "Готов",
+    "waiting": "Ожидаем остальных",
+    "changeAvatar": "Нажмите на аватар для смены",
+    "connecting": "Подключение...",
+    "locked": "Заблокировано"
+  },
+  "team": {
+    "red": "Красные",
+    "blue": "Синие",
+    "noTeam": "Без команды",
+    "players": "Игроки"
+  },
+  "round": {
+    "captain": "Выбор капитана",
+    "captainHint": "Нажмите, чтобы стать капитаном",
+    "beCaptain": "Буду капитаном!",
+    "pick": "Выбор вопроса",
+    "pickHint": "Капитан выбирает вопрос...",
+    "ready": "Подготовка",
+    "readyBtn": "Я готов",
+    "readyCount": "Готовы: {{count}}/{{total}}",
+    "active": "Раунд",
+    "activeHint": "Объясняйте жестами!",
+    "answeredCount": "Ответили: {{count}}/{{total}}",
+    "answer": "Время на ответ",
+    "answerHint": "Введите ответ",
+    "giveUp": "Сдаюсь",
+    "submit": "Отправить",
+    "gaveUp": "Вы не дали ответ",
+    "review": "Итоги раунда",
+    "next": "Далее",
+    "dispute": "Оспорить",
+    "nextRound": "Следующий раунд"
+  },
+  "joker": {
+    "use": "Использовать джокер (×2)",
+    "used": "Джокер использован",
+    "active": "Джокер активирован! ×2"
+  },
+  "score": {
+    "total": "Итого"
   }
 }

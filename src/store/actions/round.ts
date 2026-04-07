@@ -2,7 +2,7 @@ import { useGameStore } from "@/store/gameStore";
 import { canBeCaptain, getRandomCaptain } from "@/logic/captain";
 import { getPlayedQuestionIndices, getNextPhaseAfterReview, createNextRoundState, getTotalQuestionCount } from "@/logic/phaseTransitions";
 import { createTimer, getPickTimerDuration, getCaptainTimerDuration, getActiveTimerDuration, getAnswerTimerDuration } from "@/logic/timer";
-import { calculateRoundScore, calculateBonusMultiplier } from "@/logic/scoring";
+import { calculateRoundScore, calculateBonusMultiplier, checkBonusConditions } from "@/logic/scoring";
 import type { AnswerEvaluation, RoundPhase } from "@/types/game";
 
 export function claimCaptain(playerName: string): void {
@@ -215,10 +215,14 @@ export function splitAnswerFromGroup(playerName: string): void {
   );
   groups.push([playerName]);
 
+  const evaluations = review.evaluations.map((e) =>
+    e.playerName === playerName ? { ...e, correct: null as boolean | null } : e,
+  );
+
   useGameStore.getState().setState({
     currentRound: {
       ...state.currentRound,
-      reviewResult: { ...review, groups },
+      reviewResult: { ...review, groups, evaluations },
     },
   });
 }
@@ -247,8 +251,16 @@ export function confirmReview(): void {
   const teamPlayers = state.players.filter((p) => p.team === round.teamId);
   const respondersCount = teamPlayers.length - 1;
   const activeDuration = getActiveTimerDuration(respondersCount);
-  const bonusMultiplier = round.bonusTime > 0
-    ? calculateBonusMultiplier(round.bonusTime, activeDuration)
+
+  const bonus = checkBonusConditions(
+    round.answers,
+    review.evaluations,
+    review.groups,
+    respondersCount,
+    activeDuration,
+  );
+  const bonusMultiplier = bonus.hasBonus
+    ? calculateBonusMultiplier(bonus.bonusTime, activeDuration)
     : 0;
 
   const score = calculateRoundScore(difficulty, correctCount, round.jokerActive, bonusMultiplier);

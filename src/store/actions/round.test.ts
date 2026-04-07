@@ -278,7 +278,7 @@ describe("confirmReview", () => {
             { playerName: "Bob", correct: true },
             { playerName: "Carol", correct: true },
           ],
-          groups: [["Bob"], ["Carol"]],
+          groups: [["Bob", "Carol"]],
           score: 0,
           jokerApplied: false,
         },
@@ -287,7 +287,7 @@ describe("confirmReview", () => {
     confirmReview();
     const s = useGameStore.getState();
     expect(s.history).toHaveLength(1);
-    expect(s.history[0].score).toBe(200); // 100 × 2
+    expect(s.history[0].score).toBe(200); // 100 × 2 (no bonus: merged group)
     expect(s.teams[0].score).toBe(200);
     // 3 unplayed questions remain, so next phase is round-captain
     expect(s.phase).toBe("round-captain");

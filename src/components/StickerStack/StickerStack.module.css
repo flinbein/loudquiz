@@ -53,3 +53,17 @@
 .badge:hover {
   background: var(--color-primary-light);
 }
+
+.single {
+  position: relative;
+}
+
+.stack[data-dragging] {
+  opacity: 0.5;
+}
+
+.stack[data-drop-over] {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}

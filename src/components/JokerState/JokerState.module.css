@@ -1,0 +1,49 @@
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background: var(--color-bg);
+  transition: all var(--duration-all);
+}
+
+.enabled {
+  cursor: pointer;
+  border-color: var(--color-warning);
+  background: var(--color-bg);
+}
+
+.enabled:hover {
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-md);
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: default;
+  border-color: var(--color-border);
+}
+
+.active {
+  border-color: var(--color-warning);
+  background: var(--color-warning);
+  color: white;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.icon {
+  font-size: 2rem;
+}
+
+.text {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--font-size-md);
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(251, 140, 0, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(251, 140, 0, 0.8); }
+}

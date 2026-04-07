@@ -1,0 +1,63 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.sidebar {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.stickersGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.stickerSlot {
+  width: 200px;
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.actionBtn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--duration-all);
+}
+
+.primaryBtn {
+  composes: actionBtn;
+  background: var(--color-success);
+  color: white;
+}
+
+.secondaryBtn {
+  composes: actionBtn;
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.phaseInfo {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}

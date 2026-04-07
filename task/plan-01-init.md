@@ -142,39 +142,53 @@
 
 ---
 
-## Фаза 5: Game Setup + Lobby [не готово]
+## Фаза 5: Game Setup + Lobby [готово]
 
 **Цель:** полный поток: главная → создание игры → лобби с подключением игроков, выбором команд, аватаров, стартом.
 
-- [ ] `HomePage` — кнопка «Новая игра»
-- [ ] `GameSetup` — режим команд (single/dual), источник вопросов (manual/AI), загрузка JSON (manual) / настройки AI, валидация, создание комнаты → навигация на `/play?room=b-xxx`
-- [ ] `PlayPage` — маршрутизация host/player по sessionStorage, рендер по текущей фазе
-- [ ] `HostLobby` — QR-код, список игроков по командам, drag для перемещения, kick, кнопка «Старт»
-- [ ] `PlayerLobby` — ввод имени, выбор команды, клик по аватару для смены эмодзи, «Готов», «Старт»
-- [ ] `src/store/actions/lobby.ts` — joinGame, setReady, kickPlayer, movePlayer, startGame
-- [ ] `src/logic/emojiPool.ts` — пул эмодзи из спеки, случайный выбор с исключением занятых
+- [x] `HomePage` — кнопка «Новая игра» → `/setup`
+- [x] `SetupPage` — режим команд (single/dual), источник вопросов (manual/AI), загрузка JSON (manual) / настройки AI, валидация, создание комнаты → навигация на `/play`
+- [x] `PlayPage` — маршрутизация host/player по sessionStorage, ввод имени, рендер по текущей фазе
+- [x] `HostLobby` — QR-код (qrcode.react), список игроков по командам через TeamGroup + PlayerStatusTable, drag для перемещения, kick drop-zone, кнопка «Старт»
+- [x] `PlayerLobby` — ввод имени, TeamPicker с drag/click выбором команды, клик по аватару для смены эмодзи, «Готов», «Старт»
+- [x] `src/store/actions/lobby.ts` — handleJoin, handleSetTeam, handleSetReady, handleChangeEmoji, kickPlayer, movePlayer, canStartGame, startGame (18 тестов)
+- [x] `src/logic/emojiPool.ts` — пул 280+ эмодзи, getRandomEmoji с исключением занятых, getShortName (9 тестов)
+- [x] `src/components/TeamGroup/` — компонент группировки игроков по команде с цветной полоской
+- [x] `src/components/PlayerStatusTable/` — добавлен draggable prop, исправлен статус waiting (⏳)
+- [x] PlayerAction types — добавлены change-emoji, start-game
+- [x] i18n — все ключи setup.*, lobby.*, team.* (ru + en)
+- [x] useTransport — упрощён host join, делегирование в lobby actions
 
 **Проверка:**
-- E2E: хост создаёт игру, видит QR-код в лобби
-- E2E: игрок подключается, вводит имя, выбирает команду, нажимает «Готов»
-- E2E: хост видит игрока, нажимает «Старт»
-- Unit-тест: emoji pool исключает использованные
-- Unit-тест: lobby actions
-- Ручной тест: две вкладки, полный поток лобби
+- [x] Unit-тест: emoji pool исключает использованные (9 тестов)
+- [x] Unit-тест: lobby actions (18 тестов)
+- [x] Все 63 теста проходят
+- [x] tsc --noEmit без ошибок
+- [x] Сборка (vite build) успешна
+- [ ] E2E: хост создаёт игру, видит QR-код в лобби
+- [ ] E2E: игрок подключается, вводит имя, выбирает команду, нажимает «Готов»
+- [ ] E2E: хост видит игрока, нажимает «Старт»
+- [ ] Ручной тест: две вкладки, полный поток лобби
 
 ---
 
-## Фаза 6: Раунды (6 фаз) — Manual Mode [не готово]
+## Фаза 6: Раунды (6 фаз) — Manual Mode [готово]
 
 **Цель:** полный цикл раунда с 6 фазами для ручного режима, одна команда. Ядро геймплея.
 
-- [ ] `src/logic/phaseTransitions.ts` — `getNextPhase()`: следующий раунд / блиц / финал
-- [ ] `src/logic/timer.ts` + `src/hooks/useTimer.ts` — обратный отсчёт по формулам из спеки
-- [ ] `src/logic/captain.ts` — выбор капитана (первый нажал / таймаут = случайный), нельзя дважды подряд
-- [ ] `src/logic/scoring.ts` — формулы: все правильные + уникальные (бонус за время), частичные, джокер ×2
-- [ ] `src/store/actions/round.ts` — claimCaptain, selectQuestion, activateJoker, submitAnswer, evaluateAnswer, mergeAnswers, splitStack, confirmReview
-- [ ] `HostRound` — 6 подфаз: captain, pick, ready, active, answer, review (фаза 1 и 2)
-- [ ] `PlayerRound` — по ролям: капитан, респондер, противник × 6 подфаз
+- [x] `src/logic/phaseTransitions.ts` — `getNextPhase()`: следующий раунд / блиц / финал
+- [x] `src/logic/timer.ts` + `src/hooks/useCountdown.ts` — обратный отсчёт по формулам из спеки
+- [x] `src/logic/captain.ts` — выбор капитана (первый нажал / таймаут = случайный), нельзя дважды подряд
+- [x] `src/logic/scoring.ts` — формулы: все правильные + уникальные (бонус за время), частичные, джокер ×2
+- [x] `src/store/actions/round.ts` — claimCaptain, selectQuestion, activateJoker, submitAnswer, evaluateAnswer, mergeAnswers, splitStack, confirmReview
+- [x] `HostRound` — 6 подфаз: captain, pick, ready, active, answer, review
+- [x] `PlayerRound` — по ролям: капитан, респондер × 6 подфаз
+- [x] Компоненты: Timer, TimerButton, TimerInput, JokerState, TeamScore, ScoreFormula
+- [x] StickerStack: drag-n-drop для объединения ответов в review
+- [x] i18n ключи для round/joker/score (ru, en)
+- [x] Интеграция в PlayPage + useTransport
+
+**Выполнено:** Реализован полный цикл раунда для manual mode, single team. 19 задач: типы (tri-state AnswerEvaluation, новые PlayerAction), 4 модуля логики (timer, captain, scoring, phaseTransitions) с 34 unit-тестами, store actions (round.ts) с 18 тестами, хук useCountdown с imperative handle, 6 UI-компонентов (Timer, TimerButton, TimerInput, JokerState, TeamScore, ScoreFormula), drag-n-drop в StickerStack, страницы HostRound и PlayerRound, интеграция через PlayPage с централизованным onHostAction. Все 115 тестов проходят, build успешен.
 
 **Ключевые спеки:** `spec/game/phases.md`, `spec/game/scoring.md`, `spec/ui/host-screens/round.md`, `spec/ui/player-screens/round.md`
 

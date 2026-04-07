@@ -1,0 +1,49 @@
+.button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  width: 100%;
+  transition: opacity var(--duration-all);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.time {
+  font-family: var(--font-display);
+  font-weight: 700;
+  min-width: 60px;
+  text-align: right;
+}
+
+.warning .time {
+  color: #ffcdd2;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.progressBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.4);
+  transition: width 1s linear;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

@@ -1,0 +1,116 @@
+.avatarDrag {
+  position: absolute;
+  z-index: 1;
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.15s ease-out;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+}
+
+.avatarDrag:active {
+  cursor: grabbing;
+  transition: none !important;
+  animation: none !important;
+}
+
+/*//////////////////////////////////////////////////////*/
+
+.wrapper {
+  width: 100%;
+  height: 25vh;
+  max-height: 25vh;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 2fr;
+  grid-template-rows: 1fr 6fr 1fr;
+  container-type: size;
+}
+
+.block {
+  font-family: var(--font-display);
+  font-size: 40cqh;
+  line-height: 1;
+  color: white;
+  font-weight: 700;
+  text-shadow: 0 0 2vh rgba(0, 0, 0, 0.5), 2cqh 2cqh 4cqh rgba(0, 0, 0, 0.5);
+  padding: 30cqh 5cqw;
+  transform: scaleX(1);
+  /*transition: transform var(--duration-all) ease-in-out;*/
+}
+
+.block-none {
+  grid-column: 1 / 5;
+  grid-row: 1 / 4;
+  background: linear-gradient(135deg, var(--color-team-none-light), var(--color-team-none));
+}
+
+.block-red  {
+  grid-column: 1 / 3;
+  grid-row: 1 / 4;
+  background: linear-gradient(135deg, var(--color-team-red-light), var(--color-team-red));
+  transform-origin: left;
+}
+
+
+.block-blue  {
+  grid-column: 3 / 5;
+  grid-row: 1 / 4;
+  background: linear-gradient(135deg, var(--color-team-blue), var(--color-team-blue-light));
+  text-align: right;
+  transform-origin: right;
+}
+
+.block-active {
+  z-index: 1;
+  transform: scaleX(1.2);
+}
+
+.avatar {
+  position: relative;
+  grid-column: 2 / 4;
+  grid-row: 2 / 3;
+  max-height: 100cqh;
+  filter: drop-shadow(1cqh 1cqh 1cqh rgba(0, 0, 0, 0.5));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+}
+.avatar-animated {
+  animation: shake 2s forwards linear;
+}
+
+.avatar-animated .avatar-pointer {
+  display: block;
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  font-size: 25cqh;
+  text-shadow: 2cqh 2cqh 2cqh rgba(0, 0, 0, 0.5);
+  transform: translateX(-50%);
+  user-select: none;
+  pointer-events: none;
+  animation: click 2s forwards linear;
+  opacity: 0;
+  animation-composition: add;
+}
+.avatar-pointer {
+  display: none;
+}
+
+@keyframes shake {
+  from, 10%, to {transform: translateX(0)}
+  20%, 30% {transform: translateX(50%)}
+  60%, 70% {transform: translateX(-50%)}
+}
+@keyframes click {
+  from, to {
+    transform: translate(0, 0);
+    text-shadow: 2cqh 2cqh 2cqh rgba(0, 0, 0, 0.5);
+    opacity: 0;
+  }
+  10%, 90% {
+    transform: translate(15%, 15%);
+    text-shadow: 6cqh 6cqh 6cqh rgba(0, 0, 0, 0.5);
+    opacity: 1;
+  }
+}

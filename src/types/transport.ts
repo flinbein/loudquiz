@@ -33,9 +33,11 @@ export interface PlayerActionMessage {
 }
 
 export type PlayerAction =
-  | { kind: "join"; name: string; emoji: string }
+  | { kind: "join"; name: string }
   | { kind: "set-team"; team: string }
   | { kind: "set-ready"; ready: boolean }
+  | { kind: "change-emoji" }
+  | { kind: "start-game" }
   | { kind: "claim-captain" }
   | { kind: "select-question"; questionIndex: number }
   | { kind: "activate-joker" }
@@ -44,6 +46,8 @@ export type PlayerAction =
   | { kind: "select-blitz-task"; taskId: string }
   | { kind: "submit-blitz-answer"; text: string }
   | { kind: "skip-blitz-answer" }
-  | { kind: "suggest-topic"; text: string };
+  | { kind: "suggest-topic"; text: string }
+  | { kind: "dispute-review" }
+  | { kind: "next-round" };
 
 export type Message = StateUpdateMessage | PlayerActionMessage;

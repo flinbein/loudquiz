@@ -41,14 +41,11 @@ export type TeamColor = "red" | "blue" | "none";
 // Minimal player shape used by visual components (avatar + name + team)
 export interface PlayerDisplay {
   emoji: string;
-  playerName: string;
+  name: string;
   team: TeamColor;
 }
 
-export interface PlayerData {
-  name: string;
-  emoji: string;
-  team: string;
+export interface PlayerData extends PlayerDisplay{
   online: boolean;
   ready: boolean;
 }
@@ -97,7 +94,7 @@ export interface PlayerAnswer {
 
 export interface AnswerEvaluation {
   playerName: string;
-  correct: boolean;
+  correct: boolean | null;  // null = not evaluated, true = correct, false = incorrect
   aiComment?: string;
 }
 

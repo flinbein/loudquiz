@@ -1,5 +1,5 @@
 import { useGameStore } from "./gameStore";
-import type { GameState, PlayerData, TeamData } from "@/types/game";
+import type { GameState, PlayerData, TeamData, Topic, Question } from "@/types/game";
 
 // Team selectors
 
@@ -59,12 +59,37 @@ export function isPlayerInActiveTeam(
 export function getCurrentQuestion(state: GameState) {
   if (!state.currentRound || state.currentRound.questionIndex == null)
     return undefined;
+  let remaining = state.currentRound.questionIndex;
   for (const topic of state.topics) {
-    if (state.currentRound.questionIndex < topic.questions.length) {
-      return topic.questions[state.currentRound.questionIndex];
+    if (remaining < topic.questions.length) {
+      return topic.questions[remaining];
     }
+    remaining -= topic.questions.length;
   }
   return undefined;
+}
+
+export function getQuestionByLinearIndex(
+  state: GameState,
+  linearIndex: number,
+): { topic: Topic; topicIndex: number; question: Question; questionIndex: number } | undefined {
+  let remaining = linearIndex;
+  for (let ti = 0; ti < state.topics.length; ti++) {
+    const topic = state.topics[ti];
+    if (remaining < topic.questions.length) {
+      return { topic, topicIndex: ti, question: topic.questions[remaining], questionIndex: remaining };
+    }
+    remaining -= topic.questions.length;
+  }
+  return undefined;
+}
+
+export function toLinearQuestionIndex(state: GameState, topicIndex: number, questionIndex: number): number {
+  let linear = 0;
+  for (let i = 0; i < topicIndex; i++) {
+    linear += state.topics[i].questions.length;
+  }
+  return linear + questionIndex;
 }
 
 export function getCurrentBlitzTask(state: GameState) {

@@ -168,24 +168,75 @@ export function initReview(): void {
         evaluations,
         groups,
         score: 0,
+        scoreConfirmed: false,
         jokerApplied: state.currentRound.jokerActive,
       },
     },
   });
 }
 
-export function evaluateAnswer(playerName: string, correct: boolean): void {
+export function evaluateGroup(groupPlayers: string[], correct: boolean | null): void {
   const state = useGameStore.getState();
   if (state.phase !== "round-review" || !state.currentRound?.reviewResult) return;
 
   const evaluations = state.currentRound.reviewResult.evaluations.map((e) =>
-    e.playerName === playerName ? { ...e, correct } : e,
+    groupPlayers.includes(e.playerName) ? { ...e, correct } : e,
   );
 
   useGameStore.getState().setState({
     currentRound: {
       ...state.currentRound,
       reviewResult: { ...state.currentRound.reviewResult, evaluations },
+    },
+  });
+}
+
+export function evaluateAnswer(playerName: string, correct: boolean): void {
+  evaluateGroup([playerName], correct);
+}
+
+export function confirmScore(): void {
+  const state = useGameStore.getState();
+  if (state.phase !== "round-review" || !state.currentRound?.reviewResult) return;
+
+  const review = state.currentRound.reviewResult;
+  const round = state.currentRound;
+
+  const correctCount = review.evaluations.filter((e) => e.correct === true).length;
+
+  let difficulty = 100;
+  if (round.questionIndex != null) {
+    let remaining = round.questionIndex;
+    for (const topic of state.topics) {
+      if (remaining < topic.questions.length) {
+        difficulty = topic.questions[remaining].difficulty;
+        break;
+      }
+      remaining -= topic.questions.length;
+    }
+  }
+
+  const teamPlayers = state.players.filter((p) => p.team === round.teamId);
+  const respondersCount = teamPlayers.length - 1;
+  const activeDuration = getActiveTimerDuration(respondersCount);
+
+  const bonus = checkBonusConditions(
+    round.answers,
+    review.evaluations,
+    review.groups,
+    respondersCount,
+    activeDuration,
+  );
+  const bonusMultiplier = bonus.hasBonus
+    ? calculateBonusMultiplier(bonus.bonusTime, activeDuration)
+    : 0;
+
+  const score = calculateRoundScore(difficulty, correctCount, round.jokerActive, bonusMultiplier);
+
+  useGameStore.getState().setState({
+    currentRound: {
+      ...state.currentRound,
+      reviewResult: { ...review, score, scoreConfirmed: true },
     },
   });
 }
@@ -246,37 +297,7 @@ export function confirmReview(): void {
 
   const review = state.currentRound.reviewResult;
   const round = state.currentRound;
-
-  const correctCount = review.evaluations.filter((e) => e.correct === true).length;
-
-  let difficulty = 100;
-  if (round.questionIndex != null) {
-    let remaining = round.questionIndex;
-    for (const topic of state.topics) {
-      if (remaining < topic.questions.length) {
-        difficulty = topic.questions[remaining].difficulty;
-        break;
-      }
-      remaining -= topic.questions.length;
-    }
-  }
-
-  const teamPlayers = state.players.filter((p) => p.team === round.teamId);
-  const respondersCount = teamPlayers.length - 1;
-  const activeDuration = getActiveTimerDuration(respondersCount);
-
-  const bonus = checkBonusConditions(
-    round.answers,
-    review.evaluations,
-    review.groups,
-    respondersCount,
-    activeDuration,
-  );
-  const bonusMultiplier = bonus.hasBonus
-    ? calculateBonusMultiplier(bonus.bonusTime, activeDuration)
-    : 0;
-
-  const score = calculateRoundScore(difficulty, correctCount, round.jokerActive, bonusMultiplier);
+  const score = review.score;
 
   const result = {
     type: "round" as const,
@@ -318,10 +339,20 @@ export function disputeReview(): void {
   const state = useGameStore.getState();
   if (state.phase !== "round-review" || !state.currentRound?.reviewResult) return;
 
+  const evaluations = state.currentRound.reviewResult.evaluations.map((e) => ({
+    ...e,
+    correct: (state.currentRound!.answers[e.playerName]?.text === "" ? false : null) as boolean | null,
+  }));
+
   useGameStore.getState().setState({
     currentRound: {
       ...state.currentRound,
-      reviewResult: { ...state.currentRound.reviewResult, score: 0 },
+      reviewResult: {
+        ...state.currentRound.reviewResult,
+        score: 0,
+        scoreConfirmed: false,
+        evaluations,
+      },
     },
   });
 }

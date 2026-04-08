@@ -7,8 +7,10 @@ import {
   toLinearQuestionIndex,
 } from "@/store/selectors";
 import { useGameStore } from "@/store/gameStore";
+import { canBeCaptain } from "@/logic/captain";
 import { getPlayedQuestionIndices } from "@/logic/phaseTransitions";
 import { getRemainingTime } from "@/logic/timer";
+import { Timer } from "@/components/Timer/Timer";
 import { TimerButton } from "@/components/TimerButton/TimerButton";
 import { TimerInput } from "@/components/TimerInput/TimerInput";
 import { TaskCard } from "@/components/TaskCard/TaskCard";
@@ -88,16 +90,20 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
   // -- round-captain --
   if (phase === "round-captain") {
     const remainingTime = timer ? getRemainingTime(timer) : 60;
+    const eligible = canBeCaptain(playerName, history);
     return (
       <div className={styles.container}>
         <div className={styles.phaseInfo}>{t("round.captain")}</div>
         <TimerButton
           time={remainingTime}
           onClick={() => sendAction({ kind: "claim-captain" })}
+          disabled={!eligible}
         >
           {t("round.beCaptain")}
         </TimerButton>
-        <div className={styles.phaseInfo}>{t("round.captainHint")}</div>
+        <div className={styles.phaseInfo}>
+          {eligible ? t("round.captainHint") : t("round.wasCaptain")}
+        </div>
       </div>
     );
   }
@@ -105,7 +111,6 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
   // -- round-pick --
   if (phase === "round-pick") {
     if (isCaptain) {
-      const playedIndices = getPlayedQuestionIndices(history);
       const taskViewTopics: TaskViewTopic[] = topics.map((topic, topicIdx) => ({
         name: topic.name,
         questions: topic.questions.map((q, qIdx) => {
@@ -126,7 +131,7 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
         }),
       }));
 
-      const taskViewBlitz: TaskViewBlitz[] = blitzTasks.map((_, bi) => ({
+      const taskViewBlitz: TaskViewBlitz[] = blitzTasks.map(() => ({
         active: false,
         team: undefined,
         score: undefined,
@@ -174,6 +179,7 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
 
   // -- round-ready --
   if (phase === "round-ready") {
+    const isReady = myPlayer?.ready ?? false;
     return (
       <div className={styles.container}>
         <div className={styles.phaseInfo}>{t("round.ready")}</div>
@@ -188,12 +194,16 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
           questionScore={currentQuestion?.question.text ?? ""}
           hidden
         />
-        <button
-          className={styles.readyBtn}
-          onClick={() => sendAction({ kind: "set-ready", ready: true })}
-        >
-          {t("round.readyBtn")}
-        </button>
+        {isReady ? (
+          <div className={styles.phaseInfo}>{t("lobby.waiting")}</div>
+        ) : (
+          <button
+            className={styles.readyBtn}
+            onClick={() => sendAction({ kind: "set-ready", ready: true })}
+          >
+            {t("round.readyBtn")}
+          </button>
+        )}
       </div>
     );
   }
@@ -220,6 +230,7 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
             questionScore={currentQuestion?.question.text ?? ""}
           />
           <div className={styles.phaseInfo}>{t("round.activeHint")}</div>
+          <Timer time={remainingTime} />
         </div>
       );
     }
@@ -232,6 +243,17 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
             <div className={styles.phaseInfo}>
               {phase === "round-active" ? t("round.active") : t("round.answer")}
             </div>
+            <TaskCard
+              topic={currentQuestion?.topic.name}
+              player={
+                captainPlayer
+                  ? { emoji: captainPlayer.emoji, name: captainPlayer.name, team: captainPlayer.team }
+                  : undefined
+              }
+              difficulty={currentQuestion?.question.difficulty ?? 0}
+              questionScore={currentQuestion?.question.text ?? ""}
+              hidden
+            />
             <div className={styles.phaseInfo}>{t("round.gaveUp")}</div>
           </div>
         );
@@ -242,6 +264,17 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
           <div className={styles.phaseInfo}>
             {phase === "round-active" ? t("round.active") : t("round.answer")}
           </div>
+          <TaskCard
+            topic={currentQuestion?.topic.name}
+            player={
+              captainPlayer
+                ? { emoji: captainPlayer.emoji, name: captainPlayer.name, team: captainPlayer.team }
+                : undefined
+            }
+            difficulty={currentQuestion?.question.difficulty ?? 0}
+            questionScore={currentQuestion?.question.text ?? ""}
+            hidden
+          />
           <Sticker
             player={myPlayer ? { emoji: myPlayer.emoji, name: myPlayer.name, team: myPlayer.team } : undefined}
             answerText={myAnswer.text}
@@ -256,6 +289,17 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
         <div className={styles.phaseInfo}>
           {phase === "round-active" ? t("round.active") : t("round.answer")}
         </div>
+        <TaskCard
+          topic={currentQuestion?.topic.name}
+          player={
+            captainPlayer
+              ? { emoji: captainPlayer.emoji, name: captainPlayer.name, team: captainPlayer.team }
+              : undefined
+          }
+          difficulty={currentQuestion?.question.difficulty ?? 0}
+          questionScore={currentQuestion?.question.text ?? ""}
+          hidden
+        />
         <div className={styles.answerForm}>
           <TimerInput
             time={remainingTime}
@@ -298,15 +342,13 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
     const myEvaluation = round.reviewResult?.evaluations.find(
       (e) => e.playerName === playerName,
     );
-    const score = round.reviewResult?.score;
-    const allEvaluated = round.reviewResult?.evaluations.every(
-      (e) => e.correct !== null,
-    );
+    const scoreConfirmed = round.reviewResult?.scoreConfirmed ?? false;
+    const roundScore = round.reviewResult?.score ?? 0;
 
-    const questionScore = currentQuestion?.question.difficulty ?? 0;
+    const questionDifficulty = currentQuestion?.question.difficulty ?? 0;
     const stampText =
       myEvaluation?.correct === true
-        ? `+${questionScore}`
+        ? `+${questionDifficulty}`
         : myEvaluation?.correct === false
           ? "✗"
           : undefined;
@@ -335,12 +377,13 @@ export function PlayerRound({ playerName, sendAction }: PlayerRoundProps) {
             stampColor={stampColor}
           />
         )}
-        {allEvaluated && score != null && (
-          <div className={styles.scoreDisplay}>+{score}</div>
+        {scoreConfirmed && (
+          <div className={styles.scoreDisplay}>+{roundScore}</div>
         )}
         <div className={styles.reviewActions}>
           <button
             className={styles.disputeBtn}
+            disabled={!scoreConfirmed}
             onClick={() => sendAction({ kind: "dispute-review" })}
           >
             {t("round.dispute")}

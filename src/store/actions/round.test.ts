@@ -12,6 +12,7 @@ import {
   mergeAnswerGroups,
   splitAnswerFromGroup,
   confirmReview,
+  confirmScore,
   disputeReview,
 } from "./round";
 import type { GameState } from "@/types/game";
@@ -197,6 +198,7 @@ describe("evaluateAnswer", () => {
           ],
           groups: [["Bob"], ["Carol"]],
           score: 0,
+          scoreConfirmed: false,
           jokerApplied: false,
         },
       },
@@ -222,6 +224,7 @@ describe("mergeAnswerGroups", () => {
           ],
           groups: [["Bob"], ["Carol"]],
           score: 0,
+          scoreConfirmed: false,
           jokerApplied: false,
         },
       },
@@ -250,6 +253,7 @@ describe("splitAnswerFromGroup", () => {
           ],
           groups: [["Bob", "Carol"]],
           score: 0,
+          scoreConfirmed: false,
           jokerApplied: false,
         },
       },
@@ -280,10 +284,12 @@ describe("confirmReview", () => {
           ],
           groups: [["Bob", "Carol"]],
           score: 0,
+          scoreConfirmed: false,
           jokerApplied: false,
         },
       },
     });
+    confirmScore();
     confirmReview();
     const s = useGameStore.getState();
     expect(s.history).toHaveLength(1);
@@ -301,10 +307,12 @@ describe("disputeReview", () => {
     useGameStore.setState({
       currentRound: {
         ...useGameStore.getState().currentRound!,
+        answers: { Bob: { text: "ans", timestamp: 5000 } },
         reviewResult: {
           evaluations: [{ playerName: "Bob", correct: true }],
           groups: [["Bob"]],
           score: 150,
+          scoreConfirmed: true,
           jokerApplied: false,
         },
       },
@@ -312,5 +320,7 @@ describe("disputeReview", () => {
     disputeReview();
     const review = useGameStore.getState().currentRound!.reviewResult!;
     expect(review.score).toBe(0);
+    expect(review.scoreConfirmed).toBe(false);
+    expect(review.evaluations[0].correct).toBeNull();
   });
 });

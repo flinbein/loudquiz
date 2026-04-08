@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useGameStore } from "@/store/gameStore";
 import {
@@ -11,17 +11,17 @@ import {
 } from "@/store/selectors";
 import { getPlayedQuestionIndices } from "@/logic/phaseTransitions";
 import {
-  evaluateAnswer,
+  evaluateGroup,
   mergeAnswerGroups,
+  splitAnswerFromGroup,
   confirmReview,
+  confirmScore,
   disputeReview,
   selectQuestion,
   activateJoker,
   handleTimerExpire,
 } from "@/store/actions/round";
 import { getRemainingTime } from "@/logic/timer";
-import { getActiveTimerDuration } from "@/logic/timer";
-import { calculateRoundScore, calculateBonusMultiplier } from "@/logic/scoring";
 import { Timer } from "@/components/Timer/Timer";
 import { TaskView, type TaskViewTopic, type TaskViewBlitz } from "@/components/TaskView/TaskView";
 import { TaskCard } from "@/components/TaskCard/TaskCard";
@@ -87,8 +87,6 @@ export function HostRound() {
   const blitzTasks = useGameStore((s) => s.blitzTasks);
   const history = useGameStore((s) => s.history);
 
-  const [reviewConfirmed, setReviewConfirmed] = useState(false);
-
   // Handle timer expiry
   useEffect(() => {
     if (!timer) return;
@@ -117,15 +115,15 @@ export function HostRound() {
       const roundResult = history.find(
         (r) => r.type === "round" && r.questionIndex === linearIdx,
       );
-      const captain = isPlayed
+      const captainP = isPlayed
         ? players.find((p) => p.name === roundResult?.captainName)
         : undefined;
       const activeTeam = teams.find((t) => t.id === round.teamId);
       return {
         open: isPlayed || isActive,
         active: isActive,
-        player: captain
-          ? { emoji: captain.emoji, name: captain.name, team: captain.team }
+        player: captainP
+          ? { emoji: captainP.emoji, name: captainP.name, team: captainP.team }
           : undefined,
         jokerUsed: roundResult?.jokerUsed ?? false,
         difficulty: q.difficulty,
@@ -161,30 +159,9 @@ export function HostRound() {
       : undefined;
 
   const captain = players.find((p) => p.name === round.captainName);
-  const activeTeam = teams.find((t) => t.id === round.teamId);
-  const activeTeamColor: TeamColor = activeTeam?.color ?? "none";
 
-  // Compute score preview for review confirmed sub-phase
-  const scorePreview = (() => {
-    if (!round.reviewResult || !reviewConfirmed) return null;
-    const review = round.reviewResult;
-    const correctCount = review.evaluations.filter((e) => e.correct === true).length;
-    const difficulty = currentQuestion?.question.difficulty ?? 100;
-    const teamPlayers = players.filter((p) => p.team === round.teamId);
-    const respondersCount = teamPlayers.length - 1;
-    const activeDuration = getActiveTimerDuration(respondersCount);
-    const bonusMultiplier =
-      round.bonusTime > 0
-        ? calculateBonusMultiplier(round.bonusTime, activeDuration)
-        : 0;
-    const totalScore = calculateRoundScore(
-      difficulty,
-      correctCount,
-      round.jokerActive,
-      bonusMultiplier,
-    );
-    return { difficulty, correctCount, bonusMultiplier, totalScore };
-  })();
+  const review = round.reviewResult;
+  const scoreConfirmed = review?.scoreConfirmed ?? false;
 
   // Sidebar: player lists per team
   const sidebar = (
@@ -250,167 +227,77 @@ export function HostRound() {
         <JokerState state={jokerState} onClick={activateJoker} />
       </>
     );
-  } else if (
-    phase === "round-ready" ||
-    phase === "round-active" ||
-    phase === "round-answer" ||
-    phase === "round-review"
-  ) {
-    if (phase === "round-review") {
-      // Review phase: evaluation or score display sub-phase
-      const review = round.reviewResult;
+  } else if (phase === "round-review") {
+    // Review phase: evaluation or score display sub-phase
+    const groups = review?.groups ?? [];
 
-      if (!reviewConfirmed) {
-        // Evaluation sub-phase: sticker groups with drag-n-drop
-        const groups = review?.groups ?? [];
+    // Filter out empty-answer groups (they're auto-marked wrong)
+    const nonEmptyGroups = groups.filter((group) =>
+      group.some((name) => round.answers[name]?.text !== ""),
+    );
 
-        mainContent = (
-          <>
-            <div className={styles.phaseInfo}>{t("round.review")}</div>
-            <div className={styles.stickersGrid}>
-              {groups.map((group, groupIdx) => {
-                const representativePlayer = group[0];
-                const evaluation = review?.evaluations.find(
-                  (e) => e.playerName === representativePlayer,
-                );
-                const isCorrect = evaluation?.correct;
-                const stampText =
-                  isCorrect === true
-                    ? "✓"
-                    : isCorrect === false
-                      ? "✗"
-                      : undefined;
-                const stampColor =
-                  isCorrect === true
-                    ? "green"
-                    : isCorrect === false
-                      ? "red"
-                      : "green";
+    // Build stickers (always shown, clickable only when !scoreConfirmed)
+    const stickersContent = (
+      <div className={styles.stickersGrid}>
+        {nonEmptyGroups.map((group, groupIdx) => {
+          const representativePlayer = group[0];
+          const stickers = group.map((playerName) => {
+            const player = players.find((p) => p.name === playerName);
+            const answer = round.answers[playerName];
+            const eval_ = review?.evaluations.find(
+              (e) => e.playerName === playerName,
+            );
+            const correct = eval_?.correct;
+            const stickerStamp =
+              correct === true ? "✓" : correct === false ? "✗" : undefined;
+            const stickerStampColor: "green" | "red" =
+              correct === false ? "red" : "green";
+            return {
+              player: player
+                ? { emoji: player.emoji, name: player.name, team: player.team }
+                : undefined,
+              answerText: answer?.text ?? "• • •",
+              aiComment: eval_?.aiComment,
+              stampText: stickerStamp,
+              stampColor: stickerStampColor,
+            };
+          });
 
-                const stickers = group.map((playerName) => {
-                  const player = players.find((p) => p.name === playerName);
-                  const answer = round.answers[playerName];
-                  const eval_ = review?.evaluations.find(
-                    (e) => e.playerName === playerName,
+          return (
+            <div key={groupIdx} className={styles.stickerSlot}>
+              <StickerStack
+                stickers={stickers}
+                draggable={!scoreConfirmed}
+                dragData={!scoreConfirmed ? representativePlayer : undefined}
+                onDrop={!scoreConfirmed ? (dragData) => {
+                  mergeAnswerGroups(dragData, representativePlayer);
+                } : undefined}
+                onClickSticker={!scoreConfirmed ? () => {
+                  // Toggle evaluation for entire group: null → true → false → null
+                  const evaluation = review?.evaluations.find(
+                    (e) => e.playerName === representativePlayer,
                   );
-                  const correct = eval_?.correct;
-                  const stickerStamp =
-                    correct === true ? "✓" : correct === false ? "✗" : undefined;
-                  const stickerStampColor: "green" | "red" =
-                    correct === false ? "red" : "green";
-                  return {
-                    player: player
-                      ? { emoji: player.emoji, name: player.name, team: player.team }
-                      : undefined,
-                    answerText: answer?.text ?? "• • •",
-                    aiComment: eval_?.aiComment,
-                    stampText: stickerStamp,
-                    stampColor: stickerStampColor,
-                  };
-                });
-
-                return (
-                  <div key={groupIdx} className={styles.stickerSlot}>
-                    <StickerStack
-                      stickers={stickers}
-                      draggable
-                      dragData={representativePlayer}
-                      onDrop={(dragData) => {
-                        mergeAnswerGroups(dragData, representativePlayer);
-                      }}
-                      onClickSticker={() => {
-                        // Toggle evaluation: null → true → false → null
-                        const current = evaluation?.correct ?? null;
-                        const next =
-                          current === null ? true : current === true ? false : null;
-                        if (next !== null) {
-                          evaluateAnswer(representativePlayer, next);
-                        } else {
-                          // Reset to null — set correct to null via direct store update
-                          const state = useGameStore.getState();
-                          if (state.currentRound?.reviewResult) {
-                            const evaluations =
-                              state.currentRound.reviewResult.evaluations.map(
-                                (e) =>
-                                  group.includes(e.playerName)
-                                    ? { ...e, correct: null as boolean | null }
-                                    : e,
-                              );
-                            useGameStore.getState().setState({
-                              currentRound: {
-                                ...state.currentRound,
-                                reviewResult: {
-                                  ...state.currentRound.reviewResult,
-                                  evaluations,
-                                },
-                              },
-                            });
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            <div className={styles.actions}>
-              <button
-                className={styles.primaryBtn}
-                onClick={() => setReviewConfirmed(true)}
-              >
-                {t("round.next")}
-              </button>
-            </div>
-          </>
-        );
-      } else {
-        // Score display sub-phase
-        mainContent = (
-          <>
-            <div className={styles.phaseInfo}>{t("round.review")}</div>
-            {scorePreview && (
-              <ScoreFormula
-                difficulty={scorePreview.difficulty}
-                correctCount={scorePreview.correctCount}
-                jokerActive={round.jokerActive}
-                bonusMultiplier={scorePreview.bonusMultiplier}
-                totalScore={scorePreview.totalScore}
+                  const current = evaluation?.correct ?? null;
+                  const next =
+                    current === null ? true : current === true ? false : null;
+                  evaluateGroup(group, next);
+                } : undefined}
+                onClickBadge={!scoreConfirmed ? () => {
+                  // Split last player from group
+                  const lastPlayer = group[group.length - 1];
+                  splitAnswerFromGroup(lastPlayer);
+                } : undefined}
               />
-            )}
-            <div className={styles.actions}>
-              <button
-                className={styles.secondaryBtn}
-                onClick={() => {
-                  disputeReview();
-                  setReviewConfirmed(false);
-                }}
-              >
-                {t("round.dispute")}
-              </button>
-              <button
-                className={styles.primaryBtn}
-                onClick={() => {
-                  confirmReview();
-                  setReviewConfirmed(false);
-                }}
-              >
-                {t("round.nextRound")}
-              </button>
             </div>
-          </>
-        );
-      }
-    } else {
-      // round-ready / round-active / round-answer: show TaskCard
+          );
+        })}
+      </div>
+    );
+
+    if (!scoreConfirmed) {
       mainContent = (
         <>
-          <div className={styles.phaseInfo}>
-            {phase === "round-ready"
-              ? t("round.ready")
-              : phase === "round-active"
-                ? t("round.active")
-                : t("round.answer")}
-          </div>
+          <div className={styles.phaseInfo}>{t("round.review")}</div>
           <div className={styles.taskCardWrap}>
             <TaskCard
               topic={currentQuestion?.topic.name}
@@ -421,12 +308,94 @@ export function HostRound() {
               }
               difficulty={currentQuestion?.question.difficulty ?? 0}
               questionScore={currentQuestion?.question.text ?? ""}
-              hidden
             />
           </div>
-          {(phase === "round-active" || phase === "round-answer") && (
-            <div className={styles.stickersGrid}>
-              {Object.entries(round.answers).map(([playerName, answer]) => {
+          {stickersContent}
+          <div className={styles.actions}>
+            <button
+              className={styles.primaryBtn}
+              onClick={() => confirmScore()}
+            >
+              {t("round.next")}
+            </button>
+          </div>
+        </>
+      );
+    } else {
+      // Score display sub-phase
+      const difficulty = currentQuestion?.question.difficulty ?? 100;
+      const correctCount = review?.evaluations.filter((e) => e.correct === true).length ?? 0;
+      const totalScore = review?.score ?? 0;
+
+      mainContent = (
+        <>
+          <div className={styles.phaseInfo}>{t("round.review")}</div>
+          <div className={styles.taskCardWrap}>
+            <TaskCard
+              topic={currentQuestion?.topic.name}
+              player={
+                captain
+                  ? { emoji: captain.emoji, name: captain.name, team: captain.team }
+                  : undefined
+              }
+              difficulty={currentQuestion?.question.difficulty ?? 0}
+              questionScore={currentQuestion?.question.text ?? ""}
+            />
+          </div>
+          {stickersContent}
+          <ScoreFormula
+            difficulty={difficulty}
+            correctCount={correctCount}
+            jokerActive={round.jokerActive}
+            bonusMultiplier={0}
+            totalScore={totalScore}
+          />
+          <div className={styles.actions}>
+            <button
+              className={styles.secondaryBtn}
+              onClick={() => disputeReview()}
+            >
+              {t("round.dispute")}
+            </button>
+            <button
+              className={styles.primaryBtn}
+              onClick={() => confirmReview()}
+            >
+              {t("round.nextRound")}
+            </button>
+          </div>
+        </>
+      );
+    }
+  } else {
+    // round-ready / round-active / round-answer: show TaskCard
+    mainContent = (
+      <>
+        <div className={styles.phaseInfo}>
+          {phase === "round-ready"
+            ? t("round.ready")
+            : phase === "round-active"
+              ? t("round.active")
+              : t("round.answer")}
+        </div>
+        <div className={styles.taskCardWrap}>
+          <TaskCard
+            topic={currentQuestion?.topic.name}
+            player={
+              captain
+                ? { emoji: captain.emoji, name: captain.name, team: captain.team }
+                : undefined
+            }
+            difficulty={currentQuestion?.question.difficulty ?? 0}
+            questionScore={currentQuestion?.question.text ?? ""}
+            hidden
+          />
+        </div>
+        {(phase === "round-active" || phase === "round-answer") && (
+          <div className={styles.stickersGrid}>
+            {Object.entries(round.answers)
+              .filter(([, answer]) => answer.text !== "")
+              .map(([playerName]) => {
                 const player = players.find((p) => p.name === playerName);
                 return (
                   <div key={playerName} className={styles.stickerSlot}>
@@ -448,11 +417,10 @@ export function HostRound() {
                   </div>
                 );
               })}
-            </div>
-          )}
-        </>
-      );
-    }
+          </div>
+        )}
+      </>
+    );
   }
 
   return (

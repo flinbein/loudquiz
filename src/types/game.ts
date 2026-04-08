@@ -103,6 +103,7 @@ export interface ReviewResult {
   groups: string[][];
   comment?: string;
   score: number;
+  scoreConfirmed: boolean;
   jokerApplied: boolean;
 }
 

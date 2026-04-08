@@ -71,6 +71,7 @@
   "round": {
     "captain": "Captain Selection",
     "captainHint": "Press to become captain",
+    "wasCaptain": "You were captain last round",
     "beCaptain": "I'll be captain!",
     "pick": "Question Selection",
     "pickHint": "Captain is choosing a question...",

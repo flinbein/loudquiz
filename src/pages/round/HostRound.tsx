@@ -163,6 +163,24 @@ export function HostRound() {
   const review = round.reviewResult;
   const scoreConfirmed = review?.scoreConfirmed ?? false;
 
+  // Compute bonus time remaining for review sidebar
+  const bonusTimeInfo = (() => {
+    if (phase !== "round-review") return null;
+    const teamPlayers = players.filter((p) => p.team === round.teamId);
+    const respondersCount = teamPlayers.length - 1;
+    const activeDuration = getActiveTimerDuration(respondersCount);
+    const answerValues = Object.values(round.answers);
+    if (answerValues.length === 0 || round.activeTimerStartedAt === 0) {
+      return { seconds: 0, multiplier: 1, active: false };
+    }
+    const timerEndAt = round.activeTimerStartedAt + activeDuration * 1000;
+    const maxTimestamp = Math.max(...answerValues.map((a) => a.timestamp));
+    const remaining = Math.max(0, (timerEndAt - maxTimestamp) / 1000);
+    const multiplier = scoreConfirmed ? (review?.bonusMultiplier ?? 0) : 0;
+    const active = multiplier > 0;
+    return { seconds: Math.floor(remaining), multiplier: active ? multiplier : 1, active };
+  })();
+
   // Sidebar actions by phase
   let sidebarActions: React.ReactNode = null;
   if (phase === "round-review" && !scoreConfirmed) {
@@ -191,6 +209,17 @@ export function HostRound() {
     <div className={styles.sidebar}>
       <TeamScore teams={teams} />
       {timer && <Timer time={getRemainingTime(timer)} />}
+      {bonusTimeInfo && (
+        <div className={styles.bonusTime}>
+          <span className={bonusTimeInfo.active ? styles.bonusTimeValue : styles.bonusTimeStruck}>
+            {String(Math.floor(bonusTimeInfo.seconds / 60)).padStart(2, "0")}
+            :{String(bonusTimeInfo.seconds % 60).padStart(2, "0")}
+          </span>
+          <span className={styles.bonusTimeLabel}>
+            {"🪙\u00A0\u00A0× " + (bonusTimeInfo.active ? bonusTimeInfo.multiplier.toFixed(2) : "1")}
+          </span>
+        </div>
+      )}
       {teams.map((team) => {
         const teamPlayers = players.filter((p) => p.team === team.id);
         return (

@@ -99,9 +99,10 @@ export function startGame(): void {
   const nextPhase =
     state.settings.mode === "ai" ? "topics-suggest" : "round-captain";
 
+  const teamId = state.teams[0]?.id ?? "default";
   const roundInit = nextPhase === "round-captain"
     ? {
-        currentRound: createNextRoundState(state.teams[0].id),
+        currentRound: createNextRoundState(teamId),
         timer: createTimer(getCaptainTimerDuration()),
       }
     : {};
@@ -143,9 +144,10 @@ export function startGameAsHost(): void {
   const nextPhase =
     state.settings.mode === "ai" ? "topics-suggest" : "round-captain";
 
+  const teamId = state.teams[0]?.id ?? "default";
   const roundInit = nextPhase === "round-captain"
     ? {
-        currentRound: createNextRoundState(state.teams[0].id),
+        currentRound: createNextRoundState(teamId),
         timer: createTimer(getCaptainTimerDuration()),
       }
     : {};

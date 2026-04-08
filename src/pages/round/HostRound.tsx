@@ -35,7 +35,7 @@ import {
   type PlayerRole,
   type PlayerStatus,
 } from "@/components/PlayerStatusTable/PlayerStatusTable";
-import type { GameState, RoundPhase, TeamColor } from "@/types/game";
+import type { GameState, RoundPhase, TeamId } from "@/types/game";
 import styles from "./HostRound.module.css";
 
 function getPlayerRoundInfo(
@@ -128,7 +128,7 @@ export function HostRound() {
         jokerUsed: roundResult?.jokerUsed ?? false,
         difficulty: q.difficulty,
         totalScore: roundResult?.score,
-        paperColor: isActive ? (activeTeam?.color ?? "none") : undefined,
+        paperColor: isActive ? (activeTeam?.id ?? "none") : undefined,
       };
     }),
   }));
@@ -138,7 +138,7 @@ export function HostRound() {
     const blitzTeam = blitzResult ? teams.find((t) => t.id === blitzResult.teamId) : undefined;
     return {
       active: false,
-      team: blitzTeam?.color,
+      team: blitzTeam?.id,
       score: blitzResult?.score,
     };
   });
@@ -163,6 +163,29 @@ export function HostRound() {
   const review = round.reviewResult;
   const scoreConfirmed = review?.scoreConfirmed ?? false;
 
+  // Sidebar actions by phase
+  let sidebarActions: React.ReactNode = null;
+  if (phase === "round-review" && !scoreConfirmed) {
+    sidebarActions = (
+      <div className={styles.actions}>
+        <button className={styles.primaryBtn} onClick={() => confirmScore()}>
+          {t("round.next")}
+        </button>
+      </div>
+    );
+  } else if (phase === "round-review" && scoreConfirmed) {
+    sidebarActions = (
+      <div className={styles.actions}>
+        <button className={styles.secondaryBtn} onClick={() => disputeReview()}>
+          {t("round.dispute")}
+        </button>
+        <button className={styles.primaryBtn} onClick={() => confirmReview()}>
+          {t("round.nextRound")}
+        </button>
+      </div>
+    );
+  }
+
   // Sidebar: player lists per team
   const sidebar = (
     <div className={styles.sidebar}>
@@ -173,8 +196,8 @@ export function HostRound() {
         return (
           <TeamGroup
             key={team.id}
-            label={t(`team.${team.color}`)}
-            teamColor={team.color}
+            label={t(`team.${team.id}`)}
+            teamColor={team.id}
             playerCount={teamPlayers.length}
           >
             <PlayerStatusTable
@@ -193,6 +216,7 @@ export function HostRound() {
           </TeamGroup>
         );
       })}
+      {sidebarActions}
     </div>
   );
 
@@ -311,14 +335,6 @@ export function HostRound() {
             />
           </div>
           {stickersContent}
-          <div className={styles.actions}>
-            <button
-              className={styles.primaryBtn}
-              onClick={() => confirmScore()}
-            >
-              {t("round.next")}
-            </button>
-          </div>
         </>
       );
     } else {
@@ -350,20 +366,6 @@ export function HostRound() {
             bonusMultiplier={0}
             totalScore={totalScore}
           />
-          <div className={styles.actions}>
-            <button
-              className={styles.secondaryBtn}
-              onClick={() => disputeReview()}
-            >
-              {t("round.dispute")}
-            </button>
-            <button
-              className={styles.primaryBtn}
-              onClick={() => confirmReview()}
-            >
-              {t("round.nextRound")}
-            </button>
-          </div>
         </>
       );
     }

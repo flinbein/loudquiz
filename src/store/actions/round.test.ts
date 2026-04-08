@@ -297,8 +297,8 @@ describe("confirmReview", () => {
     confirmReview();
     const s = useGameStore.getState();
     expect(s.history).toHaveLength(1);
-    expect(s.history[0].score).toBe(200); // 100 × 2 (no bonus: merged group)
-    expect(s.teams[0].score).toBe(200);
+    expect(s.history[0].score).toBe(100); // 100 × 1 group (merged into one stack)
+    expect(s.teams[0].score).toBe(100);
     // 3 unplayed questions remain, so next phase is round-captain
     expect(s.phase).toBe("round-captain");
     expect(s.currentRound!.captainName).toBe("");

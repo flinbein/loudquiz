@@ -205,7 +205,11 @@ export function confirmScore(): void {
   const review = state.currentRound.reviewResult;
   const round = state.currentRound;
 
-  const correctCount = review.evaluations.filter((e) => e.correct === true).length;
+  // Count correct groups (stacks), not individual evaluations
+  const correctCount = review.groups.filter((group) => {
+    const eval_ = review.evaluations.find((e) => e.playerName === group[0]);
+    return eval_?.correct === true;
+  }).length;
 
   let difficulty = 100;
   if (round.questionIndex != null) {

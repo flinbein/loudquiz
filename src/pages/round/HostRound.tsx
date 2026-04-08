@@ -21,7 +21,7 @@ import {
   activateJoker,
   handleTimerExpire,
 } from "@/store/actions/round";
-import { getRemainingTime } from "@/logic/timer";
+import { getRemainingTime, getActiveTimerDuration } from "@/logic/timer";
 import { Timer } from "@/components/Timer/Timer";
 import { TaskView, type TaskViewTopic, type TaskViewBlitz } from "@/components/TaskView/TaskView";
 import { TaskCard } from "@/components/TaskCard/TaskCard";

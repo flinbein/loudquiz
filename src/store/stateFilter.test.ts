@@ -18,7 +18,7 @@ function createTestState(overrides?: Partial<GameState>): GameState {
       { name: "Bob", emoji: "🐶", team: "red", online: true, ready: true },
       { name: "Charlie", emoji: "🐸", team: "red", online: true, ready: true },
     ],
-    teams: [{ id: "red", color: "red", score: 0, jokerUsed: false }],
+    teams: [{ id: "red", score: 0, jokerUsed: false }],
     topics: [
       {
         name: "Animals",
@@ -47,6 +47,7 @@ function createTestState(overrides?: Partial<GameState>): GameState {
         Bob: { text: "lion", timestamp: 5000 },
         Charlie: { text: "tiger", timestamp: 8000 },
       },
+      activeTimerStartedAt: 0,
       bonusTime: 10000,
     },
     history: [],
@@ -92,8 +93,8 @@ describe("filterStateForPlayer", () => {
           { name: "Dave", emoji: "🦊", team: "blue", online: true, ready: true },
         ],
         teams: [
-          { id: "red", color: "red", score: 0, jokerUsed: false },
-          { id: "blue", color: "blue", score: 0, jokerUsed: false },
+          { id: "red", score: 0, jokerUsed: false },
+          { id: "blue", score: 0, jokerUsed: false },
         ],
       });
 
@@ -117,8 +118,8 @@ describe("filterStateForPlayer", () => {
           { name: "Dave", emoji: "🦊", team: "blue", online: true, ready: true },
         ],
         teams: [
-          { id: "red", color: "red", score: 0, jokerUsed: false },
-          { id: "blue", color: "blue", score: 0, jokerUsed: false },
+          { id: "red", score: 0, jokerUsed: false },
+          { id: "blue", score: 0, jokerUsed: false },
         ],
       });
 
@@ -158,6 +159,7 @@ describe("filterStateForPlayer", () => {
           blitzTaskId: "blitz-1",
           jokerActive: false,
           answers: {},
+          activeTimerStartedAt: 0,
           bonusTime: 0,
         },
       });
@@ -175,6 +177,7 @@ describe("filterStateForPlayer", () => {
           blitzTaskId: "blitz-1",
           jokerActive: false,
           answers: {},
+          activeTimerStartedAt: 0,
           bonusTime: 0,
         },
       });

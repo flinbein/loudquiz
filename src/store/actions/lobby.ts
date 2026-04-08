@@ -18,7 +18,7 @@ export function handleJoin(peerId: string, name: string): void {
   const occupied = state.players.map((p) => p.emoji);
   const emoji = getRandomEmoji(occupied);
   const team =
-    state.settings.teamMode === "single" ? state.teams[0]?.id ?? "" : "";
+    state.settings.teamMode === "single" ? state.teams[0]?.id ?? "default" : "";
 
   const player = { name, emoji, team, online: true, ready: false };
   useGameStore.getState().setState({

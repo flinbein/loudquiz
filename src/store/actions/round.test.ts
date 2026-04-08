@@ -26,13 +26,13 @@ function setupRoundState(overrides?: Partial<GameState>) {
       { name: "Bob", emoji: "👹", team: "red", online: true, ready: true },
       { name: "Carol", emoji: "👺", team: "red", online: true, ready: true },
     ],
-    teams: [{ id: "red", color: "red", score: 0, jokerUsed: false }],
+    teams: [{ id: "red", score: 0, jokerUsed: false }],
     topics: [
       { name: "T1", questions: [{ text: "Q1", difficulty: 100, acceptedAnswers: ["a1"] }, { text: "Q2", difficulty: 150, acceptedAnswers: ["a2"] }] },
       { name: "T2", questions: [{ text: "Q3", difficulty: 200, acceptedAnswers: ["a3"] }, { text: "Q4", difficulty: 120, acceptedAnswers: ["a4"] }] },
     ],
     blitzTasks: [],
-    currentRound: { type: "round", teamId: "red", captainName: "", jokerActive: false, answers: {}, bonusTime: 0 },
+    currentRound: { type: "round", teamId: "red", captainName: "", jokerActive: false, answers: {}, activeTimerStartedAt: 0, bonusTime: 0 },
     history: [],
     timer: null,
     ...overrides,
@@ -98,7 +98,7 @@ describe("activateJoker", () => {
   });
 
   it("rejects if already used by team", () => {
-    useGameStore.setState({ teams: [{ id: "red", color: "red", score: 0, jokerUsed: true }] });
+    useGameStore.setState({ teams: [{ id: "red", score: 0, jokerUsed: true }] });
     activateJoker();
     expect(useGameStore.getState().currentRound!.jokerActive).toBe(false);
   });
@@ -198,6 +198,7 @@ describe("evaluateAnswer", () => {
           ],
           groups: [["Bob"], ["Carol"]],
           score: 0,
+          bonusMultiplier: 0,
           scoreConfirmed: false,
           jokerApplied: false,
         },
@@ -224,6 +225,7 @@ describe("mergeAnswerGroups", () => {
           ],
           groups: [["Bob"], ["Carol"]],
           score: 0,
+          bonusMultiplier: 0,
           scoreConfirmed: false,
           jokerApplied: false,
         },
@@ -253,6 +255,7 @@ describe("splitAnswerFromGroup", () => {
           ],
           groups: [["Bob", "Carol"]],
           score: 0,
+          bonusMultiplier: 0,
           scoreConfirmed: false,
           jokerApplied: false,
         },
@@ -284,6 +287,7 @@ describe("confirmReview", () => {
           ],
           groups: [["Bob", "Carol"]],
           score: 0,
+          bonusMultiplier: 0,
           scoreConfirmed: false,
           jokerApplied: false,
         },
@@ -312,6 +316,7 @@ describe("disputeReview", () => {
           evaluations: [{ playerName: "Bob", correct: true }],
           groups: [["Bob"]],
           score: 150,
+          bonusMultiplier: 0,
           scoreConfirmed: true,
           jokerApplied: false,
         },

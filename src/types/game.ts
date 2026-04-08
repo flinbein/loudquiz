@@ -36,13 +36,13 @@ export interface GameSettings {
 
 // Players and teams
 
-export type TeamColor = "red" | "blue" | "none";
+export type TeamId = "red" | "blue" | "none";
 
 // Minimal player shape used by visual components (avatar + name + team)
 export interface PlayerDisplay {
   emoji: string;
   name: string;
-  team: TeamColor;
+  team: TeamId;
 }
 
 export interface PlayerData extends PlayerDisplay{
@@ -51,8 +51,7 @@ export interface PlayerData extends PlayerDisplay{
 }
 
 export interface TeamData {
-  id: string;
-  color: TeamColor;
+  id: TeamId;
   score: number;
   jokerUsed: boolean;
 }
@@ -103,13 +102,14 @@ export interface ReviewResult {
   groups: string[][];
   comment?: string;
   score: number;
+  bonusMultiplier: number;
   scoreConfirmed: boolean;
   jokerApplied: boolean;
 }
 
 export interface RoundState {
   type: "round" | "blitz";
-  teamId: string;
+  teamId: TeamId;
   captainName: string;
   questionIndex?: number;
   blitzTaskId?: string;
@@ -117,6 +117,7 @@ export interface RoundState {
   jokerActive: boolean;
   playerOrder?: string[];
   answers: Record<string, PlayerAnswer>;
+  activeTimerStartedAt: number;
   bonusTime: number;
   reviewResult?: ReviewResult;
 }

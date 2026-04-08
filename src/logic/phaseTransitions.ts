@@ -1,4 +1,4 @@
-import type { GamePhase, RoundPhase, RoundState, RoundResult, Topic } from "@/types/game";
+import type { GamePhase, RoundPhase, RoundState, RoundResult, Topic, TeamId } from "@/types/game";
 
 const ROUND_PHASE_ORDER: RoundPhase[] = [
   "round-captain",
@@ -35,13 +35,14 @@ export function getTotalQuestionCount(topics: Topic[]): number {
   return topics.reduce((sum, t) => sum + t.questions.length, 0);
 }
 
-export function createNextRoundState(teamId: string): RoundState {
+export function createNextRoundState(teamId: TeamId): RoundState {
   return {
     type: "round",
     teamId,
     captainName: "",
     jokerActive: false,
     answers: {},
+    activeTimerStartedAt: 0,
     bonusTime: 0,
   };
 }

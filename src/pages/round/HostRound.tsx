@@ -363,7 +363,7 @@ export function HostRound() {
             difficulty={difficulty}
             correctCount={correctCount}
             jokerActive={round.jokerActive}
-            bonusMultiplier={0}
+            bonusMultiplier={review?.bonusMultiplier ?? 0}
             totalScore={totalScore}
           />
         </>

@@ -40,73 +40,76 @@ describe("calculateBonusMultiplier", () => {
 
 describe("checkBonusConditions", () => {
   const activeDuration = 60;
+  // Timer started at T=10000, ends at T=10000+60000=70000
+  const timerStartedAt = 10000;
 
   it("grants bonus when all correct, unique, and answered in time", () => {
     const answers: Record<string, PlayerAnswer> = {
-      Bob: { text: "answer1", timestamp: 1000 },
-      Carol: { text: "answer2", timestamp: 2000 },
+      Bob: { text: "answer1", timestamp: 20000 },   // 10s into the phase
+      Carol: { text: "answer2", timestamp: 25000 },  // 15s into the phase
     };
     const evaluations: AnswerEvaluation[] = [
       { playerName: "Bob", correct: true },
       { playerName: "Carol", correct: true },
     ];
     const groups = [["Bob"], ["Carol"]];
-    const result = checkBonusConditions(answers, evaluations, groups, 2, activeDuration);
+    const result = checkBonusConditions(answers, evaluations, groups, 2, activeDuration, timerStartedAt);
     expect(result.hasBonus).toBe(true);
-    expect(result.bonusTime).toBeGreaterThan(0);
+    // Timer ends at 70000, last answer at 25000 → bonusTime = (70000-25000)/1000 = 45s
+    expect(result.bonusTime).toBe(45);
   });
 
   it("denies bonus when not all correct", () => {
     const answers: Record<string, PlayerAnswer> = {
-      Bob: { text: "answer1", timestamp: 1000 },
-      Carol: { text: "wrong", timestamp: 2000 },
+      Bob: { text: "answer1", timestamp: 20000 },
+      Carol: { text: "wrong", timestamp: 25000 },
     };
     const evaluations: AnswerEvaluation[] = [
       { playerName: "Bob", correct: true },
       { playerName: "Carol", correct: false },
     ];
     const groups = [["Bob"], ["Carol"]];
-    const result = checkBonusConditions(answers, evaluations, groups, 2, activeDuration);
+    const result = checkBonusConditions(answers, evaluations, groups, 2, activeDuration, timerStartedAt);
     expect(result.hasBonus).toBe(false);
   });
 
   it("denies bonus when answers are merged (not unique)", () => {
     const answers: Record<string, PlayerAnswer> = {
-      Bob: { text: "same", timestamp: 1000 },
-      Carol: { text: "same", timestamp: 2000 },
+      Bob: { text: "same", timestamp: 20000 },
+      Carol: { text: "same", timestamp: 25000 },
     };
     const evaluations: AnswerEvaluation[] = [
       { playerName: "Bob", correct: true },
       { playerName: "Carol", correct: true },
     ];
     const groups = [["Bob", "Carol"]]; // merged
-    const result = checkBonusConditions(answers, evaluations, groups, 2, activeDuration);
+    const result = checkBonusConditions(answers, evaluations, groups, 2, activeDuration, timerStartedAt);
     expect(result.hasBonus).toBe(false);
   });
 
   it("denies bonus when not all responders answered", () => {
     const answers: Record<string, PlayerAnswer> = {
-      Bob: { text: "answer1", timestamp: 1000 },
+      Bob: { text: "answer1", timestamp: 20000 },
     };
     const evaluations: AnswerEvaluation[] = [
       { playerName: "Bob", correct: true },
     ];
     const groups = [["Bob"]];
-    const result = checkBonusConditions(answers, evaluations, groups, 2, activeDuration);
+    const result = checkBonusConditions(answers, evaluations, groups, 2, activeDuration, timerStartedAt);
     expect(result.hasBonus).toBe(false);
   });
 
   it("denies bonus when a player gave up (empty text)", () => {
     const answers: Record<string, PlayerAnswer> = {
-      Bob: { text: "answer1", timestamp: 1000 },
-      Carol: { text: "", timestamp: 2000 },
+      Bob: { text: "answer1", timestamp: 20000 },
+      Carol: { text: "", timestamp: 25000 },
     };
     const evaluations: AnswerEvaluation[] = [
       { playerName: "Bob", correct: true },
       { playerName: "Carol", correct: false },
     ];
     const groups = [["Bob"], ["Carol"]];
-    const result = checkBonusConditions(answers, evaluations, groups, 2, activeDuration);
+    const result = checkBonusConditions(answers, evaluations, groups, 2, activeDuration, timerStartedAt);
     expect(result.hasBonus).toBe(false);
   });
 });

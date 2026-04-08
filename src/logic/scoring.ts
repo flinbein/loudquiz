@@ -26,6 +26,7 @@ export function checkBonusConditions(
   groups: string[][],
   respondersCount: number,
   activeDuration: number,
+  timerStartedAt: number,
 ): { hasBonus: boolean; bonusTime: number } {
   // 1. All responders answered
   const answeredCount = Object.keys(answers).length;
@@ -45,9 +46,10 @@ export function checkBonusConditions(
     return { hasBonus: false, bonusTime: 0 };
   }
 
-  // Bonus time = active duration minus the latest answer timestamp
-  // (timestamps are relative offsets within active phase in seconds)
+  // Bonus time = time remaining when last answer was submitted
+  // timestamps are absolute (Date.now()), timerStartedAt is absolute
+  const timerEndAt = timerStartedAt + activeDuration * 1000;
   const maxTimestamp = Math.max(...Object.values(answers).map((a) => a.timestamp));
-  const bonusTime = Math.max(0, activeDuration - maxTimestamp / 1000);
+  const bonusTime = Math.max(0, (timerEndAt - maxTimestamp) / 1000);
   return { hasBonus: true, bonusTime };
 }

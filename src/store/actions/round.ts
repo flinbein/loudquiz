@@ -64,10 +64,12 @@ export function setPlayerReady(playerName: string): void {
 
   if (allReady) {
     const respondersCount = teamPlayers.length - 1;
+    const activeTimer = createTimer(getActiveTimerDuration(respondersCount));
     useGameStore.getState().setState({
       phase: "round-active",
       players,
-      timer: createTimer(getActiveTimerDuration(respondersCount)),
+      timer: activeTimer,
+      currentRound: { ...state.currentRound, activeTimerStartedAt: activeTimer.startedAt },
     });
   } else {
     useGameStore.getState().setState({ players });
@@ -168,6 +170,7 @@ export function initReview(): void {
         evaluations,
         groups,
         score: 0,
+        bonusMultiplier: 0,
         scoreConfirmed: false,
         jokerApplied: state.currentRound.jokerActive,
       },
@@ -226,6 +229,7 @@ export function confirmScore(): void {
     review.groups,
     respondersCount,
     activeDuration,
+    round.activeTimerStartedAt,
   );
   const bonusMultiplier = bonus.hasBonus
     ? calculateBonusMultiplier(bonus.bonusTime, activeDuration)
@@ -236,7 +240,7 @@ export function confirmScore(): void {
   useGameStore.getState().setState({
     currentRound: {
       ...state.currentRound,
-      reviewResult: { ...review, score, scoreConfirmed: true },
+      reviewResult: { ...review, score, bonusMultiplier, scoreConfirmed: true },
     },
   });
 }

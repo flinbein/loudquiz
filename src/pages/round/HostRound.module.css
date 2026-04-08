@@ -57,6 +57,11 @@
   color: var(--color-text);
 }
 
+.taskCardWrap {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
 .phaseInfo {
   font-size: var(--font-size-md);
   color: var(--color-text-secondary);

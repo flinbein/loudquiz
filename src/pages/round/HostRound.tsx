@@ -402,11 +402,6 @@ export function HostRound() {
       }
     } else {
       // round-ready / round-active / round-answer: show TaskCard
-      const questionText =
-        phase === "round-answer"
-          ? currentQuestion?.question.text ?? ""
-          : "• • •";
-
       mainContent = (
         <>
           <div className={styles.phaseInfo}>
@@ -416,17 +411,19 @@ export function HostRound() {
                 ? t("round.active")
                 : t("round.answer")}
           </div>
-          <TaskCard
-            topic={currentQuestion?.topic.name}
-            player={
-              captain
-                ? { emoji: captain.emoji, name: captain.name, team: captain.team }
-                : undefined
-            }
-            difficulty={currentQuestion?.question.difficulty ?? 0}
-            questionScore={questionText}
-            hidden={phase === "round-ready"}
-          />
+          <div className={styles.taskCardWrap}>
+            <TaskCard
+              topic={currentQuestion?.topic.name}
+              player={
+                captain
+                  ? { emoji: captain.emoji, name: captain.name, team: captain.team }
+                  : undefined
+              }
+              difficulty={currentQuestion?.question.difficulty ?? 0}
+              questionScore={currentQuestion?.question.text ?? ""}
+              hidden
+            />
+          </div>
           {(phase === "round-active" || phase === "round-answer") && (
             <div className={styles.stickersGrid}>
               {Object.entries(round.answers).map(([playerName, answer]) => {

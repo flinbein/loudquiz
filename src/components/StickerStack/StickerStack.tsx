@@ -17,6 +17,11 @@ export function StickerStack({ stickers, onClickBadge, onClickSticker, draggable
   const [isDragging, setIsDragging] = useState(false);
   const [isDropOver, setIsDropOver] = useState(false);
 
+  const nextBgStickers = useMemo(() => {
+    if (stickers.length <= 1) return [];
+    return [...stickers, ...stickers].slice(topIndex, topIndex + Math.min(stickers.length - 1, 2));
+  }, [stickers, topIndex]);
+
   if (stickers.length === 0) return null;
 
   function handleDragStart(e: DragEvent) {
@@ -77,10 +82,6 @@ export function StickerStack({ stickers, onClickBadge, onClickSticker, draggable
   function handleBadgeClick() {
     onClickBadge?.(topIndex);
   }
-
-  const nextBgStickers = useMemo(() => {
-    return [...stickers, ...stickers].slice(topIndex, topIndex + Math.min(stickers.length - 1, 2));
-  }, [stickers, topIndex]);
 
   return (
     <div

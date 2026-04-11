@@ -279,7 +279,6 @@ export function confirmScore(): void {
   const bonusMultiplier = calculateBonusMultiplier(bonus.bonusTime, activeDuration)
 
   const score = calculateRoundScore(difficulty, correctCount, round.jokerActive, bonusMultiplier, bonus.hasBonus );
-
   useGameStore.getState().setState({
     phase: "round-result",
     currentRound: {

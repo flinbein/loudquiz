@@ -4,27 +4,27 @@ import type { PlayerAnswer, AnswerEvaluation } from "@/types/game";
 
 describe("calculateRoundScore", () => {
   it("scores basic round: difficulty × correctCount", () => {
-    expect(calculateRoundScore(100, 4, false, 0)).toBe(400);
+    expect(calculateRoundScore(100, 4, false, 1, false)).toBe(400);
   });
 
   it("scores zero when no correct answers", () => {
-    expect(calculateRoundScore(100, 0, false, 0)).toBe(0);
+    expect(calculateRoundScore(100, 0, false, 1, false)).toBe(0);
   });
 
   it("doubles with joker", () => {
-    expect(calculateRoundScore(100, 4, true, 0)).toBe(800);
+    expect(calculateRoundScore(100, 4, true, 1, false)).toBe(800);
   });
 
   it("applies bonus multiplier", () => {
-    expect(calculateRoundScore(100, 4, false, 1.2)).toBe(480);
+    expect(calculateRoundScore(100, 4, false, 1.2, true)).toBe(480);
   });
 
   it("applies joker + bonus", () => {
-    expect(calculateRoundScore(100, 4, true, 1.2)).toBe(960);
+    expect(calculateRoundScore(100, 4, true, 1.2, true)).toBe(960);
   });
 
   it("handles partial correct (2 out of 4)", () => {
-    expect(calculateRoundScore(100, 2, false, 0)).toBe(200);
+    expect(calculateRoundScore(100, 2, false, 1, false)).toBe(200);
   });
 });
 
@@ -33,13 +33,13 @@ describe("calculateBonusMultiplier", () => {
     expect(calculateBonusMultiplier(12, 60)).toBeCloseTo(1.2);
   });
 
-  it("returns 0 when no bonus time", () => {
-    expect(calculateBonusMultiplier(0, 60)).toBe(0);
+  it("returns 1 when no bonus time", () => {
+    expect(calculateBonusMultiplier(0, 60)).toBe(1);
   });
 });
 
 describe("checkBonusConditions", () => {
-  const activeDuration = 60;
+  const activeDuration = 60000;
   // Timer started at T=10000, ends at T=10000+60000=70000
   const timerStartedAt = 10000;
 
@@ -56,7 +56,7 @@ describe("checkBonusConditions", () => {
     const result = checkBonusConditions(answers, evaluations, groups, 2, activeDuration, timerStartedAt);
     expect(result.hasBonus).toBe(true);
     // Timer ends at 70000, last answer at 25000 → bonusTime = (70000-25000)/1000 = 45s
-    expect(result.bonusTime).toBe(45);
+    expect(result.bonusTime).toBe(45000);
   });
 
   it("denies bonus when not all correct", () => {

@@ -8,7 +8,7 @@ export function calculateRoundScore(
   bonusTimeApplied: boolean,
 ): number {
   const jokerMul = jokerActive ? 2 : 1;
-  const bonusMul = bonusTimeApplied ? bonusTimeMultiplier : 0;
+  const bonusMul = bonusTimeApplied ? bonusTimeMultiplier : 1;
   return Math.round(difficulty * correctCount * jokerMul * bonusMul);
 }
 

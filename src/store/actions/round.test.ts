@@ -6,7 +6,6 @@ import {
   activateJoker,
   setPlayerReady,
   submitAnswer,
-  handleTimerExpire,
   initReview,
   evaluateAnswer,
   mergeAnswerGroups,
@@ -199,7 +198,8 @@ describe("evaluateAnswer", () => {
           groups: [["Bob"], ["Carol"]],
           score: 0,
           bonusTimeMultiplier: 0,
-          scoreConfirmed: false,
+          bonusTime: 0,
+          bonusTimeApplied: false,
           jokerApplied: false,
         },
       },
@@ -226,7 +226,8 @@ describe("mergeAnswerGroups", () => {
           groups: [["Bob"], ["Carol"]],
           score: 0,
           bonusTimeMultiplier: 0,
-          scoreConfirmed: false,
+          bonusTime: 0,
+          bonusTimeApplied: false,
           jokerApplied: false,
         },
       },
@@ -256,7 +257,8 @@ describe("splitAnswerFromGroup", () => {
           groups: [["Bob", "Carol"]],
           score: 0,
           bonusTimeMultiplier: 0,
-          scoreConfirmed: false,
+          bonusTime: 0,
+          bonusTimeApplied: false,
           jokerApplied: false,
         },
       },
@@ -288,7 +290,8 @@ describe("confirmReview", () => {
           groups: [["Bob", "Carol"]],
           score: 0,
           bonusTimeMultiplier: 0,
-          scoreConfirmed: false,
+          bonusTime: 0,
+          bonusTimeApplied: false,
           jokerApplied: false,
         },
       },
@@ -306,8 +309,8 @@ describe("confirmReview", () => {
 });
 
 describe("disputeReview", () => {
-  it("resets score to 0 and goes back to evaluation", () => {
-    setupRoundState({ phase: "round-review" });
+  it("goes back to evaluation", () => {
+    setupRoundState({ phase: "round-result" });
     useGameStore.setState({
       currentRound: {
         ...useGameStore.getState().currentRound!,
@@ -317,7 +320,8 @@ describe("disputeReview", () => {
           groups: [["Bob"]],
           score: 150,
           bonusTimeMultiplier: 0,
-          scoreConfirmed: true,
+          bonusTime: 0,
+          bonusTimeApplied: false,
           jokerApplied: false,
         },
       },
@@ -325,7 +329,6 @@ describe("disputeReview", () => {
     disputeReview();
     const review = useGameStore.getState().currentRound!.reviewResult!;
     expect(review.score).toBe(0);
-    expect(review.scoreConfirmed).toBe(false);
-    expect(review.evaluations[0].correct).toBeNull();
+    expect(review.evaluations[0].correct).toBeTruthy();
   });
 });

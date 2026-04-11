@@ -90,10 +90,36 @@ describe("localPersistence", () => {
     expect(defaults.signalVolume).toBe(0.8);
     expect(defaults.hapticEnabled).toBe(true);
 
-    setCalibration({ musicVolume: 0.5, signalVolume: 0.6, hapticEnabled: false });
+    setCalibration({ musicVolume: 0.5, signalVolume: 0.6, hapticEnabled: false, sharedHeadphones: false });
     const updated = getCalibration();
     expect(updated.musicVolume).toBe(0.5);
     expect(updated.hapticEnabled).toBe(false);
+  });
+
+  it("returns sharedHeadphones=false by default", () => {
+    localStorage.clear();
+    const cal = getCalibration();
+    expect(cal.sharedHeadphones).toBe(false);
+  });
+
+  it("round-trips sharedHeadphones=true", () => {
+    setCalibration({
+      musicVolume: 0.5,
+      signalVolume: 0.5,
+      hapticEnabled: true,
+      sharedHeadphones: true,
+    });
+    expect(getCalibration().sharedHeadphones).toBe(true);
+  });
+
+  it("merges sharedHeadphones default when missing from stored record", () => {
+    localStorage.setItem(
+      "loud-quiz-calibration",
+      JSON.stringify({ musicVolume: 0.4, signalVolume: 0.6, hapticEnabled: false }),
+    );
+    const cal = getCalibration();
+    expect(cal.sharedHeadphones).toBe(false);
+    expect(cal.musicVolume).toBe(0.4);
   });
 
   it("used questions: add, get, clear", () => {

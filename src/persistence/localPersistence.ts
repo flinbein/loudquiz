@@ -13,12 +13,14 @@ export interface CalibrationSettings {
   musicVolume: number;
   signalVolume: number;
   hapticEnabled: boolean;
+  sharedHeadphones: boolean;
 }
 
 const defaultCalibration: CalibrationSettings = {
   musicVolume: 0.7,
   signalVolume: 0.8,
   hapticEnabled: true,
+  sharedHeadphones: false,
 };
 
 // API Key
@@ -47,7 +49,8 @@ export function getCalibration(): CalibrationSettings {
   try {
     const raw = localStorage.getItem(KEYS.calibration);
     if (!raw) return { ...defaultCalibration };
-    return JSON.parse(raw) as CalibrationSettings;
+    const parsed = JSON.parse(raw) as Partial<CalibrationSettings>;
+    return { ...defaultCalibration, ...parsed };
   } catch {
     return { ...defaultCalibration };
   }

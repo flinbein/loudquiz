@@ -1,0 +1,12 @@
+.slider {
+  flex: 1;
+  max-width: 180px;
+  height: 28px;
+  cursor: pointer;
+  accent-color: var(--color-accent, #5b6cff);
+}
+
+.slider:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

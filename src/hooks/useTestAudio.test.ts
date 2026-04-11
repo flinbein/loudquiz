@@ -45,8 +45,13 @@ describe("useTestAudio", () => {
   });
 
   it("pauses and resets when enabled flips to false", () => {
-    const { result, rerender } = renderHook(
-      (props) => useTestAudio(props),
+    let capturedAudio: MockAudio | undefined;
+    const { rerender } = renderHook(
+      (props) => {
+        const hookResult = useTestAudio(props);
+        capturedAudio = hookResult.audio as unknown as MockAudio;
+        return hookResult;
+      },
       {
         initialProps: {
           src: "/m.mp3",
@@ -57,7 +62,7 @@ describe("useTestAudio", () => {
       },
     );
     rerender({ src: "/m.mp3", loop: true, volume: 0.5, enabled: false });
-    expect(result.current.audio.pause).toHaveBeenCalled();
+    expect(capturedAudio!.pause).toHaveBeenCalled();
   });
 
   it("updates volume live", () => {

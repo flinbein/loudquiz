@@ -31,25 +31,25 @@ export function useTestAudio(options: UseTestAudioOptions): UseTestAudioResult {
   }
   const audio = audioRef.current;
 
-  if (audio.src !== src) audio.src = src;
+  if (audio.src !== src) {
+    audio.src = src;
+    audio.load();
+  }
   if (audio.loop !== loop) audio.loop = loop;
   if (audio.volume !== volume) audio.volume = volume;
 
   useEffect(() => {
     if (enabled) {
       void audio.play();
+      return () => {
+        audio.pause();
+        audio.currentTime = 0;
+      };
     } else {
       audio.pause();
       audio.currentTime = 0;
     }
   }, [enabled, audio]);
-
-  useEffect(() => {
-    return () => {
-      audio.pause();
-      audio.currentTime = 0;
-    };
-  }, [audio]);
 
   return { audio };
 }

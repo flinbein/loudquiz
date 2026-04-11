@@ -1,0 +1,132 @@
+<h2>Калибровка — лейаут попапа</h2>
+<p class="subtitle">Какой формат попапа подходит лучше? Содержимое одинаковое: общие наушники, музыка, сигнал, вибрация, инструкции.</p>
+
+<style>
+  .cal-mockup { font-family: system-ui, sans-serif; color: #222; }
+  .cal-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #e8e8e8; gap: 12px; }
+  .cal-row:last-child { border-bottom: none; }
+  .cal-label { font-size: 13px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 8px; }
+  .cal-ico { width: 24px; height: 24px; border-radius: 6px; background: #f0f0f0; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+  .cal-ctrl { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; }
+  .cal-slider { flex: 1; max-width: 140px; height: 4px; background: #ddd; border-radius: 2px; position: relative; }
+  .cal-slider::after { content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 65%; background: #5b6cff; border-radius: 2px; }
+  .cal-slider::before { content: ""; position: absolute; left: 65%; top: 50%; width: 14px; height: 14px; background: #fff; border: 2px solid #5b6cff; border-radius: 50%; transform: translate(-50%, -50%); }
+  .cal-btn { width: 30px; height: 30px; border-radius: 50%; background: #5b6cff; color: #fff; border: none; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+  .cal-btn-ghost { background: transparent; color: #5b6cff; border: 1.5px solid #5b6cff; }
+  .cal-toggle { width: 36px; height: 20px; border-radius: 10px; background: #5b6cff; position: relative; }
+  .cal-toggle::after { content: ""; position: absolute; right: 2px; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+  .cal-toggle.off { background: #ccc; }
+  .cal-toggle.off::after { left: 2px; right: auto; }
+  .cal-instr { font-size: 11px; color: #666; padding: 10px 14px; line-height: 1.4; background: #fafafa; border-top: 1px solid #eee; }
+  .cal-close { position: absolute; top: 8px; right: 10px; width: 28px; height: 28px; border-radius: 50%; background: #f0f0f0; border: none; font-size: 16px; color: #666; }
+  .cal-title { font-size: 14px; font-weight: 700; padding: 12px 14px 8px; border-bottom: 1px solid #e8e8e8; }
+
+  /* A: centered modal */
+  .modal-backdrop { background: rgba(0,0,0,0.4); padding: 40px 20px; min-height: 300px; display: flex; align-items: center; justify-content: center; }
+  .modal-card { background: #fff; border-radius: 14px; width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
+
+  /* B: bottom sheet */
+  .sheet-bg { background: rgba(0,0,0,0.3); min-height: 360px; position: relative; display: flex; align-items: flex-end; padding: 20px; }
+  .sheet-card { background: #fff; border-radius: 18px 18px 0 0; width: 100%; position: relative; overflow: hidden; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); }
+  .sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: #ccc; margin: 8px auto 0; }
+
+  /* C: fullscreen panel */
+  .full-bg { background: #fff; min-height: 400px; position: relative; }
+  .full-header { background: #5b6cff; color: #fff; padding: 16px 50px 16px 16px; font-size: 15px; font-weight: 700; }
+  .full-close-w { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.2); color: #fff; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image cal-mockup">
+      <div class="modal-backdrop">
+        <div class="modal-card">
+          <button class="cal-close">×</button>
+          <div class="cal-title">Калибровка</div>
+          <div class="cal-row">
+            <div class="cal-label"><span class="cal-ico">🎧</span>Общие наушники</div>
+            <div class="cal-ctrl"><div class="cal-toggle off"></div></div>
+          </div>
+          <div class="cal-row">
+            <div class="cal-label"><span class="cal-ico">🎵</span>Музыка</div>
+            <div class="cal-ctrl"><button class="cal-btn">▶</button><div class="cal-slider"></div></div>
+          </div>
+          <div class="cal-row">
+            <div class="cal-label"><span class="cal-ico">🔔</span>Сигнал</div>
+            <div class="cal-ctrl"><button class="cal-btn cal-btn-ghost">♪</button><div class="cal-slider"></div></div>
+          </div>
+          <div class="cal-row">
+            <div class="cal-label"><span class="cal-ico">📳</span>Вибрация</div>
+            <div class="cal-ctrl"><div class="cal-toggle"></div></div>
+          </div>
+          <div class="cal-instr">Настрой громкость так, чтобы не слышать соседей. Сигнал должен пробиваться поверх музыки.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Центральный модал</h3>
+      <p>Привычный диалог по центру. Клик по затемнению — закрыть. Работает одинаково на host (big screen) и player (mobile).</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image cal-mockup">
+      <div class="sheet-bg">
+        <div class="sheet-card">
+          <div class="sheet-handle"></div>
+          <div class="cal-title" style="text-align:center; border-bottom:1px solid #e8e8e8;">Калибровка</div>
+          <div class="cal-row">
+            <div class="cal-label"><span class="cal-ico">🎧</span>Общие наушники</div>
+            <div class="cal-ctrl"><div class="cal-toggle off"></div></div>
+          </div>
+          <div class="cal-row">
+            <div class="cal-label"><span class="cal-ico">🎵</span>Музыка</div>
+            <div class="cal-ctrl"><button class="cal-btn">▶</button><div class="cal-slider"></div></div>
+          </div>
+          <div class="cal-row">
+            <div class="cal-label"><span class="cal-ico">🔔</span>Сигнал</div>
+            <div class="cal-ctrl"><button class="cal-btn cal-btn-ghost">♪</button><div class="cal-slider"></div></div>
+          </div>
+          <div class="cal-row">
+            <div class="cal-label"><span class="cal-ico">📳</span>Вибрация</div>
+            <div class="cal-ctrl"><div class="cal-toggle"></div></div>
+          </div>
+          <div class="cal-instr">Сигнал должен пробиваться поверх музыки. Отключи уведомления.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Bottom sheet</h3>
+      <p>Всплывает снизу, свайп вниз закрывает. Максимально «мобильно», под большой палец. На host выглядит как нижняя полоска — менее привычно для big screen.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image cal-mockup">
+      <div class="full-bg">
+        <div class="full-header">Калибровка<button class="full-close-w">×</button></div>
+        <div class="cal-row">
+          <div class="cal-label"><span class="cal-ico">🎧</span>Общие наушники</div>
+          <div class="cal-ctrl"><div class="cal-toggle off"></div></div>
+        </div>
+        <div class="cal-row">
+          <div class="cal-label"><span class="cal-ico">🎵</span>Музыка</div>
+          <div class="cal-ctrl"><button class="cal-btn">▶</button><div class="cal-slider"></div></div>
+        </div>
+        <div class="cal-row">
+          <div class="cal-label"><span class="cal-ico">🔔</span>Сигнал</div>
+          <div class="cal-ctrl"><button class="cal-btn cal-btn-ghost">♪</button><div class="cal-slider"></div></div>
+        </div>
+        <div class="cal-row">
+          <div class="cal-label"><span class="cal-ico">📳</span>Вибрация</div>
+          <div class="cal-ctrl"><div class="cal-toggle"></div></div>
+        </div>
+        <div class="cal-instr">Настрой громкость так, чтобы не слышать соседей. Сигнал должен пробиваться поверх музыки. Отключи уведомления на время игры.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Fullscreen-панель</h3>
+      <p>Занимает всё окно, сверху цветная шапка с крестом. Максимум места для инструкций, ни с чем не путается. Но «тяжёлая» — перекрывает игру полностью, даже на host.</p>
+    </div>
+  </div>
+</div>

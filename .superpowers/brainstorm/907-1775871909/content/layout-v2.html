@@ -1,0 +1,83 @@
+<h2>Калибровка — ревизия лейаута</h2>
+<p class="subtitle">Bottom sheet, порядок: Музыка → Сигнал → Вибрация → Общие наушники. У вибрации — кнопка теста.</p>
+
+<style>
+  .cal-mockup { font-family: system-ui, sans-serif; color: #222; }
+  .cal-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e8e8e8; gap: 12px; }
+  .cal-row:last-child { border-bottom: none; }
+  .cal-label { font-size: 13px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 10px; }
+  .cal-ico { width: 26px; height: 26px; border-radius: 6px; background: #f0f0f0; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
+  .cal-ctrl { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; }
+  .cal-slider { flex: 1; max-width: 140px; height: 4px; background: #ddd; border-radius: 2px; position: relative; }
+  .cal-slider::after { content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 65%; background: #5b6cff; border-radius: 2px; }
+  .cal-slider::before { content: ""; position: absolute; left: 65%; top: 50%; width: 14px; height: 14px; background: #fff; border: 2px solid #5b6cff; border-radius: 50%; transform: translate(-50%, -50%); }
+  .cal-btn { width: 32px; height: 32px; border-radius: 50%; background: #5b6cff; color: #fff; border: none; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .cal-btn-ghost { background: transparent; color: #5b6cff; border: 1.5px solid #5b6cff; }
+  .cal-toggle { width: 38px; height: 22px; border-radius: 11px; background: #5b6cff; position: relative; flex-shrink: 0; }
+  .cal-toggle::after { content: ""; position: absolute; right: 2px; top: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; }
+  .cal-toggle.off { background: #ccc; }
+  .cal-toggle.off::after { left: 2px; right: auto; }
+  .cal-instr { font-size: 12px; color: #666; padding: 12px 16px 16px; line-height: 1.5; background: #fafafa; border-top: 1px solid #eee; }
+  .cal-title { font-size: 15px; font-weight: 700; padding: 6px 16px 12px; text-align: center; }
+
+  .sheet-bg { background: rgba(0,0,0,0.35); min-height: 520px; position: relative; display: flex; align-items: flex-end; padding: 20px 20px 0; }
+  .sheet-card { background: #fff; border-radius: 18px 18px 0 0; width: 100%; max-width: 380px; margin: 0 auto; position: relative; overflow: hidden; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); }
+  .sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: #ccc; margin: 10px auto 0; }
+
+  .section-divider { height: 8px; background: #f5f5f5; }
+</style>
+
+<div class="mockup">
+  <div class="mockup-header">Bottom sheet с новым порядком</div>
+  <div class="mockup-body cal-mockup" style="padding: 0;">
+    <div class="sheet-bg">
+      <div class="sheet-card">
+        <div class="sheet-handle"></div>
+        <div class="cal-title">Калибровка</div>
+
+        <div class="cal-row">
+          <div class="cal-label"><span class="cal-ico">🎵</span>Музыка</div>
+          <div class="cal-ctrl">
+            <button class="cal-btn">▶</button>
+            <div class="cal-slider"></div>
+          </div>
+        </div>
+
+        <div class="cal-row">
+          <div class="cal-label"><span class="cal-ico">🔔</span>Сигнал</div>
+          <div class="cal-ctrl">
+            <button class="cal-btn cal-btn-ghost">♪</button>
+            <div class="cal-slider"></div>
+          </div>
+        </div>
+
+        <div class="cal-row">
+          <div class="cal-label"><span class="cal-ico">📳</span>Вибрация</div>
+          <div class="cal-ctrl">
+            <button class="cal-btn cal-btn-ghost">📳</button>
+            <div class="cal-toggle"></div>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="cal-row">
+          <div class="cal-label"><span class="cal-ico">🎧</span>Общие наушники</div>
+          <div class="cal-ctrl"><div class="cal-toggle off"></div></div>
+        </div>
+
+        <div class="cal-instr">
+          Настрой громкость так, чтобы не слышать соседей. Сигнал должен пробиваться поверх музыки. Отключи уведомления на время игры.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top: 20px;">Проверь:</p>
+<ul>
+  <li>Порядок: <b>Музыка → Сигнал → Вибрация → Общие наушники</b> (последняя отделена светлым разделителем)</li>
+  <li>Вибрация: слева кнопка теста 📳, справа тоггл ВКЛ/ВЫКЛ. Если <code>navigator.vibrate</code> недоступен — и кнопка, и тоггл disabled, но видны</li>
+  <li>Инструкция снизу — полный текст</li>
+  <li>Свайп вниз по handle или клик по затемнению — закрыть</li>
+</ul>

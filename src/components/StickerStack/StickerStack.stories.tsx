@@ -60,12 +60,13 @@ export const MixedTeams: Story = () => (
   </div>
 );
 
+const DND_GROUPS = [
+  [{ player: { emoji: "😈", name: "Alice", team: "red" as const }, answerText: "Кошка" }],
+  [{ player: { emoji: "👹", name: "Bob", team: "red" as const }, answerText: "Кот" }],
+  [{ player: { emoji: "👺", name: "Carol", team: "red" as const }, answerText: "Собака" }],
+]
 export const DragAndDrop: Story = () => {
-  const [groups, setGroups] = useState([
-    [{ player: { emoji: "😈", name: "Alice", team: "red" as const }, answerText: "Кошка" }],
-    [{ player: { emoji: "👹", name: "Bob", team: "red" as const }, answerText: "Кот" }],
-    [{ player: { emoji: "👺", name: "Carol", team: "red" as const }, answerText: "Собака" }],
-  ]);
+  const [groups, setGroups] = useState(DND_GROUPS);
 
   function handleDrop(targetIdx: number, sourceData: string) {
     const sourceIdx = groups.findIndex((_, i) => String(i) === sourceData);
@@ -83,6 +84,7 @@ export const DragAndDrop: Story = () => {
           key={i}
           stickers={group}
           draggable
+          onClickBadge={() => setGroups(DND_GROUPS)}
           dragData={String(i)}
           onDrop={(data) => handleDrop(i, data)}
           onClickSticker={() => console.log("toggle", i)}

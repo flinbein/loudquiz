@@ -24,22 +24,59 @@ export function BottomSheet({
   const dialogRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
+  // Effect 1: focus management — depends only on `open`
   useEffect(() => {
     if (!open) return;
     previouslyFocused.current = document.activeElement as HTMLElement | null;
     dialogRef.current?.focus();
+    return () => {
+      previouslyFocused.current?.focus();
+    };
+  }, [open]);
+
+  // Effect 2: keyboard (Escape + focus trap) — depends on [open, onClose]
+  useEffect(() => {
+    if (!open) return;
+    const FOCUSABLE =
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        e.stopPropagation();
         onClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const focusables = Array.from(
+        dialog.querySelectorAll<HTMLElement>(FOCUSABLE),
+      );
+      if (focusables.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (e.shiftKey) {
+        if (active === first || active === dialog) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (active === last) {
+          e.preventDefault();
+          first.focus();
+        } else if (active === dialog) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     }
+
     document.addEventListener("keydown", handleKey);
-    return () => {
-      document.removeEventListener("keydown", handleKey);
-      previouslyFocused.current?.focus();
-    };
+    return () => document.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
 
   if (!open) return null;

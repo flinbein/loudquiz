@@ -6,12 +6,14 @@ export const Default: Story = () => {
   const [value, setValue] = useState("");
   return (
     <TimerInput
-      time={60}
+      durationMs={60000}
+      startedAt={performance.now()}
       value={value}
       onChange={(e) => setValue(e.target.value)}
       placeholder="Введите ответ..."
     />
   );
 };
-export const Warning: Story = () => <TimerInput time={5} warningTime={10} placeholder="Скорее!" />;
-export const Disabled: Story = () => <TimerInput time={30} disabled placeholder="Отключено" />;
+export const PreWarning: Story = () => <TimerInput startedAt={performance.now()} durationMs={13000} placeholder="Скорее!" />;
+export const Warning: Story = () => <TimerInput startedAt={performance.now()} durationMs={5000} placeholder="Скорее!" />;
+export const Disabled: Story = () => <TimerInput startedAt={performance.now()} durationMs={30000} disabled placeholder="Отключено" />;

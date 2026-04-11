@@ -1,26 +1,21 @@
 import type { TimerState } from "@/types/game";
 
 export function getCaptainTimerDuration(): number {
-  return 60;
+  return 60 * 1000;
 }
 
 export function getPickTimerDuration(): number {
-  return 60;
+  return 60 * 1000;
 }
 
 export function getActiveTimerDuration(respondersCount: number): number {
-  return 50 + 5 * respondersCount;
+  return (55 + 5 * respondersCount) * 1000;
 }
 
 export function getAnswerTimerDuration(): number {
-  return 20;
+  return 20 * 1000;
 }
 
 export function createTimer(duration: number): TimerState {
-  return { startedAt: Date.now(), duration };
-}
-
-export function getRemainingTime(timer: TimerState): number {
-  const elapsed = (Date.now() - timer.startedAt) / 1000;
-  return Math.max(0, timer.duration - elapsed);
+  return { startedAt: performance.now(), duration };
 }

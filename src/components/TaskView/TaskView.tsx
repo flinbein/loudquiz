@@ -1,4 +1,4 @@
-import type { TeamColor, PlayerDisplay } from "@/types/game";
+import type { TeamId, PlayerDisplay } from "@/types/game";
 import { Envelope } from "@/components/Envelope/Envelope";
 import { BlitzBox } from "@/components/BlitzBox/BlitzBox";
 import styles from "./TaskView.module.css";
@@ -10,7 +10,7 @@ export interface TaskViewQuestion {
   jokerUsed: boolean;
   difficulty: number;
   totalScore?: number;
-  paperColor?: TeamColor;
+  paperColor?: TeamId;
 }
 
 export interface TaskViewTopic {
@@ -20,7 +20,7 @@ export interface TaskViewTopic {
 
 export interface TaskViewBlitz {
   active: boolean;
-  team?: TeamColor;
+  team?: TeamId;
   score?: number;
 }
 

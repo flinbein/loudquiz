@@ -1,6 +1,6 @@
 import { useRef, useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { PlayerData, TeamColor } from "@/types/game";
+import { PlayerData, TeamId } from "@/types/game";
 import { PlayerAvatar } from "@/components/PlayerAvatar/PlayerAvatar";
 import styles from "./TeamPicker.module.css";
 import cn from "classnames";
@@ -11,7 +11,7 @@ interface TeamPickerProps {
   redCount?: number;
   blueCount?: number;
   noneCount?: number;
-  onSelectTeam: (teamId: TeamColor) => void;
+  onSelectTeam: (teamId: TeamId) => void;
   onChangeEmoji: () => void;
 }
 

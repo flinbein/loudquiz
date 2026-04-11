@@ -4,11 +4,11 @@ export function calculateRoundScore(
   difficulty: number,
   correctCount: number,
   jokerActive: boolean,
-  bonusMultiplier: number,
+  bonusTimeMultiplier: number,
+  bonusTimeApplied: boolean,
 ): number {
-  if (correctCount === 0) return 0;
   const jokerMul = jokerActive ? 2 : 1;
-  const bonusMul = bonusMultiplier > 0 ? bonusMultiplier : 1;
+  const bonusMul = bonusTimeApplied ? bonusTimeMultiplier : 0;
   return Math.round(difficulty * correctCount * jokerMul * bonusMul);
 }
 
@@ -16,7 +16,7 @@ export function calculateBonusMultiplier(
   bonusTime: number,
   totalTime: number,
 ): number {
-  if (bonusTime <= 0 || totalTime <= 0) return 0;
+  if (bonusTime <= 0 || totalTime <= 0) return 1;
   return 1 + bonusTime / totalTime;
 }
 
@@ -47,9 +47,9 @@ export function checkBonusConditions(
   }
 
   // Bonus time = time remaining when last answer was submitted
-  // timestamps are absolute (Date.now()), timerStartedAt is absolute
-  const timerEndAt = timerStartedAt + activeDuration * 1000;
+  // timestamps are absolute (performance.now()), timerStartedAt is absolute
+  const timerEndAt = timerStartedAt + activeDuration;
   const maxTimestamp = Math.max(...Object.values(answers).map((a) => a.timestamp));
-  const bonusTime = Math.max(0, (timerEndAt - maxTimestamp) / 1000);
+  const bonusTime = Math.max(0, (timerEndAt - maxTimestamp));
   return { hasBonus: true, bonusTime };
 }

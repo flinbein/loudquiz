@@ -1,0 +1,112 @@
+<h2>Выбор команды — креативные варианты</h2>
+<p class="subtitle">Dual mode: как игрок выбирает команду на мобильном экране?</p>
+
+<div class="cards">
+
+  <!-- Option A: Swipe avatar -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:24px;background:#fafafa;">
+      <div style="font-family:system-ui;position:relative;">
+        <!-- Zones -->
+        <div style="display:flex;gap:0;height:120px;border-radius:16px;overflow:hidden;position:relative;">
+          <div style="flex:1;background:linear-gradient(135deg,#ffcdd2,#ef9a9a);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;">
+            <div style="font-size:24px;">🔴</div>
+            <div style="font-size:11px;font-weight:600;color:#c62828;">Красные</div>
+          </div>
+          <div style="flex:1;background:linear-gradient(135deg,#bbdefb,#90caf9);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;">
+            <div style="font-size:24px;">🔵</div>
+            <div style="font-size:11px;font-weight:600;color:#1565c0;">Синие</div>
+          </div>
+          <!-- Avatar in the middle (draggable) -->
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 4px 12px rgba(0,0,0,0.2);cursor:grab;border:3px solid white;">😈</div>
+        </div>
+        <div style="text-align:center;margin-top:8px;font-size:11px;color:#888;">← перетащи или нажми на зону →</div>
+
+        <!-- After selection -->
+        <div style="margin-top:12px;display:flex;gap:0;height:80px;border-radius:12px;overflow:hidden;">
+          <div style="flex:1;background:linear-gradient(135deg,#ffcdd2,#ef9a9a);display:flex;align-items:center;justify-content:center;">
+            <div style="width:48px;height:48px;border-radius:50%;background:#ef9a9a;display:flex;align-items:center;justify-content:center;font-size:24px;border:3px solid #e53935;box-shadow:0 0 12px rgba(229,57,53,0.4);">😈</div>
+          </div>
+          <div style="flex:1;background:#e3f2fd;display:flex;align-items:center;justify-content:center;opacity:0.5;">
+            <div style="font-size:20px;">🔵</div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:4px;font-size:11px;color:#e53935;font-weight:600;">Красные выбраны! Нажми снова чтобы сменить</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A) Зоны + перетаскивание аватара</h3>
+      <p>Два цветных поля рядом. Аватар по центру — свайпни или нажми на зону. После выбора аватар «прилипает» к стороне.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Тактильно, игрово</li><li>Визуально понятно</li><li>Работает и свайп, и клик</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Сложнее в реализации (drag на тачскрине)</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B: Tilt phone -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:24px;background:#fafafa;">
+      <div style="font-family:system-ui;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;height:120px;">
+          <div style="text-align:center;">
+            <div style="font-size:32px;transform:rotate(-15deg);display:inline-block;">📱</div>
+            <div style="font-size:10px;color:#e53935;font-weight:600;margin-top:4px;">← Наклони</div>
+          </div>
+          <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(90deg,#ef9a9a,#90caf9);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">😈</div>
+          <div style="text-align:center;">
+            <div style="font-size:32px;transform:rotate(15deg);display:inline-block;">📱</div>
+            <div style="font-size:10px;color:#1e88e5;font-weight:600;margin-top:4px;">Наклони →</div>
+          </div>
+        </div>
+        <!-- Result bar -->
+        <div style="height:8px;border-radius:4px;background:linear-gradient(90deg,#e53935 30%,#eee 30%,#eee 70%,#1e88e5 70%);margin-top:8px;"></div>
+        <div style="text-align:center;font-size:11px;color:#888;margin-top:4px;">Наклони телефон влево или вправо</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B) Наклон телефона (акселерометр)</h3>
+      <p>Наклони телефон влево = красные, вправо = синие. Фон экрана плавно меняет цвет. Подтверждение по нажатию.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Очень креативно, «вау»-эффект</li><li>Физическое взаимодействие</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Не все устройства/браузеры поддерживают</li><li>Нужен fallback</li><li>Может раздражать при случайных наклонах</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option C: Color flood -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:24px;background:#fafafa;">
+      <div style="font-family:system-ui;">
+        <div style="display:flex;gap:12px;height:120px;">
+          <!-- Red side -->
+          <div style="flex:1;background:linear-gradient(180deg,#e53935,#c62828);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 12px rgba(229,57,53,0.3);">
+            <div style="font-size:32px;margin-bottom:4px;">🔥</div>
+            <div style="color:white;font-weight:700;font-size:14px;">Красные</div>
+            <div style="color:rgba(255,255,255,0.7);font-size:11px;">2 игрока</div>
+          </div>
+          <!-- Blue side -->
+          <div style="flex:1;background:linear-gradient(180deg,#ddd,#ccc);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;opacity:0.6;">
+            <div style="font-size:32px;margin-bottom:4px;">❄️</div>
+            <div style="color:#666;font-weight:700;font-size:14px;">Синие</div>
+            <div style="color:#999;font-size:11px;">1 игрок</div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:8px;font-size:11px;color:#e53935;font-weight:600;">🔥 Красные выбраны</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C) Большие цветные кнопки с иконками</h3>
+      <p>Две большие карточки с яркими градиентами, иконками (🔥/❄️) и счётчиком игроков. Нажатие выбирает команду, фон экрана заливается цветом.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Просто и надёжно</li><li>Показывает баланс команд</li><li>Яркие карточки = не скучно</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Менее интерактивно чем A</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px;padding:16px;background:#fff3e0;border-radius:12px;border-left:4px solid #ff9800;">
+  <strong>Рекомендация:</strong> Вариант A (зоны + перетаскивание) — игровой, тактильный, визуально считывается. Реализация через pointer events (не HTML DnD), что хорошо работает на тачскринах. Fallback — клик по зоне.
+</div>

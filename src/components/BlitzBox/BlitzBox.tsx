@@ -1,14 +1,14 @@
-import type { TeamColor } from "@/types/game";
+import type { TeamId } from "@/types/game";
 import styles from "./BlitzBox.module.css";
 
 export interface BlitzBoxProps {
   active?: boolean;
-  team?: TeamColor;
+  team?: TeamId;
   score?: number | null;
   onClick?: () => void;
 }
 
-const textColorClass: Record<TeamColor, string> = {
+const textColorClass: Record<TeamId, string> = {
   red: styles.textRed,
   blue: styles.textBlue,
   none: styles.textNone,

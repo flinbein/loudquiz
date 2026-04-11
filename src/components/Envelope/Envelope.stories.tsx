@@ -2,7 +2,7 @@ import type { Story } from "@ladle/react";
 import { useState } from "react";
 import { Envelope } from "./Envelope";
 
-const player = { emoji: "👻", playerName: "Алексей", team: "red" as const };
+const player = { emoji: "👻", name: "Алексей", team: "red" as const };
 
 const EnvelopeToggle: typeof Envelope = (props) => {
   const [innerOpen, setInnerOpen] = useState(props.open);

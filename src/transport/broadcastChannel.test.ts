@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createBroadcastChannelTransport } from "./broadcastChannel";
 import type { Transport, Message } from "./interface";
 
-// Mock BroadcastChannel for jsdom
+// --- Mock BroadcastChannel ---
+
 class MockBroadcastChannel {
   static channels = new Map<string, Set<MockBroadcastChannel>>();
 
@@ -26,7 +27,7 @@ class MockBroadcastChannel {
       const handlers = peer.listeners.get("message");
       if (handlers) {
         for (const handler of handlers) {
-          handler(event);
+          queueMicrotask(() => handler(event));
         }
       }
     }
@@ -50,16 +51,174 @@ class MockBroadcastChannel {
   }
 }
 
+// --- Mock WebRTC ---
+
+/** Registry to pair offer/answer PCs by SDP string */
+const pcRegistry = new Map<string, MockRTCPeerConnection>();
+
+class MockRTCDataChannel {
+  label: string;
+  readyState: RTCDataChannelState = "connecting";
+  binaryType: BinaryType = "blob";
+  private _remote: MockRTCDataChannel | null = null;
+
+  onopen: ((ev: Event) => void) | null = null;
+  onclose: ((ev: Event) => void) | null = null;
+  onmessage: ((ev: MessageEvent) => void) | null = null;
+
+  constructor(label: string) {
+    this.label = label;
+  }
+
+  _pair(remote: MockRTCDataChannel) {
+    this._remote = remote;
+    remote._remote = this;
+  }
+
+  _open() {
+    this.readyState = "open";
+    this.onopen?.(new Event("open"));
+  }
+
+  send(data: string | ArrayBuffer) {
+    if (this.readyState !== "open" || !this._remote) return;
+    if (this._remote.readyState === "open") {
+      this._remote.onmessage?.(new MessageEvent("message", { data }));
+    }
+  }
+
+  close() {
+    if (this.readyState === "closed") return;
+    this.readyState = "closed";
+    this.onclose?.(new Event("close"));
+  }
+}
+
+class MockRTCPeerConnection {
+  connectionState: RTCPeerConnectionState = "new";
+  localDescription: { type: RTCSdpType; sdp: string } | null = null;
+  remoteDescription: { type: RTCSdpType; sdp: string } | null = null;
+
+  onicecandidate: ((ev: { candidate: null }) => void) | null = null;
+  ondatachannel:
+    | ((ev: { channel: MockRTCDataChannel }) => void)
+    | null = null;
+  onconnectionstatechange: ((ev: Event) => void) | null = null;
+
+  private _localChannels: MockRTCDataChannel[] = [];
+  private _id = Math.random().toString(36).slice(2, 8);
+  private _closed = false;
+
+  createDataChannel(label: string): MockRTCDataChannel {
+    const ch = new MockRTCDataChannel(label);
+    this._localChannels.push(ch);
+    return ch;
+  }
+
+  async createOffer(): Promise<RTCSessionDescriptionInit> {
+    return { type: "offer", sdp: `offer-${this._id}` };
+  }
+
+  async createAnswer(): Promise<RTCSessionDescriptionInit> {
+    return { type: "answer", sdp: `answer-${this._id}` };
+  }
+
+  async setLocalDescription(desc: RTCSessionDescriptionInit) {
+    this.localDescription = { type: desc.type!, sdp: desc.sdp ?? "" };
+    // Register ourselves so the remote side can find us
+    pcRegistry.set(desc.sdp ?? "", this);
+    // Fire ICE gathering complete
+    queueMicrotask(() => {
+      this.onicecandidate?.({ candidate: null });
+    });
+  }
+
+  async setRemoteDescription(desc: RTCSessionDescriptionInit) {
+    this.remoteDescription = { type: desc.type!, sdp: desc.sdp ?? "" };
+
+    if (desc.type === "answer") {
+      // We are the offerer. Find the answerer by their answer SDP.
+      const answererPc = pcRegistry.get(desc.sdp ?? "");
+      if (answererPc) {
+        this._wireUp(answererPc);
+      }
+    }
+  }
+
+  private _wireUp(answererPc: MockRTCPeerConnection) {
+    // For each local channel on the offerer, create a mirror on the answerer
+    for (const localCh of this._localChannels) {
+      const remoteCh = new MockRTCDataChannel(localCh.label);
+      localCh._pair(remoteCh);
+
+      // Fire ondatachannel on the answerer
+      queueMicrotask(() => {
+        answererPc.ondatachannel?.({ channel: remoteCh });
+
+        // Open channels after another tick
+        queueMicrotask(() => {
+          localCh._open();
+          remoteCh._open();
+
+          // Connection state → connected
+          this.connectionState = "connected";
+          this.onconnectionstatechange?.(new Event("connectionstatechange"));
+          answererPc.connectionState = "connected";
+          answererPc.onconnectionstatechange?.(
+            new Event("connectionstatechange"),
+          );
+        });
+      });
+    }
+  }
+
+  async addIceCandidate() {
+    // no-op
+  }
+
+  close() {
+    if (this._closed) return;
+    this._closed = true;
+    this.connectionState = "closed";
+    this.onconnectionstatechange?.(new Event("connectionstatechange"));
+    for (const ch of this._localChannels) ch.close();
+  }
+}
+
+class MockRTCSessionDescription {
+  type: RTCSdpType;
+  sdp: string;
+  constructor(init: RTCSessionDescriptionInit) {
+    this.type = init.type!;
+    this.sdp = init.sdp ?? "";
+  }
+}
+
+class MockRTCIceCandidate {
+  candidate: string;
+  constructor(init: RTCIceCandidateInit) {
+    this.candidate = init.candidate ?? "";
+  }
+}
+
+// --- Setup ---
+
 beforeEach(() => {
   MockBroadcastChannel.channels.clear();
+  pcRegistry.clear();
   vi.stubGlobal("BroadcastChannel", MockBroadcastChannel);
+  vi.stubGlobal("RTCPeerConnection", MockRTCPeerConnection);
+  vi.stubGlobal("RTCSessionDescription", MockRTCSessionDescription);
+  vi.stubGlobal("RTCIceCandidate", MockRTCIceCandidate);
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("BroadcastChannel transport", () => {
+// --- Tests ---
+
+describe("BroadcastChannel + WebRTC transport", () => {
   let host: Transport;
   let player: Transport;
 
@@ -75,7 +234,7 @@ describe("BroadcastChannel transport", () => {
     expect(info.joinUrl).toContain(info.roomId);
   });
 
-  it("sends and receives messages between host and player", async () => {
+  it("sends and receives messages between host and player via WebRTC", async () => {
     host = createBroadcastChannelTransport();
     const info = await host.createRoom();
 
@@ -89,13 +248,13 @@ describe("BroadcastChannel transport", () => {
 
     await player.joinRoom(info.roomId);
 
-    // Wait for connect handshake
-    await delay(50);
+    // Wait for signaling + WebRTC channel setup
+    await delay(100);
 
     // Player sends action to host
     const action: Message = {
       type: "player-action",
-      action: { kind: "join", name: "Alice", emoji: "🎸" },
+      action: { kind: "join", name: "Alice" },
     };
     player.broadcast(action);
 
@@ -132,7 +291,7 @@ describe("BroadcastChannel transport", () => {
     expect(playerReceived[0]).toEqual(stateUpdate);
   });
 
-  it("fires onPeerConnect when a peer joins", async () => {
+  it("fires onPeerConnect when WebRTC channel is established", async () => {
     host = createBroadcastChannelTransport();
     const info = await host.createRoom();
 
@@ -142,7 +301,7 @@ describe("BroadcastChannel transport", () => {
     player = createBroadcastChannelTransport();
     await player.joinRoom(info.roomId);
 
-    await delay(50);
+    await delay(100);
     expect(connected.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -155,9 +314,8 @@ describe("BroadcastChannel transport", () => {
 
     player = createBroadcastChannelTransport();
     await player.joinRoom(info.roomId);
-    await delay(50);
+    await delay(100);
 
-    // Player broadcasts disconnect and closes
     player.close();
 
     await delay(50);
@@ -170,7 +328,9 @@ describe("BroadcastChannel transport", () => {
     host.close();
 
     // Sending after close should not throw
-    expect(() => host.broadcast({ type: "state-update", state: {} as never })).not.toThrow();
+    expect(() =>
+      host.broadcast({ type: "state-update", state: {} as never }),
+    ).not.toThrow();
   });
 });
 
@@ -178,6 +338,9 @@ describe("Transport factory", () => {
   it("creates BroadcastChannel transport for b- prefix", async () => {
     const { createTransport } = await import("./factory");
     vi.stubGlobal("BroadcastChannel", MockBroadcastChannel);
+    vi.stubGlobal("RTCPeerConnection", MockRTCPeerConnection);
+    vi.stubGlobal("RTCSessionDescription", MockRTCSessionDescription);
+    vi.stubGlobal("RTCIceCandidate", MockRTCIceCandidate);
 
     const transport = createTransport("b-test123");
     expect(transport).toBeDefined();
@@ -197,7 +360,9 @@ describe("Transport factory", () => {
 
   it("throws for unknown prefix", async () => {
     const { createTransport } = await import("./factory");
-    expect(() => createTransport("x-test123")).toThrow("Unknown transport prefix");
+    expect(() => createTransport("x-test123")).toThrow(
+      "Unknown transport prefix",
+    );
   });
 });
 

@@ -1,59 +1,40 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.ring {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ring svg {
-  transform: rotate(-90deg);
-}
-
-.trackCircle {
-  fill: none;
-  stroke: var(--color-border);
-  stroke-width: 6;
-}
-
-.progressCircle {
-  fill: none;
-  stroke: var(--color-primary);
-  stroke-width: 6;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 1s linear, stroke 0.3s;
-}
-
-.warning .progressCircle {
-  stroke: var(--color-error);
-}
-
-.time {
-  position: absolute;
+.timer {
+  display: inline-block;
   font-family: var(--font-display);
   font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--color-text);
+  transform: scale(1);
 }
 
-.warning .time {
+.timer.warning {
   color: var(--color-error);
   animation: pulse 1s ease-in-out infinite;
 }
 
-.children {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  text-align: center;
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.separator {
+  animation: blink 1s cubic-bezier(1,0,0,1) infinite;
+}
+.expired .separator {
+  animation: none;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }

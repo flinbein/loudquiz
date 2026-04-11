@@ -1,0 +1,118 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+}
+
+.qrSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  border-radius: 20px;
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-xl);
+}
+
+.logo {
+  font-family: var(--font-display);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.roomId {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.qrCode {
+  margin-bottom: var(--spacing-md);
+}
+
+.scanHint {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.joinUrl {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
+  word-break: break-all;
+  text-align: center;
+  max-width: 280px;
+}
+
+.sidebar {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.teamList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  flex: 1;
+  overflow-x: visible;
+  overflow-y: auto;
+}
+
+.kickZone {
+  padding: var(--spacing-md);
+  border: 2px dashed var(--color-error);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  transition: background var(--duration-all);
+}
+
+.kickZone:hover {
+  background: var(--color-team-red-light);
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.calibrationBtn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-secondary);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.startBtn {
+  padding: var(--spacing-md);
+  background: var(--color-success);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--duration-all);
+}
+
+.startBtn:disabled {
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: default;
+}
+
+.startHint {
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-warning);
+}

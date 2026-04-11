@@ -3,6 +3,12 @@ import { BlitzBox } from "./BlitzBox";
 
 export const Size: Story = () => (
   <div style={{display: "flex", gap: 10}}>
+    <div style={{ width: 25 }}>
+      <BlitzBox score={0} />
+    </div>
+    <div style={{ width: 25 }}>
+      <BlitzBox score={25} />
+    </div>
     <div style={{ width: 50 }}>
       <BlitzBox score={50} />
     </div>
@@ -14,6 +20,9 @@ export const Size: Story = () => (
     </div>
     <div style={{ width: 200 }}>
       <BlitzBox score={200} />
+    </div>
+    <div style={{ width: 400 }}>
+      <BlitzBox score={400} />
     </div>
   </div>
 );

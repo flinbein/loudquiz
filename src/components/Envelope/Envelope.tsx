@@ -1,5 +1,5 @@
 import cn from "classnames";
-import type { TeamColor, PlayerDisplay } from "@/types/game";
+import type { TeamId, PlayerDisplay } from "@/types/game";
 import { PlayerAvatar } from "@/components/PlayerAvatar/PlayerAvatar";
 import styles from "./Envelope.module.css";
 
@@ -7,14 +7,14 @@ export interface EnvelopeProps {
   open?: boolean;
   difficulty?: number;
   totalScore?: number | null;
-  paperColor?: TeamColor;
+  paperColor?: TeamId;
   active?: boolean;
   player?: PlayerDisplay;
   jokerUsed?: boolean;
   onClick?: () => void;
 }
 
-const paperClass: Record<TeamColor, string> = {
+const paperClass: Record<TeamId, string> = {
   red: styles.paperRed,
   blue: styles.paperBlue,
   none: styles.paperNone,

@@ -2,14 +2,30 @@ import type { Story } from "@ladle/react";
 import { Sticker } from "./Sticker";
 import { useState } from "react";
 
-const redPlayer = { emoji: "👻", playerName: "Алексей", team: "red" as const };
-const bluePlayer = { emoji: "🤖", playerName: "Мария", team: "blue" as const };
+const redPlayer = { emoji: "👻", name: "Алексей", team: "red" as const };
+const bluePlayer = { emoji: "🤖", name: "Мария", team: "blue" as const };
 
 export const CorrectAnswer: Story = () => (
   <div style={{ width: 220 }}>
     <Sticker player={redPlayer} answerText="Гепард" stampText="+200" stampColor="green" />
   </div>
 );
+
+export const ShowHide: Story = () => {
+  const [hidden, setHidden] = useState(false);
+  return (
+    <div style={{ width: 220 }}>
+      <Sticker
+        player={redPlayer}
+        answerHidden={hidden}
+        onClickAvatar={() => setHidden(v => !v)}
+        answerText="Гепард"
+        stampText="+200"
+        stampColor="green"
+      />
+    </div>
+  )
+};
 
 export const WrongAnswer: Story = () => (
   <div style={{ width: 220 }}>
@@ -74,7 +90,7 @@ export const TeamColors: Story = () => (
     </div>
     <div style={{ width: 200 }}>
       <Sticker
-        player={{ emoji: "🦊", playerName: "Лиса", team: "none" }}
+        player={{ emoji: "🦊", name: "Лиса", team: "none" }}
         answerText="Без команды"
         stampText="+50"
         stampColor="green"

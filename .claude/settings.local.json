@@ -1,4 +1,7 @@
 {
+  "env": {
+    "EDITOR": "\"C:\\SOFT\\WebStorm\\bin\\webstorm64.exe\" --wait"
+  },
   "permissions": {
     "allow": [
       "Bash(*)",
@@ -6,10 +9,9 @@
       "Read(*)",
       "WebSearch",
       "Agent(*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "mcp__webstorm__create_new_file",
+      "mcp__webstorm__execute_terminal_command"
     ]
-  },
-  "env": {
-    "EDITOR": "\"C:\\SOFT\\WebStorm\\bin\\webstorm64.exe\" --wait"
   }
 }

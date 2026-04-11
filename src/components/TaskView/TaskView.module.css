@@ -24,7 +24,7 @@
 }
 
 .questionsArea {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -57,12 +57,13 @@
 
 .blitzRow {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-sm) 0;
   justify-content: center;
 }
 
 .blitzCell {
   width: 80px;
-  flex-shrink: 0;
+  min-width: 0;
+  flex-shrink: 1;
 }

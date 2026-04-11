@@ -6,7 +6,8 @@ export type RoundPhase =
   | "round-ready"
   | "round-active"
   | "round-answer"
-  | "round-review";
+  | "round-review"
+  | "round-result";
 
 export type BlitzPhase =
   | "blitz-captain"
@@ -102,8 +103,9 @@ export interface ReviewResult {
   groups: string[][];
   comment?: string;
   score: number;
-  bonusMultiplier: number;
-  scoreConfirmed: boolean;
+  bonusTimeMultiplier: number;
+  bonusTimeApplied: boolean;
+  bonusTime: number;
   jokerApplied: boolean;
 }
 

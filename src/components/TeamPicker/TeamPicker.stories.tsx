@@ -1,10 +1,10 @@
 import type { Story } from "@ladle/react";
 import { TeamPicker } from "./TeamPicker";
 import { useState } from "react";
-import { PlayerData, TeamColor } from "@/types/game";
+import { PlayerData, TeamId } from "@/types/game";
 
 const EMOJIS = ["👻", "🤖", "🦊", "👽", "🐙", "🎃", "🐔"];
-function usePlayer(team: TeamColor  = "none"){
+function usePlayer(team: TeamId  = "none"){
   const [player, setPlayer] = useState<PlayerData>({
     ready: false,
     emoji: EMOJIS[0],
@@ -16,7 +16,7 @@ function usePlayer(team: TeamColor  = "none"){
   return [
     player,
     () => setPlayer(p => ({ ...p, emoji: EMOJIS[(EMOJIS.indexOf(p.emoji) + 1) % EMOJIS.length] })),
-    (team: TeamColor) => setPlayer(p => ({ ...p, team}))
+    (team: TeamId) => setPlayer(p => ({ ...p, team}))
   ] as const
 }
 

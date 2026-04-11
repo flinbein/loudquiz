@@ -1,9 +1,16 @@
 import { useEffect, useRef, useCallback, useState } from "react";
-import type { Transport, Message, PlayerAction } from "@/transport/interface";
+import type {
+  Transport,
+  Message,
+  PlayerAction,
+  SyncResponseMessage,
+} from "@/transport/interface";
 import type { GameState } from "@/types/game";
 import { createTransport } from "@/transport/factory";
 import { useGameStore } from "@/store/gameStore";
 import { filterStateForPlayer } from "@/store/stateFilter";
+import { useClockSyncStore } from "@/store/clockSyncStore";
+import { runSyncHandshake } from "@/transport/clockSync";
 
 interface UseTransportHostOptions {
   role: "host";
@@ -63,7 +70,8 @@ function useHostTransport(): UseTransportHostResult {
     const transport = transportRef.current;
     if (!transport) return;
 
-    const state = useGameStore.getState();
+    const { setState: _set, resetGame: _reset, ...state } =
+      useGameStore.getState();
 
     for (const [peerId, playerName] of peersRef.current) {
       const filtered = filterStateForPlayer(state, playerName);
@@ -102,6 +110,18 @@ function useHostTransport(): UseTransportHostResult {
     });
 
     transport.onMessage((peerId, message: Message) => {
+      // Clock-sync handshake: respond synchronously with our current
+      // performance.now(). Capture BEFORE any other work to minimize the
+      // server-side contribution to the round-trip time the player measures.
+      if (message.type === "sync-request") {
+        transport.send(peerId, {
+          type: "sync-response",
+          nonce: message.nonce,
+          hostNow: performance.now(),
+        });
+        return;
+      }
+
       if (message.type !== "player-action") return;
 
       const { action } = message;
@@ -109,18 +129,6 @@ function useHostTransport(): UseTransportHostResult {
       if (action.kind === "join") {
         // Map peer to player name
         peersRef.current.set(peerId, action.name);
-
-        // Check for reconnection
-        const state = useGameStore.getState();
-        const existing = state.players.find((p) => p.name === action.name);
-        if (existing) {
-          // Reconnection: mark online
-          const players = state.players.map((p) =>
-            p.name === action.name ? { ...p, online: true } : p,
-          );
-          useGameStore.getState().setState({ players });
-        }
-        // New player joining will be handled by lobby actions (Phase 5)
       }
 
       // Emit action for game logic to handle
@@ -181,37 +189,61 @@ function usePlayerTransport(
     const transport = createTransport(roomId);
     transportRef.current = transport;
 
+    // Pending sync-response waiters, keyed by nonce. runSyncHandshake owns the
+    // register/unregister lifecycle; we only route messages into this map.
+    const pendingSync = new Map<number, (msg: SyncResponseMessage) => void>();
+    const registerSync = (nonce: number, cb: (msg: SyncResponseMessage) => void) => {
+      pendingSync.set(nonce, cb);
+    };
+    const unregisterSync = (nonce: number) => {
+      pendingSync.delete(nonce);
+    };
+
     transport.onMessage((_peerId, message: Message) => {
+      if (message.type === "sync-response") {
+        const cb = pendingSync.get(message.nonce);
+        cb?.(message);
+        return;
+      }
       if (message.type !== "state-update") return;
       // Update local store with filtered state from host
       useGameStore.getState().setState(message.state);
     });
 
-    transport.onPeerConnect(() => {
-      setConnected(true);
+    transport.onPeerConnect(async () => {
+      // Keep `connected` false until the clock-sync handshake lands.
+      // The existing "Connecting…" screen naturally covers this window, so no
+      // Timer component ever mounts with an unsynced offset.
+      try {
+        const offset = await runSyncHandshake(transport, registerSync, unregisterSync);
+        useClockSyncStore.getState().setOffset(offset);
+        transport.broadcast({
+          type: "player-action",
+          action: { kind: "join", name: playerName },
+        });
+        setConnected(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
     });
 
     transport.onPeerDisconnect(() => {
       setConnected(false);
+      // Drop any in-flight sync waiters so they don't leak into the next
+      // connect cycle. The handshake will re-run on reconnect.
+      pendingSync.clear();
+      useClockSyncStore.getState().reset();
     });
 
-    transport
-      .joinRoom(roomId)
-      .then(() => {
-        setConnected(true);
-        // Send join action
-        transport.broadcast({
-          type: "player-action",
-          action: { kind: "join", name: playerName, emoji: "" },
-        });
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : String(err));
-      });
+    transport.joinRoom(roomId).catch((err) => {
+      setError(err instanceof Error ? err.message : String(err));
+    });
 
     return () => {
       transport.close();
       transportRef.current = null;
+      pendingSync.clear();
+      useClockSyncStore.getState().reset();
     };
   }, [roomId, playerName]);
 

@@ -1,4 +1,4 @@
-import type { TeamColor, PlayerDisplay } from "@/types/game";
+import type { TeamId, PlayerDisplay } from "@/types/game";
 import { PlayerAvatar } from "@/components/PlayerAvatar/PlayerAvatar";
 import styles from "./TaskCard.module.css";
 
@@ -6,12 +6,12 @@ export interface TaskCardProps {
   topic?: string;
   player?: PlayerDisplay;
   difficulty: number;
-  questionScore: string;
+  question: string;
   hidden?: boolean;
   onClick?: () => void;
 }
 
-const nameColorClass: Record<TeamColor, string> = {
+const nameColorClass: Record<TeamId, string> = {
   red: styles.captainNameRed,
   blue: styles.captainNameBlue,
   none: styles.captainNameNone,
@@ -21,7 +21,7 @@ export function TaskCard({
   topic,
   player,
   difficulty,
-  questionScore,
+  question,
   hidden = false,
   onClick,
 }: TaskCardProps) {
@@ -39,12 +39,12 @@ export function TaskCard({
             <div className={styles.captain}>
               <PlayerAvatar size={72} emoji={player.emoji} team={player.team} />
               <span className={`${styles.captainName} ${nameColorClass[player.team]}`}>
-                {player.playerName}
+                {player.name}
               </span>
             </div>
           )}
           <div className={styles.question}>
-            {questionScore}
+            {question}
           </div>
         </div>
         <div className={styles.footer}>{difficulty}</div>
@@ -57,7 +57,7 @@ export function TaskCard({
             <div className={styles.captain}>
               <PlayerAvatar size={72} emoji={player.emoji} team={player.team} />
               <span className={`${styles.captainName} ${nameColorClass[player.team]}`}>
-                {player.playerName}
+                {player.name}
               </span>
             </div>
           )}

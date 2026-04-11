@@ -12,7 +12,7 @@ import {
   PlayerStatusTable,
   type PlayerStatusRow,
 } from "@/components/PlayerStatusTable/PlayerStatusTable";
-import type { TeamColor } from "@/types/game";
+import type { TeamId } from "@/types/game";
 import styles from "./HostLobby.module.css";
 
 export function HostLobby({
@@ -28,21 +28,20 @@ export function HostLobby({
   const teams = useTeams();
 
   function toStatusRows(
-    teamId: string,
-    teamColor: TeamColor,
+    teamId: TeamId
   ): PlayerStatusRow[] {
     return players
       .filter((p) => p.team === teamId)
       .map((p) => ({
         emoji: p.emoji,
         name: p.name,
-        team: teamColor,
+        team: teamId,
         online: p.online,
         status: p.ready ? ("right" as const) : ("waiting" as const),
       }));
   }
 
-  function handleDrop(targetTeamId: string, e: React.DragEvent) {
+  function handleDrop(targetTeamId: TeamId, e: React.DragEvent) {
     e.preventDefault();
     const name = e.dataTransfer.getData("application/loud-quiz-player-name");
     if (name) movePlayer(name, targetTeamId);
@@ -86,14 +85,14 @@ export function HostLobby({
           {settings.teamMode === "dual" ? (
             <>
               {teams
-                .filter((team) => team.color !== "none")
+                .filter((team) => team.id !== "none")
                 .map((team) => {
-                  const rows = toStatusRows(team.id, team.color);
+                  const rows = toStatusRows(team.id);
                   return (
                     <TeamGroup
                       key={team.id}
                       label={t(`team.${team.id}`)}
-                      teamColor={team.color}
+                      teamColor={team.id}
                       playerCount={rows.length}
                       onDragOver={preventDef}
                       onDrop={(e) => handleDrop(team.id, e)}
@@ -107,7 +106,7 @@ export function HostLobby({
                 teamColor="none"
                 playerCount={players.filter((p) => !p.team).length}
                 onDragOver={preventDef}
-                onDrop={(e) => handleDrop("", e)}
+                onDrop={(e) => handleDrop("none", e)}
               >
                 <PlayerStatusTable
                   players={players
@@ -183,7 +182,7 @@ function getStartBlockReasonHost(
 
   if (settings.teamMode === "dual") {
     const teamSizes = teams
-      .filter((team) => team.color !== "none")
+      .filter((team) => team.id !== "none")
       .map((team) => players.filter((p) => p.team === team.id).length);
     if (teamSizes.some((s) => s < 2)) return t("lobby.needMorePlayers");
     if (!teamSizes.every((s) => s === teamSizes[0]))

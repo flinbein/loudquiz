@@ -1,0 +1,163 @@
+<h2>HostLobby v2 — Обновлённый лейаут</h2>
+<p class="subtitle">QR слева, игроки справа. PlayerStatusTable адаптирован для lobby</p>
+
+<div class="mockup">
+  <div class="mockup-header">Dual Mode — 1366×768 desktop</div>
+  <div class="mockup-body" style="padding:24px;font-family:system-ui;background:#fafafa;display:flex;gap:24px;min-height:500px;">
+
+    <!-- LEFT: QR Code -->
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:white;border-radius:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:32px;">
+      <h3 style="margin:0 0 8px;font-size:20px;">🎮 Loud Quiz</h3>
+      <div style="font-size:13px;color:#888;margin-bottom:24px;">Комната: b-x7k2m</div>
+
+      <!-- QR placeholder -->
+      <div style="width:220px;height:220px;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+        <div style="width:190px;height:190px;background:white;border-radius:6px;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:8px;">
+          <div style="background:#000;"></div><div style="background:#000;"></div><div style="background:#000;"></div><div></div><div style="background:#000;"></div><div></div><div style="background:#000;"></div>
+          <div style="background:#000;"></div><div></div><div style="background:#000;"></div><div style="background:#000;"></div><div></div><div style="background:#000;"></div><div></div>
+          <div></div><div style="background:#000;"></div><div></div><div style="background:#000;"></div><div style="background:#000;"></div><div></div><div style="background:#000;"></div>
+          <div style="background:#000;"></div><div></div><div style="background:#000;"></div><div></div><div style="background:#000;"></div><div style="background:#000;"></div><div></div>
+          <div></div><div style="background:#000;"></div><div style="background:#000;"></div><div style="background:#000;"></div><div></div><div style="background:#000;"></div><div style="background:#000;"></div>
+          <div style="background:#000;"></div><div></div><div></div><div style="background:#000;"></div><div style="background:#000;"></div><div></div><div style="background:#000;"></div>
+          <div style="background:#000;"></div><div style="background:#000;"></div><div style="background:#000;"></div><div></div><div style="background:#000;"></div><div style="background:#000;"></div><div></div>
+        </div>
+      </div>
+
+      <div style="font-size:14px;color:#555;font-weight:500;">Отсканируйте для подключения</div>
+      <div style="font-size:12px;color:#aaa;margin-top:4px;word-break:break-all;text-align:center;max-width:260px;">loudquiz.app/play?room=b-x7k2m</div>
+    </div>
+
+    <!-- RIGHT: Players + Controls -->
+    <div style="width:320px;display:flex;flex-direction:column;gap:12px;">
+
+      <!-- Red Team -->
+      <div style="background:white;border-radius:14px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid #e53935;">
+        <div style="font-weight:600;margin-bottom:8px;color:#e53935;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">🔴 Красные (2)</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div draggable="true" style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#ffebee;border-radius:8px;cursor:grab;font-size:13px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#ef9a9a;display:flex;align-items:center;justify-content:center;font-size:14px;">😈</div>
+            <span style="flex:1;font-weight:500;">Алексей</span>
+            <span style="color:#4caf50;font-size:11px;font-weight:600;">✓ Готов</span>
+            <span style="color:#ccc;cursor:pointer;font-size:12px;padding:0 4px;">✕</span>
+          </div>
+          <div draggable="true" style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#ffebee;border-radius:8px;cursor:grab;font-size:13px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#ef9a9a;display:flex;align-items:center;justify-content:center;font-size:14px;">🎃</div>
+            <span style="flex:1;font-weight:500;">Катя</span>
+            <span style="color:#4caf50;font-size:11px;font-weight:600;">✓ Готова</span>
+            <span style="color:#ccc;cursor:pointer;font-size:12px;padding:0 4px;">✕</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blue Team -->
+      <div style="background:white;border-radius:14px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid #1e88e5;">
+        <div style="font-weight:600;margin-bottom:8px;color:#1e88e5;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">🔵 Синие (2)</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div draggable="true" style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#e3f2fd;border-radius:8px;cursor:grab;font-size:13px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#90caf9;display:flex;align-items:center;justify-content:center;font-size:14px;">👻</div>
+            <span style="flex:1;font-weight:500;">Маша</span>
+            <span style="color:#4caf50;font-size:11px;font-weight:600;">✓ Готова</span>
+            <span style="color:#ccc;cursor:pointer;font-size:12px;padding:0 4px;">✕</span>
+          </div>
+          <div draggable="true" style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#e3f2fd;border-radius:8px;cursor:grab;font-size:13px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#90caf9;display:flex;align-items:center;justify-content:center;font-size:14px;">🤖</div>
+            <span style="flex:1;font-weight:500;">Дима</span>
+            <span style="color:#ff9800;font-size:11px;">⏳ Ожидание</span>
+            <span style="color:#ccc;cursor:pointer;font-size:12px;padding:0 4px;">✕</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- No team yet -->
+      <div style="background:white;border-radius:14px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid #bbb;">
+        <div style="font-weight:600;margin-bottom:8px;color:#888;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Без команды (1)</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div draggable="true" style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#f5f5f5;border-radius:8px;cursor:grab;font-size:13px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:14px;">🐱</div>
+            <span style="flex:1;font-weight:500;">Вова</span>
+            <span style="color:#ff9800;font-size:11px;">⏳ Ожидание</span>
+            <span style="color:#ccc;cursor:pointer;font-size:12px;padding:0 4px;">✕</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spacer -->
+      <div style="flex:1;"></div>
+
+      <!-- Buttons -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button style="padding:10px;background:#eee;border:none;border-radius:10px;font-size:13px;cursor:pointer;">🔊 Калибровка</button>
+        <button disabled style="padding:14px;background:#ccc;color:#999;border:none;border-radius:10px;font-size:15px;font-weight:600;" title="Не все игроки готовы">
+          ▶ Старт
+        </button>
+        <div style="text-align:center;font-size:11px;color:#ff9800;">Не все игроки готовы</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Single mode variant -->
+<div class="mockup" style="margin-top:24px;">
+  <div class="mockup-header">Single Mode — Одна команда</div>
+  <div class="mockup-body" style="padding:24px;font-family:system-ui;background:#fafafa;display:flex;gap:24px;min-height:400px;">
+
+    <!-- LEFT: QR Code -->
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:white;border-radius:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:32px;">
+      <h3 style="margin:0 0 8px;font-size:20px;">🎮 Loud Quiz</h3>
+      <div style="font-size:13px;color:#888;margin-bottom:24px;">Комната: b-x7k2m</div>
+      <div style="width:180px;height:180px;background:#000;border-radius:12px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;">
+        <div style="color:white;font-size:40px;">📱</div>
+      </div>
+      <div style="font-size:14px;color:#555;">Отсканируйте QR-код</div>
+      <div style="font-size:12px;color:#aaa;margin-top:4px;">loudquiz.app/play?room=b-x7k2m</div>
+    </div>
+
+    <!-- RIGHT: Single team -->
+    <div style="width:320px;display:flex;flex-direction:column;gap:12px;">
+
+      <div style="background:white;border-radius:14px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid #d7ccc8;">
+        <div style="font-weight:600;margin-bottom:8px;color:#8d6e63;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Игроки (3)</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#efebe9;border-radius:8px;font-size:13px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#d7ccc8;display:flex;align-items:center;justify-content:center;font-size:14px;">😈</div>
+            <span style="flex:1;font-weight:500;">Алексей</span>
+            <span style="color:#4caf50;font-size:11px;font-weight:600;">✓ Готов</span>
+            <span style="color:#ccc;cursor:pointer;font-size:12px;padding:0 4px;">✕</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#efebe9;border-radius:8px;font-size:13px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#d7ccc8;display:flex;align-items:center;justify-content:center;font-size:14px;">👻</div>
+            <span style="flex:1;font-weight:500;">Маша</span>
+            <span style="color:#4caf50;font-size:11px;font-weight:600;">✓ Готова</span>
+            <span style="color:#ccc;cursor:pointer;font-size:12px;padding:0 4px;">✕</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#efebe9;border-radius:8px;font-size:13px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#d7ccc8;display:flex;align-items:center;justify-content:center;font-size:14px;">🤖</div>
+            <span style="flex:1;font-weight:500;">Дима</span>
+            <span style="color:#4caf50;font-size:11px;font-weight:600;">✓ Готов</span>
+            <span style="color:#ccc;cursor:pointer;font-size:12px;padding:0 4px;">✕</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;"></div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button style="padding:10px;background:#eee;border:none;border-radius:10px;font-size:13px;cursor:pointer;">🔊 Калибровка</button>
+        <button style="padding:14px;background:#4caf50;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;">
+          ▶ Старт
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:24px;">
+  <h3>Изменения в PlayerStatusTable</h3>
+  <ul style="line-height:1.8;color:#555;">
+    <li><strong>Новый prop <code>mode: "lobby" | "game"</code></strong> — переключает поведение</li>
+    <li><strong>lobby mode:</strong> показывает ready-статус (✓/⏳) вместо role/status, кнопку kick (✕), draggable строки</li>
+    <li><strong>game mode:</strong> текущее поведение (роль, статус ответа)</li>
+    <li><strong>Группировка по командам:</strong> компонент принимает данные, HostLobby группирует в секции (красные → синие → без команды)</li>
+    <li><strong>Drag:</strong> нативный HTML DnD, drag-handle на строке, drop-zone на секции команды</li>
+  </ul>
+</div>

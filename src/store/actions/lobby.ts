@@ -2,6 +2,7 @@ import { useGameStore } from "@/store/gameStore";
 import { getRandomEmoji } from "@/logic/emojiPool";
 import { createNextRoundState } from "@/logic/phaseTransitions";
 import { createTimer, getCaptainTimerDuration } from "@/logic/timer";
+import { TeamId } from "@/types/game";
 
 export function handleJoin(peerId: string, name: string): void {
   const state = useGameStore.getState();
@@ -17,16 +18,15 @@ export function handleJoin(peerId: string, name: string): void {
 
   const occupied = state.players.map((p) => p.emoji);
   const emoji = getRandomEmoji(occupied);
-  const team =
-    state.settings.teamMode === "single" ? state.teams[0]?.id ?? "default" : "";
+  const team = "none";
 
-  const player = { name, emoji, team, online: true, ready: false };
+  const player = { name, emoji, team, online: true, ready: false } as const;
   useGameStore.getState().setState({
     players: [...state.players, player],
   });
 }
 
-export function handleSetTeam(name: string, teamId: string): void {
+export function handleSetTeam(name: string, teamId: TeamId): void {
   const state = useGameStore.getState();
   if (state.phase !== "lobby") return;
   const players = state.players.map((p) =>
@@ -64,7 +64,7 @@ export function kickPlayer(name: string): void {
   useGameStore.getState().setState({ players });
 }
 
-export function movePlayer(name: string, teamId: string): void {
+export function movePlayer(name: string, teamId: TeamId): void {
   const state = useGameStore.getState();
   const players = state.players.map((p) =>
     p.name === name ? { ...p, team: teamId } : p,
@@ -99,7 +99,7 @@ export function startGame(): void {
   const nextPhase =
     state.settings.mode === "ai" ? "topics-suggest" : "round-captain";
 
-  const teamId = state.teams[0]?.id ?? "default";
+  const teamId = state.teams[0]?.id ?? "none";
   const roundInit = nextPhase === "round-captain"
     ? {
         currentRound: createNextRoundState(teamId),

@@ -13,8 +13,6 @@
   animation: none !important;
 }
 
-/*//////////////////////////////////////////////////////*/
-
 .wrapper {
   width: 100%;
   height: 25vh;
@@ -27,12 +25,12 @@
 
 .block {
   font-family: var(--font-display);
-  font-size: 40cqh;
+  font-size: min(50cqh, 20cqw);
   line-height: 1;
   color: white;
   font-weight: 700;
   text-shadow: 0 0 2vh rgba(0, 0, 0, 0.5), 2cqh 2cqh 4cqh rgba(0, 0, 0, 0.5);
-  padding: 30cqh 5cqw;
+  padding: calc(50cqh - min(50cqh, 20cqw)/2) 2cqw;
   transform: scaleX(1);
   /*transition: transform var(--duration-all) ease-in-out;*/
 }
@@ -68,12 +66,13 @@
   position: relative;
   grid-column: 2 / 4;
   grid-row: 2 / 3;
-  max-height: 100cqh;
+  max-height: min(100cqh, 50cqw);
   filter: drop-shadow(1cqh 1cqh 1cqh rgba(0, 0, 0, 0.5));
   display: flex;
   justify-content: center;
   align-items: center;
-
+  align-self: center;
+  height: 100%;
 }
 .avatar-animated {
   animation: shake 2s forwards linear;

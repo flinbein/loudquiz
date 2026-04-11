@@ -1,0 +1,94 @@
+<h2>SetupPage — Экран настройки игры</h2>
+<p class="subtitle">Хост настраивает параметры перед созданием комнаты</p>
+
+<div class="mockup">
+  <div class="mockup-header">SetupPage (/setup) — Desktop 1366×768</div>
+  <div class="mockup-body" style="max-width:500px;margin:0 auto;padding:32px;font-family:system-ui;">
+
+    <h3 style="text-align:center;margin-bottom:24px;font-size:24px;">🎮 Новая игра</h3>
+
+    <!-- Team Mode -->
+    <div style="margin-bottom:24px;">
+      <label style="display:block;font-weight:600;margin-bottom:8px;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;color:#666;">Режим команд</label>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;padding:16px;border:2px solid #1e88e5;border-radius:12px;background:#e3f2fd;text-align:center;cursor:pointer;">
+          <div style="font-size:24px;margin-bottom:4px;">👥</div>
+          <div style="font-weight:600;">Одна команда</div>
+          <div style="font-size:12px;color:#666;">Кооперативный режим</div>
+        </div>
+        <div style="flex:1;padding:16px;border:2px solid #ddd;border-radius:12px;text-align:center;cursor:pointer;">
+          <div style="font-size:24px;margin-bottom:4px;">⚔️</div>
+          <div style="font-weight:600;">Две команды</div>
+          <div style="font-size:12px;color:#666;">Соревновательный режим</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question Source -->
+    <div style="margin-bottom:24px;">
+      <label style="display:block;font-weight:600;margin-bottom:8px;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;color:#666;">Источник вопросов</label>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;padding:16px;border:2px solid #1e88e5;border-radius:12px;background:#e3f2fd;text-align:center;cursor:pointer;">
+          <div style="font-size:24px;margin-bottom:4px;">📄</div>
+          <div style="font-weight:600;">Свои вопросы</div>
+          <div style="font-size:12px;color:#666;">Загрузить JSON</div>
+        </div>
+        <div style="flex:1;padding:16px;border:2px solid #ddd;border-radius:12px;text-align:center;cursor:pointer;">
+          <div style="font-size:24px;margin-bottom:4px;">🤖</div>
+          <div style="font-weight:600;">AI генерация</div>
+          <div style="font-size:12px;color:#666;">OpenRouter API</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manual mode: file upload -->
+    <div style="margin-bottom:24px;padding:20px;border:2px dashed #ccc;border-radius:12px;text-align:center;color:#888;">
+      <div style="font-size:32px;margin-bottom:8px;">📁</div>
+      <div>Перетащите JSON-файл сюда</div>
+      <div style="font-size:12px;margin-top:4px;">или нажмите для выбора</div>
+    </div>
+
+    <!-- AI mode settings (shown when AI selected) -->
+    <div style="margin-bottom:24px;padding:16px;background:#f5f5f5;border-radius:12px;display:none;">
+      <div style="margin-bottom:12px;">
+        <label style="font-size:13px;color:#666;">API Key (OpenRouter)</label>
+        <input style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-top:4px;" placeholder="sk-or-..." />
+      </div>
+      <div style="display:flex;gap:12px;">
+        <div style="flex:1;">
+          <label style="font-size:13px;color:#666;">Тем</label>
+          <input type="number" value="3" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-top:4px;" />
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:13px;color:#666;">Вопросов / тему</label>
+          <input type="number" value="4" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-top:4px;" />
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:13px;color:#666;">Блиц-раундов</label>
+          <input type="number" value="2" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-top:4px;" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Create button -->
+    <button style="width:100%;padding:16px;background:#4caf50;color:white;border:none;border-radius:12px;font-size:18px;font-weight:600;cursor:pointer;">
+      Создать игру
+    </button>
+
+    <div style="text-align:center;margin-top:12px;font-size:12px;color:#999;">
+      Валидация: (темы × вопросы) &gt; 0 или блиц-раунды &gt; 0
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:24px;">
+  <h3>Логика SetupPage</h3>
+  <ul style="line-height:1.8;color:#555;">
+    <li><strong>Team Mode:</strong> toggle single/dual — сохраняется в GameSettings</li>
+    <li><strong>Manual:</strong> file input (JSON) → парсинг → валидация → topics/blitzTasks в store</li>
+    <li><strong>AI:</strong> API key (из localStorage), topic count, questions/topic, blitz rounds</li>
+    <li><strong>«Создать игру»:</strong> сохраняет settings + topics в sessionStorage, создаёт комнату, navigate → /play?room=b-xxx</li>
+    <li><strong>AI settings показываются</strong> только при выборе AI-режима</li>
+    <li><strong>Валидация файла:</strong> JSON должен содержать массив topics с questions</li>
+  </ul>
+</div>

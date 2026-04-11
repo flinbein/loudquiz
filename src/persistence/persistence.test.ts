@@ -31,7 +31,7 @@ const testState: GameState = {
   players: [
     { name: "Alice", emoji: "🐱", team: "red", online: true, ready: false },
   ],
-  teams: [{ id: "red", color: "red", score: 0, jokerUsed: false }],
+  teams: [{ id: "red", score: 0, jokerUsed: false }],
   topics: [],
   blitzTasks: [],
   currentRound: null,

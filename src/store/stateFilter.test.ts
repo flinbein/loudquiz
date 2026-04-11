@@ -51,7 +51,7 @@ function createTestState(overrides?: Partial<GameState>): GameState {
       bonusTime: 10000,
     },
     history: [],
-    timer: { startedAt: Date.now(), duration: 60000 },
+    timer: { startedAt: performance.now(), duration: 60000 },
     ...overrides,
   };
 }

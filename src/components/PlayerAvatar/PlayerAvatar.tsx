@@ -1,28 +1,28 @@
 import { useEffect, useRef, useState } from "react";
-import type { TeamColor } from "@/types/game";
+import type { TeamId } from "@/types/game";
 import styles from "./PlayerAvatar.module.css";
 import cn from "classnames";
 import { Property } from "csstype";
 
 export interface PlayerAvatarProps {
   emoji: string;
-  playerName?: string;
-  team?: TeamColor;
+  name?: string;
+  team?: TeamId;
   size?: Property.Height<string | number>; // size in px
   online?: boolean;
   onClick?: () => void;
 }
 
 function formatName(name: string): string {
-  const cleaned = name.replace(/[^a-zA-Zа-яА-ЯёЁ\s]/g, "").trim();
-  const words = cleaned.split(/\s+/).filter(Boolean);
+  const cleaned = name.replace(/[?!*_<>(){}\[\]'"`.,;:^+=]/g, "").trim();
+  const words = cleaned.split(/[\s\-_]+/).filter(Boolean);
   if (words.length >= 2) {
     return (words[0][0] + words[1][0]).toUpperCase();
   }
   return cleaned.slice(0, 3).toUpperCase();
 }
 
-const teamClass: Record<TeamColor, string> = {
+const teamClass: Record<TeamId, string> = {
   red: styles.teamRed,
   blue: styles.teamBlue,
   none: styles.teamNone,
@@ -31,7 +31,7 @@ const teamClass: Record<TeamColor, string> = {
 export function PlayerAvatar({
   emoji,
   size,
-  playerName,
+  name,
   team,
   online = true,
   onClick,
@@ -93,7 +93,7 @@ export function PlayerAvatar({
             )}
           </div>
         </div>
-        {playerName && <span className={styles.name}>{formatName(playerName)}</span>}
+        {name && <span className={styles.name}>{formatName(name)}</span>}
       </div>
     </div>
   );

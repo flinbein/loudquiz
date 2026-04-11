@@ -8,7 +8,7 @@ export function HomePage() {
     <div>
       <h1>{t("app.title")}</h1>
       <nav>
-        <Link to="/play">{t("home.newGame")}</Link>
+        <Link to="/setup">{t("home.newGame")}</Link>
         <Link to="/constructor">{t("home.constructor")}</Link>
         <Link to="/rules">{t("home.rules")}</Link>
       </nav>

@@ -1,9 +1,9 @@
 import cn from "classnames";
-import type { TeamColor } from "@/types/game";
+import type { TeamId } from "@/types/game";
 import styles from "./TeamScore.module.css";
 
 export interface TeamScoreProps {
-  teams: Array<{ id: string; color: TeamColor; score: number }>;
+  teams: Array<{ id: TeamId; score: number }>;
 }
 
 export function TeamScore({ teams }: TeamScoreProps) {
@@ -17,7 +17,7 @@ export function TeamScore({ teams }: TeamScoreProps) {
           key={team.id}
           className={cn(
             styles.team,
-            styles[team.color],
+            styles[team.id],
             { [styles.leader]: hasLeader && team.score === maxScore },
           )}
         >

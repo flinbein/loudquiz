@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import cn from "classnames";
-import type { TeamColor, PlayerDisplay } from "@/types/game";
+import type { TeamId, PlayerDisplay } from "@/types/game";
 import { PlayerAvatar } from "@/components/PlayerAvatar/PlayerAvatar";
 import styles from "./Sticker.module.css";
 
@@ -11,14 +11,15 @@ export interface StickerProps {
   stampText?: string;
   hideAvatar?: boolean;
   stampColor?: "green" | "red";
+  answerHidden?: boolean;
   onClickSticker?: () => void;
   onClickAvatar?: () => void;
 }
 
-const teamClass: Partial<Record<TeamColor, string>> = {
+const teamClass: Partial<Record<TeamId, string>> = {
   red: styles.teamRed,
   blue: styles.teamBlue,
-  // "none" — default beige sticker, no modifier class needed
+  // "none" — default sticker, no modifier class needed
 };
 
 const stampColorClass = {
@@ -35,6 +36,7 @@ export function Sticker({
   answerText,
   aiComment,
   stampText,
+  answerHidden,
   stampColor = "green",
   onClickSticker,
   onClickAvatar,
@@ -48,6 +50,7 @@ export function Sticker({
     <div
       className={cn(styles.wrapper, team && teamClass[team])}
       style={{ transform: `rotate(${rotation}deg)` }}
+      data-hidden={answerHidden}
     >
       {/* Player avatar — on wrapper, not clipped */}
       {player && !hideAvatar && (
@@ -57,8 +60,18 @@ export function Sticker({
       )}
 
       {/* Sticker body — clipped */}
-      <div className={styles.sticker} onClick={onClickSticker} data-clickable={onClickSticker ? "true" : undefined}>
-        <div className={styles.tape} />
+      <div
+        className={cn(styles.sticker, styles.stickerBack)}
+        onClick={onClickSticker}
+        data-clickable={onClickSticker ? "true" : undefined}
+      >
+        <span className={styles.stickerBackText}>{player?.name}</span>
+      </div>
+      <div
+        className={cn(styles.sticker, styles.stickerFront)}
+        onClick={onClickSticker}
+        data-clickable={onClickSticker ? "true" : undefined}
+      >
         <div className={styles.content}>
           <p className={styles.answerText}><span>&nbsp;</span>{answerText}</p>
           {aiComment && <p className={styles.aiComment}>{aiComment}</p>}

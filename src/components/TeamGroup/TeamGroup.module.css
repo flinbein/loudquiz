@@ -1,0 +1,57 @@
+.group {
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-lg);
+  border-left: 4px solid var(--color-border);
+}
+
+.red {
+  border-left-color: var(--color-team-red);
+  background-color: var(--color-team-red-bg);
+}
+.red .label {
+  color: var(--color-team-red);
+}
+
+.blue {
+  border-left-color: var(--color-team-blue);
+  background-color: var(--color-team-blue-bg);
+}
+.blue .label {
+  color: var(--color-team-blue);
+}
+
+.none {
+  border-left-color: var(--color-team-neutral);
+  background-color: var(--color-team-none-bg);
+}
+.none .label {
+  color: var(--color-team-none);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+}
+
+.label {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.count {
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.content {
+  min-height: 32px;
+}

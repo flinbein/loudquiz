@@ -1,0 +1,118 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
+  margin: 0 auto;
+  position: relative;
+  height: 100vh;
+}
+
+.connecting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: var(--color-text-secondary);
+}
+
+/* Toolbar - icon buttons overlaid at top */
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-xs);
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  z-index: 10;
+}
+
+.toolBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+  border: none;
+  border-radius: var(--radius-round);
+  color: white;
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.toolBtn:active {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* Player list */
+.playerList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+}
+
+/* Bottom controls - sticky */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg);
+  padding-top: var(--spacing-sm);
+}
+
+.calibrationBtn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
+  border: 2px solid var(--color-success);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.readyBtn {
+  padding: var(--spacing-md);
+  background: var(--color-success);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.startBtn {
+  padding: var(--spacing-md);
+  background: var(--color-text);
+  color: var(--color-bg);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  cursor: pointer;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.waitingBtn {
+  padding: var(--spacing-md);
+  background: var(--color-bg-secondary);
+  color: var(--color-success);
+  border: 2px solid var(--color-success);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  cursor: default;
+}

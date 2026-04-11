@@ -7,6 +7,7 @@ const ROUND_PHASE_ORDER: RoundPhase[] = [
   "round-active",
   "round-answer",
   "round-review",
+  "round-result",
 ];
 
 export function getNextRoundPhase(current: RoundPhase): RoundPhase {

@@ -4,11 +4,12 @@ export interface ScoreFormulaProps {
   difficulty: number;
   correctCount: number;
   jokerActive: boolean;
-  bonusMultiplier: number;
+  bonusTimeMultiplier: number;
+  bonusTimeApplied: boolean;
   totalScore: number;
 }
 
-export function ScoreFormula({ difficulty, correctCount, jokerActive, bonusMultiplier, totalScore }: ScoreFormulaProps) {
+export function ScoreFormula({ difficulty, correctCount, jokerActive, bonusTimeMultiplier, bonusTimeApplied, totalScore }: ScoreFormulaProps) {
   if (correctCount === 0) {
     return <div className={styles.formula}><span className={styles.total}>0 🪙</span></div>;
   }
@@ -16,7 +17,7 @@ export function ScoreFormula({ difficulty, correctCount, jokerActive, bonusMulti
   const parts: string[] = [];
   parts.push(`( ${difficulty}🪙 × ${correctCount} )`);
   if (jokerActive) parts.push("× 2🃏");
-  if (bonusMultiplier > 0) parts.push(`× ${bonusMultiplier.toFixed(1)}⌚`);
+  if (bonusTimeApplied) parts.push(`× ${bonusTimeMultiplier.toFixed(2)}⌚`);
 
   return (
     <div className={styles.formula}>

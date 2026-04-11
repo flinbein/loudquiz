@@ -37,6 +37,15 @@ describe("App", () => {
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByText("Игра")).toBeInTheDocument();
+    expect(screen.getByText(/Игра/)).toBeInTheDocument();
+  });
+
+  it("renders setup page", () => {
+    render(
+      <MemoryRouter initialEntries={["/setup"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("Новая игра")).toBeInTheDocument();
   });
 });

@@ -1,13 +1,21 @@
+/**
+ * BroadcastChannel transport — uses BroadcastChannel API for peer discovery
+ * and WebRTC signaling (SDP/ICE exchange). Actual data transfer goes through
+ * RTCDataChannel (text + binary).
+ */
 import type { Transport, RoomInfo, Message } from "./interface";
+import {
+  createWebRTCPeerManager,
+  type SignalMessage,
+  type WebRTCPeerManager,
+} from "./webrtcPeer";
 
-const HEARTBEAT_INTERVAL = 2000;
-const HEARTBEAT_TIMEOUT = 5000;
-
-interface InternalMessage {
-  type: "msg" | "heartbeat" | "connect" | "disconnect";
+/** Signaling messages sent over BroadcastChannel */
+interface BcSignal {
+  kind: "announce" | "signal" | "leave";
   senderId: string;
   targetId?: string;
-  payload?: Message;
+  signal?: SignalMessage;
 }
 
 function generateId(): string {
@@ -16,116 +24,129 @@ function generateId(): string {
 
 export function createBroadcastChannelTransport(): Transport {
   const peerId = generateId();
+  const tag = `[bc-transport:${peerId.slice(0, 4)}]`;
   let channel: BroadcastChannel | null = null;
-  let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+  let rtc: WebRTCPeerManager | null = null;
 
-  const connectedPeers = new Set<string>();
-  const peerLastSeen = new Map<string, number>();
+  /** Set of peer IDs we've seen announce (used for discovery) */
+  const knownPeers = new Set<string>();
 
   let messageHandler: ((peerId: string, message: Message) => void) | null =
     null;
   let connectHandler: ((peerId: string) => void) | null = null;
   let disconnectHandler: ((peerId: string) => void) | null = null;
 
-  function send(raw: InternalMessage) {
-    channel?.postMessage(raw);
+  function bcSend(msg: BcSignal) {
+    channel?.postMessage(msg);
   }
 
-  function handleIncoming(event: MessageEvent<InternalMessage>) {
+  function handleBcMessage(event: MessageEvent<BcSignal>) {
     const data = event.data;
     if (!data || data.senderId === peerId) return;
-
     if (data.targetId && data.targetId !== peerId) return;
 
-    switch (data.type) {
-      case "connect": {
-        const isNew = !connectedPeers.has(data.senderId);
-        connectedPeers.add(data.senderId);
-        peerLastSeen.set(data.senderId, Date.now());
-        if (isNew) {
-          connectHandler?.(data.senderId);
-          // Reply so the new peer knows about us (only for new peers to avoid loop)
-          send({ type: "connect", senderId: peerId, targetId: data.senderId });
+    switch (data.kind) {
+      case "announce": {
+        if (!knownPeers.has(data.senderId)) {
+          knownPeers.add(data.senderId);
+          console.log(`${tag} discovered peer: ${data.senderId}`);
+          if (!data.targetId) {
+            // Broadcast announce — reply so the new peer discovers us,
+            // and initiate WebRTC (we are the existing peer / caller)
+            bcSend({
+              kind: "announce",
+              senderId: peerId,
+              targetId: data.senderId,
+            });
+            rtc?.connectTo(data.senderId);
+          }
+          // Targeted announce (reply) — don't initiate; the other side already did
         }
         break;
       }
-      case "disconnect": {
-        if (connectedPeers.has(data.senderId)) {
-          connectedPeers.delete(data.senderId);
-          peerLastSeen.delete(data.senderId);
-          disconnectHandler?.(data.senderId);
+      case "signal": {
+        if (data.signal) {
+          // Also track as known peer
+          knownPeers.add(data.senderId);
+          rtc?.handleSignal(data.signal);
         }
         break;
       }
-      case "heartbeat": {
-        peerLastSeen.set(data.senderId, Date.now());
-        if (!connectedPeers.has(data.senderId)) {
-          connectedPeers.add(data.senderId);
-          connectHandler?.(data.senderId);
-        }
-        break;
-      }
-      case "msg": {
-        if (data.payload) {
-          peerLastSeen.set(data.senderId, Date.now());
-          messageHandler?.(data.senderId, data.payload);
-        }
+      case "leave": {
+        console.log(`${tag} peer leaving: ${data.senderId}`);
+        knownPeers.delete(data.senderId);
+        rtc?.closePeer(data.senderId);
         break;
       }
     }
   }
 
-  function startHeartbeat() {
-    heartbeatTimer = setInterval(() => {
-      send({ type: "heartbeat", senderId: peerId });
-
-      // Check for timed-out peers
-      const now = Date.now();
-      for (const [id, lastSeen] of peerLastSeen) {
-        if (now - lastSeen > HEARTBEAT_TIMEOUT) {
-          connectedPeers.delete(id);
-          peerLastSeen.delete(id);
-          disconnectHandler?.(id);
-        }
-      }
-    }, HEARTBEAT_INTERVAL);
-  }
-
   function initChannel(roomId: string) {
     channel = new BroadcastChannel(`loudquiz-${roomId}`);
-    channel.addEventListener("message", handleIncoming);
-    startHeartbeat();
+    channel.addEventListener("message", handleBcMessage);
+    console.log(`${tag} signaling channel opened: loudquiz-${roomId}`);
+  }
+
+  function initRTC() {
+    rtc = createWebRTCPeerManager({
+      localId: peerId,
+      onMessage(remotePeerId, data) {
+        if (typeof data === "string") {
+          try {
+            const msg = JSON.parse(data) as Message;
+            console.log(
+              `${tag} msg from ${remotePeerId}: ${msg.type}`,
+            );
+            messageHandler?.(remotePeerId, msg);
+          } catch (e) {
+            console.warn(`${tag} bad message from ${remotePeerId}:`, e);
+          }
+        }
+        // Binary messages can be handled here in the future
+      },
+      onPeerReady(remotePeerId) {
+        console.log(`${tag} peer connected (WebRTC ready): ${remotePeerId}`);
+        connectHandler?.(remotePeerId);
+      },
+      onPeerClosed(remotePeerId) {
+        console.log(`${tag} peer disconnected: ${remotePeerId}`);
+        disconnectHandler?.(remotePeerId);
+      },
+      sendSignal(signal) {
+        bcSend({
+          kind: "signal",
+          senderId: peerId,
+          targetId: signal.targetId,
+          signal,
+        });
+      },
+    });
   }
 
   return {
     async createRoom(): Promise<RoomInfo> {
       const roomId = `b-${generateId()}`;
+      initRTC();
       initChannel(roomId);
-      const joinUrl = `${window.location.origin}${window.location.pathname}#/play?room=${roomId}`;
+      const joinUrl = `${window.location.origin}/play?room=${roomId}`;
+      console.log(`${tag} room created: ${roomId}`);
       return { roomId, joinUrl };
     },
 
     async joinRoom(roomId: string): Promise<void> {
+      initRTC();
       initChannel(roomId);
-      // Announce presence
-      send({ type: "connect", senderId: peerId });
+      // Announce presence so host discovers us
+      bcSend({ kind: "announce", senderId: peerId });
+      console.log(`${tag} joining room: ${roomId}`);
     },
 
     send(targetId: string, message: Message): void {
-      send({
-        type: "msg",
-        senderId: peerId,
-        targetId,
-        payload: message,
-      });
+      rtc?.sendText(targetId, JSON.stringify(message));
     },
 
     broadcast(message: Message): void {
-      send({
-        type: "msg",
-        senderId: peerId,
-        payload: message,
-      });
+      rtc?.broadcastText(JSON.stringify(message));
     },
 
     onMessage(handler: (peerId: string, message: Message) => void): void {
@@ -141,18 +162,16 @@ export function createBroadcastChannelTransport(): Transport {
     },
 
     close(): void {
-      if (heartbeatTimer) {
-        clearInterval(heartbeatTimer);
-        heartbeatTimer = null;
-      }
+      console.log(`${tag} closing`);
       if (channel) {
-        send({ type: "disconnect", senderId: peerId });
-        channel.removeEventListener("message", handleIncoming);
+        bcSend({ kind: "leave", senderId: peerId });
+        channel.removeEventListener("message", handleBcMessage);
         channel.close();
         channel = null;
       }
-      connectedPeers.clear();
-      peerLastSeen.clear();
+      rtc?.closeAll();
+      rtc = null;
+      knownPeers.clear();
     },
   };
 }

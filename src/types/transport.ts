@@ -1,4 +1,4 @@
-import type { GameState } from "./game";
+import type { GameState, TeamId } from "./game";
 
 // Transport interface
 
@@ -32,9 +32,22 @@ export interface PlayerActionMessage {
   action: PlayerAction;
 }
 
+// Messages: clock-sync handshake (out-of-band, bypasses game store)
+
+export interface SyncRequestMessage {
+  type: "sync-request";
+  nonce: number;
+}
+
+export interface SyncResponseMessage {
+  type: "sync-response";
+  nonce: number;
+  hostNow: number;
+}
+
 export type PlayerAction =
   | { kind: "join"; name: string }
-  | { kind: "set-team"; team: string }
+  | { kind: "set-team"; team: TeamId }
   | { kind: "set-ready"; ready: boolean }
   | { kind: "change-emoji" }
   | { kind: "start-game" }
@@ -50,4 +63,8 @@ export type PlayerAction =
   | { kind: "dispute-review" }
   | { kind: "next-round" };
 
-export type Message = StateUpdateMessage | PlayerActionMessage;
+export type Message =
+  | StateUpdateMessage
+  | PlayerActionMessage
+  | SyncRequestMessage
+  | SyncResponseMessage;

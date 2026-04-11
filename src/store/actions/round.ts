@@ -48,6 +48,25 @@ export function activateJoker(): void {
   });
 }
 
+export function startRoundTask(): void {
+  const state = useGameStore.getState();
+  if (state.phase !== "round-ready" || !state.currentRound) return;
+  
+  const teamPlayers = state.players.filter((p) => p.team === state.currentRound!.teamId);
+  
+  const respondersCount = teamPlayers.length - 1;
+  const activeTimer = createTimer(getActiveTimerDuration(respondersCount));
+  
+  useGameStore.getState().setState({
+    phase: "round-active",
+    players: state.players.map((p) =>
+      (p.team === state.currentRound?.teamId && !p.ready) ? { ...p, ready: true } : p,
+    ),
+    timer: activeTimer,
+    currentRound: { ...state.currentRound, activeTimerStartedAt: activeTimer.startedAt },
+  });
+}
+
 export function setPlayerReady(playerName: string): void {
   const state = useGameStore.getState();
   if (state.phase !== "round-ready" || !state.currentRound) return;
@@ -63,14 +82,7 @@ export function setPlayerReady(playerName: string): void {
   const allReady = teamPlayers.every((p) => p.ready);
 
   if (allReady) {
-    const respondersCount = teamPlayers.length - 1;
-    const activeTimer = createTimer(getActiveTimerDuration(respondersCount));
-    useGameStore.getState().setState({
-      phase: "round-active",
-      players,
-      timer: activeTimer,
-      currentRound: { ...state.currentRound, activeTimerStartedAt: activeTimer.startedAt },
-    });
+    startRoundTask();
   } else {
     useGameStore.getState().setState({ players });
   }
@@ -85,7 +97,7 @@ export function submitAnswer(playerName: string, text: string): void {
 
   const newAnswers = {
     ...state.currentRound.answers,
-    [playerName]: { text, timestamp: Date.now() },
+    [playerName]: { text, timestamp: performance.now() },
   };
 
   useGameStore.getState().setState({
@@ -107,19 +119,26 @@ export function submitAnswer(playerName: string, text: string): void {
   }
 }
 
+export function forceTeamCaptain(){
+  const state = useGameStore.getState();
+  if (state.phase !== "round-captain" || !state.currentRound) return;
+  
+  const teamPlayers = state.players.filter((p) => p.team === state.currentRound!.teamId);
+  const captain = getRandomCaptain(teamPlayers, state.history);
+  useGameStore.getState().setState({
+    phase: "round-pick",
+    currentRound: { ...state.currentRound, captainName: captain },
+    timer: createTimer(getPickTimerDuration()),
+  });
+}
+
 export function handleTimerExpire(phase: RoundPhase): void {
   const state = useGameStore.getState();
   if (state.phase !== phase || !state.currentRound) return;
 
   switch (phase) {
     case "round-captain": {
-      const teamPlayers = state.players.filter((p) => p.team === state.currentRound!.teamId);
-      const captain = getRandomCaptain(teamPlayers, state.history);
-      useGameStore.getState().setState({
-        phase: "round-pick",
-        currentRound: { ...state.currentRound, captainName: captain },
-        timer: createTimer(getPickTimerDuration()),
-      });
+      forceTeamCaptain();
       break;
     }
     case "round-pick": {
@@ -153,6 +172,10 @@ export function handleTimerExpire(phase: RoundPhase): void {
 export function initReview(): void {
   const state = useGameStore.getState();
   if (!state.currentRound) return;
+  const round = state.currentRound;
+  const teamPlayers = state.players.filter((p) => p.team === round.teamId);
+  const respondersCount = teamPlayers.length - 1;
+  const activeDuration = getActiveTimerDuration(respondersCount);
 
   const evaluations: AnswerEvaluation[] = Object.entries(state.currentRound.answers).map(
     ([playerName, answer]) => ({
@@ -160,8 +183,20 @@ export function initReview(): void {
       correct: answer.text === "" ? false : null,
     }),
   );
-
-  const groups = Object.keys(state.currentRound.answers).map((name) => [name]);
+  
+  const groups = Object.entries(round?.answers ?? {})
+    .map(([name, answer]) => ({name, answer} as const))
+    .sort((a, b) => a.answer.timestamp - b.answer.timestamp)
+    .map(a => [a.name])
+  ;
+  
+  const timerEndAt = round.activeTimerStartedAt + activeDuration;
+  const maxTimestamp = Math.max(...Object.values(round.answers).map((a) => a.timestamp));
+  const bonusTime = Math.max(0, (timerEndAt - maxTimestamp));
+  
+  const bonusMultiplier =  calculateBonusMultiplier(bonusTime, activeDuration);
+  
+  const bonusTimeApplied = bonusTime > 0;
 
   useGameStore.getState().setState({
     currentRound: {
@@ -170,8 +205,9 @@ export function initReview(): void {
         evaluations,
         groups,
         score: 0,
-        bonusMultiplier: 0,
-        scoreConfirmed: false,
+        bonusTimeMultiplier: bonusMultiplier,
+        bonusTime,
+        bonusTimeApplied,
         jokerApplied: state.currentRound.jokerActive,
       },
     },
@@ -185,11 +221,16 @@ export function evaluateGroup(groupPlayers: string[], correct: boolean | null): 
   const evaluations = state.currentRound.reviewResult.evaluations.map((e) =>
     groupPlayers.includes(e.playerName) ? { ...e, correct } : e,
   );
-
+  
+  const bonusTimeApplied = state.currentRound.reviewResult.bonusTime > 0
+    && state.currentRound.reviewResult.groups.every((group) => group.length <= 1)
+    && evaluations.every(e => e.correct !== false)
+  ;
+  
   useGameStore.getState().setState({
     currentRound: {
       ...state.currentRound,
-      reviewResult: { ...state.currentRound.reviewResult, evaluations },
+      reviewResult: { ...state.currentRound.reviewResult, evaluations, bonusTimeApplied },
     },
   });
 }
@@ -235,16 +276,22 @@ export function confirmScore(): void {
     activeDuration,
     round.activeTimerStartedAt,
   );
-  const bonusMultiplier = bonus.hasBonus
-    ? calculateBonusMultiplier(bonus.bonusTime, activeDuration)
-    : 0;
+  const bonusMultiplier = calculateBonusMultiplier(bonus.bonusTime, activeDuration)
 
-  const score = calculateRoundScore(difficulty, correctCount, round.jokerActive, bonusMultiplier);
+  const score = calculateRoundScore(difficulty, correctCount, round.jokerActive, bonusMultiplier, bonus.hasBonus );
 
   useGameStore.getState().setState({
+    phase: "round-result",
     currentRound: {
       ...state.currentRound,
-      reviewResult: { ...review, score, bonusMultiplier, scoreConfirmed: true },
+      reviewResult: {
+        ...review,
+        evaluations: review.evaluations.map(e => (
+          e.correct === true ? e : {...e, correct: false}
+        )),
+        score,
+        bonusTimeApplied: bonus.hasBonus,
+      },
     },
   });
 }
@@ -301,7 +348,7 @@ export function splitAnswerFromGroup(playerName: string): void {
 
 export function confirmReview(): void {
   const state = useGameStore.getState();
-  if (state.phase !== "round-review" || !state.currentRound?.reviewResult) return;
+  if (state.phase !== "round-result" || !state.currentRound?.reviewResult) return;
 
   const review = state.currentRound.reviewResult;
   const round = state.currentRound;
@@ -345,21 +392,27 @@ export function confirmReview(): void {
 
 export function disputeReview(): void {
   const state = useGameStore.getState();
-  if (state.phase !== "round-review" || !state.currentRound?.reviewResult) return;
+  if (state.phase !== "round-result" || !state.currentRound?.reviewResult) return;
 
   const evaluations = state.currentRound.reviewResult.evaluations.map((e) => ({
     ...e,
-    correct: (state.currentRound!.answers[e.playerName]?.text === "" ? false : null) as boolean | null,
+    correct: (state.currentRound!.answers[e.playerName]?.text === "" ? false : e.correct) as boolean | null,
   }));
+  
+  const bonusTimeApplied = state.currentRound.reviewResult.bonusTime > 0
+    && state.currentRound.reviewResult.groups.every((group) => group.length <= 1)
+    && evaluations.every(e => e.correct !== false)
+  ;
 
   useGameStore.getState().setState({
+    phase: "round-review",
     currentRound: {
       ...state.currentRound,
       reviewResult: {
         ...state.currentRound.reviewResult,
         score: 0,
-        scoreConfirmed: false,
         evaluations,
+        bonusTimeApplied
       },
     },
   });

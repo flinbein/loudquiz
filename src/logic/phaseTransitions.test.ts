@@ -71,9 +71,9 @@ describe("getTotalQuestionCount", () => {
 
 describe("createNextRoundState", () => {
   it("creates a fresh round state with team id", () => {
-    const round = createNextRoundState("team-red");
+    const round = createNextRoundState("red");
     expect(round.type).toBe("round");
-    expect(round.teamId).toBe("team-red");
+    expect(round.teamId).toBe("red");
     expect(round.captainName).toBe("");
     expect(round.jokerActive).toBe(false);
     expect(round.answers).toEqual({});

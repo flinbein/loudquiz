@@ -6,7 +6,7 @@ import { VolumeSlider } from "./VolumeSlider";
 describe("VolumeSlider", () => {
   it("renders input with value 0..1 scaled to 0..100", () => {
     render(<VolumeSlider value={0.5} onChange={() => {}} label="x" />);
-    expect(screen.getByRole("slider")).toHaveAttribute("aria-valuenow", "50");
+    expect(screen.getByRole("slider")).toHaveValue("50");
   });
 
   it("emits onChange with 0..1 value when user drags", () => {

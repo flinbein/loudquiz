@@ -19,21 +19,14 @@ export function VolumeSlider({
   return (
     <input
       type="range"
-      role="slider"
       min={0}
       max={100}
       step={1}
       value={percent}
       aria-label={label}
-      aria-valuenow={percent}
-      aria-valuemin={0}
-      aria-valuemax={100}
       disabled={disabled}
       className={styles.slider}
       onChange={(e) => onChange(Number(e.target.value) / 100)}
-      onInput={(e) =>
-        onChange(Number((e.target as HTMLInputElement).value) / 100)
-      }
     />
   );
 }

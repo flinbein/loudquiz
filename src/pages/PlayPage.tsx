@@ -10,6 +10,7 @@ import { HostLobby } from "@/pages/lobby/HostLobby";
 import { PlayerLobby } from "@/pages/lobby/PlayerLobby";
 import { HostRound } from "@/pages/round/HostRound";
 import { PlayerRound } from "@/pages/round/PlayerRound";
+import { GameShell } from "@/pages/GameShell";
 import { handleJoin, handleSetTeam, handleSetReady, handleChangeEmoji, startGame } from "@/store/actions/lobby";
 import {
   claimCaptain,
@@ -104,12 +105,12 @@ function HostPlay() {
   if (transport.role !== "host") return null;
 
   return (
-    <div>
+    <GameShell role="host">
       {phase === "lobby" && (
         <HostLobby roomId={transport.roomId} joinUrl={transport.joinUrl} />
       )}
       {phase.startsWith("round-") && <HostRound />}
-    </div>
+    </GameShell>
   );
 }
 
@@ -182,7 +183,7 @@ function PlayerPlayConnected({
   if (transport.role !== "player") return null;
 
   return (
-    <div>
+    <GameShell role="player" onClockResync={transport.resyncClock}>
       {phase === "lobby" && (
         <PlayerLobby
           playerName={playerName}
@@ -193,6 +194,6 @@ function PlayerPlayConnected({
       {phase.startsWith("round-") && (
         <PlayerRound playerName={playerName} sendAction={transport.sendAction} />
       )}
-    </div>
+    </GameShell>
   );
 }

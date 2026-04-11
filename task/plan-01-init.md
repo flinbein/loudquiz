@@ -207,7 +207,7 @@
 
 - [ ] `src/audio/audioManager.ts` — музыка (loop, fade-out 3s), сигнал (однократный), вибрация, громкость из localStorage
 - [ ] `src/hooks/useAudio.ts` — автозапуск музыки на ready/active (только для players), сигнал + вибрация на начало/конец active
-- [ ] CalibrationPopup — доработка: play/pause, слайдеры, тест сигнала, вибрация
+- [x] CalibrationPopup — попап готов: bottom sheet с music/signal/vibration/sharedHeadphones + clock calibration (host/player), Toolbar, GameShell обёртка в PlayPage, CalibrationPopupContainer связывает с zustand stores, полный набор hooks (useTestAudio, useSecondPulse, useClockTick)
 - [ ] `src/logic/blitzCheck.ts` — нормализация ответа: регистр, ё/е, спецсимволы, пробелы
 - [ ] `src/store/actions/blitz.ts` — claimBlitzCaptain, selectSlot, selectBlitzTask, submitBlitzAnswer, skipBlitzAnswer, confirmBlitzReview
 - [ ] Расширение `scoring.ts` для блица: `difficulty × playerNumber × (1 + bonusTime/totalTime)`, 0 при неправильном

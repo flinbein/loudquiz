@@ -3,10 +3,10 @@ import { useTranslation } from "react-i18next";
 import type { PlayerAction } from "@/types/transport";
 import type { TeamId } from "@/types/game";
 import { usePlayers, useSettings, useTeams } from "@/store/selectors";
-import { setTheme as saveTheme } from "@/persistence/localPersistence";
 import { isAllPlayersReady } from "@/store/selectors";
 import { canStartGame } from "@/store/actions/lobby";
 import { useGameStore } from "@/store/gameStore";
+import { useCalibrationUiStore } from "@/store/calibrationUiStore";
 import { TeamGroup } from "@/components/TeamGroup/TeamGroup";
 import {
   PlayerStatusTable,
@@ -31,6 +31,7 @@ export function PlayerLobby({
   const settings = useSettings();
   const teams = useTeams();
   const state = useGameStore.getState();
+  const openCalibration = useCalibrationUiStore((s) => s.setOpen);
   const listRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(players.length);
 
@@ -63,21 +64,6 @@ export function PlayerLobby({
     }));
   }
 
-  function toggleFullscreen() {
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-    } else {
-      document.documentElement.requestFullscreen();
-    }
-  }
-
-  function toggleTheme() {
-    const html = document.documentElement;
-    const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    html.setAttribute("data-theme", next);
-    saveTheme(next);
-  }
-
   if (!connected || !me) {
     return (
       <div className={styles.page}>
@@ -88,27 +74,6 @@ export function PlayerLobby({
 
   return (
     <div className={styles.page}>
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <button className={styles.toolBtn} title={t("lobby.calibration")}>
-          &#x1F50A;
-        </button>
-        <button
-          className={styles.toolBtn}
-          onClick={toggleFullscreen}
-          title="Fullscreen"
-        >
-          &#x26F6;
-        </button>
-        <button
-          className={styles.toolBtn}
-          onClick={toggleTheme}
-          title="Theme"
-        >
-          &#x263E;
-        </button>
-      </div>
-
       {/* Team color header block with avatar */}
       <TeamPicker
         player={me}
@@ -181,7 +146,10 @@ export function PlayerLobby({
 
       {/* Bottom controls */}
       <div className={styles.controls}>
-        <button className={styles.calibrationBtn}>
+        <button
+          className={styles.calibrationBtn}
+          onClick={() => openCalibration(true)}
+        >
           {t("lobby.calibration")}
         </button>
         {!me.ready ? (

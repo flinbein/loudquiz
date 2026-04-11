@@ -98,5 +98,25 @@
   },
   "score": {
     "total": "Total"
+  },
+  "calibration": {
+    "title": "Calibration",
+    "music": "Music",
+    "signal": "Signal",
+    "vibration": "Vibration",
+    "sharedHeadphones": "Shared headphones",
+    "clockSection": "Clock adjustment",
+    "clockOffset": "offset: {{value}} ms",
+    "clockPending": "{{sign}}{{value}} ms",
+    "clockApply": "Apply",
+    "clockResync": "Re-sync",
+    "clockResyncFailed": "Sync failed",
+    "instructions": "Set the volume so you can't hear the other players. The signal should cut through the music. Turn off notifications for the game.",
+    "vibrationUnsupported": "Vibration is not supported on this device",
+    "testSignal": "Play signal",
+    "testVibration": "Test vibration",
+    "playMusic": "Play music",
+    "pauseMusic": "Pause music",
+    "close": "Close"
   }
 }

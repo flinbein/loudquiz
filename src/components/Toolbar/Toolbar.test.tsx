@@ -13,7 +13,7 @@ describe("Toolbar", () => {
         onToggleTheme={() => {}}
       />,
     );
-    await userEvent.click(screen.getByLabelText("calibration.title"));
+    await userEvent.click(screen.getByLabelText("Калибровка"));
     expect(fn).toHaveBeenCalledTimes(1);
   });
 

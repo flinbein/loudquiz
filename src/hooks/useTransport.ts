@@ -38,6 +38,12 @@ interface UseTransportPlayerResult {
   connected: boolean;
   error: string | null;
   sendAction: (action: PlayerAction) => void;
+  /**
+   * Re-run the clock-sync handshake and return the new offset. Used by the
+   * Calibration popup's "re-sync" button. Rejects if the handshake fails or
+   * the transport is not yet ready.
+   */
+  resyncClock: () => Promise<number>;
 }
 
 export type UseTransportResult =
@@ -179,10 +185,30 @@ function usePlayerTransport(
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Per-connection clock-sync infrastructure. Lives in a ref so resyncClock
+  // (a stable useCallback) can reach the current pendingSync map without
+  // re-binding when roomId/playerName change.
+  const syncCtxRef = useRef<{
+    pendingSync: Map<number, (msg: SyncResponseMessage) => void>;
+    register: (nonce: number, cb: (msg: SyncResponseMessage) => void) => void;
+    unregister: (nonce: number) => void;
+  } | null>(null);
+
   const sendAction = useCallback((action: PlayerAction) => {
     const transport = transportRef.current;
     if (!transport) return;
     transport.broadcast({ type: "player-action", action });
+  }, []);
+
+  const resyncClock = useCallback(async (): Promise<number> => {
+    const transport = transportRef.current;
+    const ctx = syncCtxRef.current;
+    if (!transport || !ctx) {
+      throw new Error("resyncClock: transport not ready");
+    }
+    const offset = await runSyncHandshake(transport, ctx.register, ctx.unregister);
+    useClockSyncStore.getState().setOffset(offset);
+    return offset;
   }, []);
 
   useEffect(() => {
@@ -197,6 +223,11 @@ function usePlayerTransport(
     };
     const unregisterSync = (nonce: number) => {
       pendingSync.delete(nonce);
+    };
+    syncCtxRef.current = {
+      pendingSync,
+      register: registerSync,
+      unregister: unregisterSync,
     };
 
     transport.onMessage((_peerId, message: Message) => {
@@ -242,10 +273,11 @@ function usePlayerTransport(
     return () => {
       transport.close();
       transportRef.current = null;
+      syncCtxRef.current = null;
       pendingSync.clear();
       useClockSyncStore.getState().reset();
     };
   }, [roomId, playerName]);
 
-  return { role: "player", connected, error, sendAction };
+  return { role: "player", connected, error, sendAction, resyncClock };
 }

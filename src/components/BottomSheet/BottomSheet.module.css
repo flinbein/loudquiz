@@ -10,8 +10,8 @@
 }
 
 .card {
-  background: var(--color-surface, #fff);
-  color: var(--color-text, #222);
+  background: var(--color-bg);
+  color: var(--color-text);
   border-radius: 18px 18px 0 0;
   width: 100%;
   max-width: 420px;
@@ -25,7 +25,7 @@
   width: 40px;
   height: 4px;
   border-radius: 2px;
-  background: var(--color-text-muted, #ccc);
+  background: var(--color-text-secondary);
   margin: 10px auto 0;
   touch-action: none;
 }

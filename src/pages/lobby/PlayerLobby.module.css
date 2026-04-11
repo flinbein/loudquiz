@@ -15,36 +15,6 @@
   color: var(--color-text-secondary);
 }
 
-/* Toolbar - icon buttons overlaid at top */
-.toolbar {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-xs);
-  position: absolute;
-  top: var(--spacing-xs);
-  right: var(--spacing-xs);
-  z-index: 10;
-}
-
-.toolBtn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.2);
-  border: none;
-  border-radius: var(--radius-round);
-  color: white;
-  font-size: var(--font-size-md);
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-}
-
-.toolBtn:active {
-  background: rgba(0, 0, 0, 0.4);
-}
-
 /* Player list */
 .playerList {
   flex: 1;

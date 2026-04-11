@@ -12,6 +12,7 @@ import {
   PlayerStatusTable,
   type PlayerStatusRow,
 } from "@/components/PlayerStatusTable/PlayerStatusTable";
+import { useCalibrationUiStore } from "@/store/calibrationUiStore";
 import type { TeamId } from "@/types/game";
 import styles from "./HostLobby.module.css";
 
@@ -26,6 +27,7 @@ export function HostLobby({
   const settings = useSettings();
   const players = usePlayers();
   const teams = useTeams();
+  const openCalibration = useCalibrationUiStore((s) => s.setOpen);
 
   function toStatusRows(
     teamId: TeamId
@@ -153,7 +155,10 @@ export function HostLobby({
         </div>
 
         <div className={styles.controls}>
-          <button className={styles.calibrationBtn}>
+          <button
+            className={styles.calibrationBtn}
+            onClick={() => openCalibration(true)}
+          >
             {t("lobby.calibration")}
           </button>
           <button

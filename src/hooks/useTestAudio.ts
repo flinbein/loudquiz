@@ -25,15 +25,22 @@ export interface UseTestAudioResult {
 export function useTestAudio(options: UseTestAudioOptions): UseTestAudioResult {
   const { src, loop, volume, enabled } = options;
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const appliedSrcRef = useRef<string | null>(null);
 
   if (audioRef.current === null) {
     audioRef.current = new Audio(src);
+    appliedSrcRef.current = src;
   }
   const audio = audioRef.current;
 
-  if (audio.src !== src) {
+  // Track the requested src via a ref — comparing against `audio.src` getter
+  // is unreliable because HTMLMediaElement resolves it to an absolute URL,
+  // which causes `audio.load()` to re-fire on every render and can freeze
+  // the main thread when renders are frequent (e.g. driven by a rAF loop).
+  if (appliedSrcRef.current !== src) {
     audio.src = src;
     audio.load();
+    appliedSrcRef.current = src;
   }
   if (audio.loop !== loop) audio.loop = loop;
   if (audio.volume !== volume) audio.volume = volume;

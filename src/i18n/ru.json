@@ -98,5 +98,25 @@
   },
   "score": {
     "total": "Итого"
+  },
+  "calibration": {
+    "title": "Калибровка",
+    "music": "Музыка",
+    "signal": "Сигнал",
+    "vibration": "Вибрация",
+    "sharedHeadphones": "Общие наушники",
+    "clockSection": "Подстройка таймера",
+    "clockOffset": "offset: {{value}} ms",
+    "clockPending": "{{sign}}{{value}} ms",
+    "clockApply": "Применить",
+    "clockResync": "Пересинхронизировать",
+    "clockResyncFailed": "Не удалось синхронизировать",
+    "instructions": "Настрой громкость так, чтобы не слышать соседей. Сигнал должен пробиваться поверх музыки. Отключи уведомления на время игры.",
+    "vibrationUnsupported": "Вибрация не поддерживается устройством",
+    "testSignal": "Проиграть сигнал",
+    "testVibration": "Проверить вибрацию",
+    "playMusic": "Проиграть музыку",
+    "pauseMusic": "Остановить музыку",
+    "close": "Закрыть"
   }
 }

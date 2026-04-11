@@ -1,0 +1,16 @@
+.display {
+  font-family: "Tektur", system-ui, sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: center;
+  padding: 20px 16px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: background 60ms ease;
+  border-radius: 8px;
+}
+
+.pulsing {
+  background: var(--color-bg-secondary);
+}

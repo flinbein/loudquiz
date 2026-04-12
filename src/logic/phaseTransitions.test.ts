@@ -1,6 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { getNextRoundPhase, getNextPhaseAfterReview, getPlayedQuestionIndices, createNextRoundState, getTotalQuestionCount } from "./phaseTransitions";
-import type { RoundResult } from "@/types/game";
+import {
+  getNextRoundPhase,
+  getNextPhaseAfterReview,
+  getPlayedQuestionIndices,
+  getPlayedBlitzTaskIds,
+  getUnplayedBlitzTasks,
+  createNextRoundState,
+  createNextBlitzRoundState,
+  getTotalQuestionCount,
+} from "./phaseTransitions";
+import type { BlitzTask, RoundResult } from "@/types/game";
 
 describe("getNextRoundPhase", () => {
   it("round-captain → round-pick", () => {
@@ -79,5 +88,57 @@ describe("createNextRoundState", () => {
     expect(round.answers).toEqual({});
     expect(round.bonusTime).toBe(0);
     expect(round.reviewResult).toBeUndefined();
+  });
+});
+
+describe("blitz history helpers", () => {
+  const blitzTasks: BlitzTask[] = [
+    { id: "b1", items: [] },
+    { id: "b2", items: [] },
+    { id: "b3", items: [] },
+  ];
+
+  it("getPlayedBlitzTaskIds returns only blitz results", () => {
+    const history: RoundResult[] = [
+      { type: "round", teamId: "t1", captainName: "A", questionIndex: 0, score: 100, jokerUsed: false },
+      { type: "blitz", teamId: "t1", captainName: "B", blitzTaskId: "b1", score: 200, jokerUsed: false },
+      { type: "blitz", teamId: "t1", captainName: "C", blitzTaskId: "b3", score: 300, jokerUsed: false },
+    ];
+    expect(getPlayedBlitzTaskIds(history)).toEqual(["b1", "b3"]);
+  });
+
+  it("getUnplayedBlitzTasks filters out played ids", () => {
+    const history: RoundResult[] = [
+      { type: "blitz", teamId: "t1", captainName: "B", blitzTaskId: "b1", score: 200, jokerUsed: false },
+    ];
+    expect(getUnplayedBlitzTasks(blitzTasks, history).map((t) => t.id)).toEqual(["b2", "b3"]);
+  });
+
+  it("getNextPhaseAfterReview returns blitz-captain when unplayed blitz remain", () => {
+    const history: RoundResult[] = [
+      { type: "round", teamId: "t1", captainName: "A", questionIndex: 0, score: 100, jokerUsed: false },
+      { type: "blitz", teamId: "t1", captainName: "B", blitzTaskId: "b1", score: 200, jokerUsed: false },
+    ];
+    expect(getNextPhaseAfterReview(1, history, 3)).toBe("blitz-captain");
+  });
+
+  it("getNextPhaseAfterReview returns finale when all blitz played", () => {
+    const history: RoundResult[] = [
+      { type: "round", teamId: "t1", captainName: "A", questionIndex: 0, score: 100, jokerUsed: false },
+      { type: "blitz", teamId: "t1", captainName: "B", blitzTaskId: "b1", score: 200, jokerUsed: false },
+      { type: "blitz", teamId: "t1", captainName: "C", blitzTaskId: "b2", score: 200, jokerUsed: false },
+    ];
+    expect(getNextPhaseAfterReview(1, history, 2)).toBe("finale");
+  });
+});
+
+describe("createNextBlitzRoundState", () => {
+  it("creates a fresh blitz round with empty playerOrder", () => {
+    const round = createNextBlitzRoundState("red");
+    expect(round.type).toBe("blitz");
+    expect(round.teamId).toBe("red");
+    expect(round.captainName).toBe("");
+    expect(round.playerOrder).toEqual([]);
+    expect(round.answers).toEqual({});
   });
 });

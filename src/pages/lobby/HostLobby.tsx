@@ -4,7 +4,6 @@ import { useSettings, usePlayers, useTeams } from "@/store/selectors";
 import {
   kickPlayer,
   movePlayer,
-  startGameAsHost,
   canStartGameAsHost,
 } from "@/store/actions/lobby";
 import { TeamGroup } from "@/components/TeamGroup/TeamGroup";
@@ -15,6 +14,7 @@ import {
 import { useCalibrationUiStore } from "@/store/calibrationUiStore";
 import type { TeamId } from "@/types/game";
 import styles from "./HostLobby.module.css";
+import { goToNextRound } from "@/store/actions/round";
 
 export function HostLobby({
   roomId,
@@ -106,13 +106,13 @@ export function HostLobby({
               <TeamGroup
                 label={t("team.noTeam")}
                 teamColor="none"
-                playerCount={players.filter((p) => !p.team).length}
+                playerCount={players.filter((p) => !p.team || p.team === "none").length}
                 onDragOver={preventDef}
                 onDrop={(e) => handleDrop("none", e)}
               >
                 <PlayerStatusTable
                   players={players
-                    .filter((p) => !p.team)
+                    .filter((p) => !p.team || p.team === "none")
                     .map((p) => ({
                       emoji: p.emoji,
                       name: p.name,
@@ -164,7 +164,7 @@ export function HostLobby({
           <button
             className={styles.startBtn}
             disabled={!canStart}
-            onClick={() => startGameAsHost()}
+            onClick={() => goToNextRound()}
           >
             {t("lobby.start")}
           </button>

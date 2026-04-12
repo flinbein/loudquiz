@@ -53,17 +53,14 @@ function DisplaySelectTask(){
       const captainP = isPlayed
         ? players.find((p) => p.name === roundResult?.captainName)
         : undefined;
-      const activeTeam = teams.find((t) => t.id === round?.teamId);
       return {
         open: isPlayed || isActive,
         active: isActive,
-        player: captainP
-          ? { emoji: captainP.emoji, name: captainP.name, team: captainP.team }
-          : undefined,
+        player: captainP,
         jokerUsed: roundResult?.jokerUsed ?? false,
         difficulty: q.difficulty,
         totalScore: roundResult?.score,
-        paperColor: isActive ? (activeTeam?.id ?? "none") : undefined,
+        paperColor: captainP?.team ?? "none",
       };
     }),
   }));

@@ -1,4 +1,4 @@
-import type { GamePhase, RoundPhase, RoundState, RoundResult, Topic, TeamId } from "@/types/game";
+import type { GamePhase, RoundPhase, RoundState, RoundResult, Topic, TeamId, BlitzTask } from "@/types/game";
 
 const ROUND_PHASE_ORDER: RoundPhase[] = [
   "round-captain",
@@ -18,11 +18,12 @@ export function getNextRoundPhase(current: RoundPhase): RoundPhase {
 export function getNextPhaseAfterReview(
   totalQuestions: number,
   history: RoundResult[],
-  blitzTaskCount: number,
+  totalBlitz: number,
 ): GamePhase {
   const playedCount = getPlayedQuestionIndices(history).length;
   if (playedCount < totalQuestions) return "round-captain";
-  if (blitzTaskCount > 0) return "blitz-captain";
+  const playedBlitz = getPlayedBlitzTaskIds(history).length;
+  if (playedBlitz < totalBlitz) return "blitz-captain";
   return "finale";
 }
 
@@ -30,6 +31,20 @@ export function getPlayedQuestionIndices(history: RoundResult[]): number[] {
   return history
     .filter((r) => r.type === "round" && r.questionIndex != null)
     .map((r) => r.questionIndex!);
+}
+
+export function getPlayedBlitzTaskIds(history: RoundResult[]): string[] {
+  return history
+    .filter((r) => r.type === "blitz" && r.blitzTaskId != null)
+    .map((r) => r.blitzTaskId!);
+}
+
+export function getUnplayedBlitzTasks(
+  blitzTasks: BlitzTask[],
+  history: RoundResult[],
+): BlitzTask[] {
+  const played = new Set(getPlayedBlitzTaskIds(history));
+  return blitzTasks.filter((t) => !played.has(t.id));
 }
 
 export function getTotalQuestionCount(topics: Topic[]): number {
@@ -43,6 +58,23 @@ export function createNextRoundState(teamId: TeamId): RoundState {
     captainName: "",
     jokerActive: false,
     answers: {},
+    activeTimerStartedAt: 0,
+    bonusTime: 0,
+  };
+}
+
+export function createNextBlitzRoundState(
+  teamId: TeamId,
+  blitzTaskId?: string,
+): RoundState {
+  return {
+    type: "blitz",
+    teamId,
+    captainName: "",
+    blitzTaskId,
+    jokerActive: false,
+    answers: {},
+    playerOrder: [],
     activeTimerStartedAt: 0,
     bonusTime: 0,
   };

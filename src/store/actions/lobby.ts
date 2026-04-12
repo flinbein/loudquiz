@@ -144,7 +144,7 @@ export function startGameAsHost(): void {
   const nextPhase =
     state.settings.mode === "ai" ? "topics-suggest" : "round-captain";
 
-  const teamId = state.teams[0]?.id ?? "default";
+  const teamId = state.teams[0]?.id ?? "none";
   const roundInit = nextPhase === "round-captain"
     ? {
         currentRound: createNextRoundState(teamId),

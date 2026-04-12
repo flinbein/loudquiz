@@ -1,6 +1,5 @@
 .stack {
   position: relative;
-  cursor: pointer;
 }
 
 /* Background sticker layers peeking out */
@@ -33,7 +32,7 @@
   position: absolute;
   top: -8px;
   right: -8px;
-  z-index: 10;
+  z-index: 99999999;
   min-width: 24px;
   height: 24px;
   border-radius: 12px;
@@ -66,4 +65,40 @@
   outline: 2px dashed var(--color-primary);
   outline-offset: 4px;
   border-radius: var(--radius-sm);
+}
+
+.sticker-place {
+  display: grid;
+}
+.sticker-wrapper {
+  grid-row: 1;
+  grid-column: 1;
+  transition: filter var(--duration-all) ease-in-out;
+}
+.sticker-wrapper[data-shadow="true"] {
+  filter: brightness(0.8);
+  animation: none;
+}
+.sticker-wrapper[data-shadow="false"] {
+  animation: put-top var(--duration-open) linear forwards, scroll-top var(--duration-open) linear forwards;
+}
+@keyframes put-top {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-70%) rotateX(80deg);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes scroll-top {
+  0%,39% {
+    z-index: 0;
+  }
+  40% {
+    z-index: 999999;
+  }
 }

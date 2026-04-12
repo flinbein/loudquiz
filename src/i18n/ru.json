@@ -91,6 +91,26 @@
     "dispute": "Оспорить",
     "nextRound": "Следующий раунд"
   },
+  "blitz": {
+    "taskTitle": "Блиц-задание",
+    "iAmCaptain": "Я капитан блица!",
+    "captainHint": "Нажмите, чтобы стать капитаном блица",
+    "waitForSlots": "Ожидаем, пока игроки выберут место в цепочке",
+    "pickSlot": "Выберите свою позицию в цепочке",
+    "captainPicking": "Капитан выбирает задание...",
+    "pickTask": "Выберите задание",
+    "explainTo": "Объясняйте жестами: {{name}}",
+    "lastPlayerHint": "Отвечайте на то, что показал {{name}}",
+    "intermediateHint": "Получили от {{from}} → покажите {{to}}",
+    "waitingForAnswerer": "Ждём ответа: {{name}}",
+    "dontKnow": "Я не знаю",
+    "blitz-captain": { "opponentHint": "Соперники выбирают капитана" },
+    "blitz-pick": { "opponentHint": "Соперники выбирают задание" },
+    "blitz-ready": { "opponentHint": "Соперники готовятся" },
+    "blitz-active": { "opponentHint": "Идёт блиц соперников" },
+    "blitz-answer": { "opponentHint": "Соперники отвечают" },
+    "blitz-review": { "opponentHint": "Итоги блица" }
+  },
   "joker": {
     "use": "Использовать джокер (×2)",
     "used": "Джокер использован",

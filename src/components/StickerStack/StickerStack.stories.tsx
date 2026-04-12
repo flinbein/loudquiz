@@ -48,17 +48,22 @@ export const FiveStickers: Story = () => (
   </div>
 );
 
-export const MixedTeams: Story = () => (
-  <div style={{ width: 220 }}>
-    <StickerStack
-      stickers={[
-        makeSticker("Красный", "👻", "Ответ", "red"),
-        makeSticker("Синий", "🤖", "Более развернутый ответ о том же", "blue"),
-        makeSticker("Без команды", "🦊", "Другой ответ", "none"),
-      ]}
-    />
+export const MixedTeams: Story = () => {
+  const [stickers, setStickers] = useState(() => [
+    makeSticker("Красный", "👻", "Ответ", "red"),
+    makeSticker("Синий", "🤖", "Более развернутый ответ о том же", "blue"),
+    makeSticker("Без команды", "🦊", "Другой ответ", "none"),
+  ])
+  function clickSticker(index: number) {
+    setStickers(stickers => stickers.map((sticker, i) => i !== index ? sticker : ({
+      ...sticker,
+      answerHidden: !sticker.answerHidden
+    })))
+  }
+  return <div style={{ width: 350, padding: 50 }}>
+    <StickerStack stickers={stickers} onClickSticker={clickSticker} />
   </div>
-);
+};
 
 const DND_GROUPS = [
   [{ player: { emoji: "😈", name: "Alice", team: "red" as const }, answerText: "Кошка" }],

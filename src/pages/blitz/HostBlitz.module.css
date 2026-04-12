@@ -11,6 +11,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  align-items: center;
 }
 
 .sidebar {
@@ -21,14 +22,10 @@
   padding-top: var(--spacing-xl);
 }
 
-.stickersGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
-}
-
-.stickerSlot {
-  width: 200px;
+.taskCardWrap {
+  width: 400px;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 .actions {
@@ -54,44 +51,41 @@
   color: white;
 }
 
-.secondaryBtn {
-  composes: actionBtn;
-  background: var(--color-bg-secondary);
-  color: var(--color-text);
-}
-
-.taskCardWrap {
-  width: 400px;
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.bonusTime {
+.chain {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
 }
 
-.bonusTimeValue {
-  font-family: monospace;
-  font-size: var(--font-size-xl, 2rem);
-  font-weight: 700;
+.chainLink {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-md);
+}
+
+.chainEmoji {
+  font-size: 1.5rem;
+}
+
+.chainName {
   color: var(--color-text);
+  font-weight: 600;
 }
 
-.bonusTimeStruck {
-  composes: bonusTimeValue;
-  text-decoration: line-through;
-  opacity: 0.5;
-}
-
-.bonusTimeLabel {
-  font-size: var(--font-size-md);
+.chainArrow {
   color: var(--color-text-secondary);
+  font-size: 1.25rem;
 }
 
-.phaseInfo {
-  font-size: var(--font-size-md);
-  color: var(--color-text-secondary);
+.chainAnswer {
+  font-weight: 700;
+  color: var(--color-success);
+  margin-left: var(--spacing-xs);
 }

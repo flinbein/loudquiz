@@ -4,12 +4,15 @@ import { useTranslation } from "react-i18next";
 import { isHost } from "@/persistence/sessionPersistence";
 import { getPlayerName, setPlayerName } from "@/persistence/localPersistence";
 import { useTransport, onHostAction } from "@/hooks/useTransport";
+import { useAudio } from "@/hooks/useAudio";
 import { usePhase } from "@/store/selectors";
 import { useGameStore } from "@/store/gameStore";
 import { HostLobby } from "@/pages/lobby/HostLobby";
 import { PlayerLobby } from "@/pages/lobby/PlayerLobby";
 import { HostRound } from "@/pages/round/HostRound";
 import { PlayerRound } from "@/pages/round/PlayerRound";
+import { HostBlitz } from "@/pages/blitz/HostBlitz";
+import { PlayerBlitz } from "@/pages/blitz/PlayerBlitz";
 import { GameShell } from "@/pages/GameShell";
 import { handleJoin, handleSetTeam, handleSetReady, handleChangeEmoji, startGame } from "@/store/actions/lobby";
 import {
@@ -21,6 +24,15 @@ import {
   disputeReview,
   confirmReview,
 } from "@/store/actions/round";
+import {
+  claimBlitzCaptain,
+  claimBlitzSlot,
+  selectBlitzItem,
+  setBlitzPlayerReady,
+  submitBlitzAnswer,
+  skipBlitzAnswer,
+  confirmBlitzReview,
+} from "@/store/actions/blitz";
 import styles from "./PlayPage.module.css";
 
 export function PlayPage() {
@@ -44,6 +56,9 @@ function HostPlay() {
   const transport = useTransport({ role: "host" });
   const phase = usePhase();
   const peerMap = useRef(new Map<string, string>());
+
+  // Host hears the signal (no music — music is for players only).
+  useAudio({ playerName: "" });
 
   useEffect(() => {
     if (transport.role === "host" && transport.roomId) {
@@ -70,6 +85,8 @@ function HostPlay() {
             handleSetReady(name, action.ready);
           } else if (state.phase === "round-ready") {
             setPlayerReady(name);
+          } else if (state.phase === "blitz-ready") {
+            setBlitzPlayerReady(name);
           }
           break;
         }
@@ -95,8 +112,30 @@ function HostPlay() {
         case "dispute-review":
           disputeReview();
           break;
-        case "next-round":
-          confirmReview();
+        case "next-round": {
+          const state = useGameStore.getState();
+          if (state.phase === "blitz-review") {
+            confirmBlitzReview();
+          } else {
+            confirmReview();
+          }
+          break;
+        }
+        // Blitz actions
+        case "claim-blitz-captain":
+          claimBlitzCaptain(name);
+          break;
+        case "claim-blitz-slot":
+          claimBlitzSlot(name, action.slot);
+          break;
+        case "select-blitz-item":
+          selectBlitzItem(action.itemIndex);
+          break;
+        case "submit-blitz-answer":
+          submitBlitzAnswer(name, action.text);
+          break;
+        case "skip-blitz-answer":
+          skipBlitzAnswer(name);
           break;
       }
     });
@@ -110,6 +149,7 @@ function HostPlay() {
         <HostLobby roomId={transport.roomId} joinUrl={transport.joinUrl} />
       )}
       {phase.startsWith("round-") && <HostRound />}
+      {phase.startsWith("blitz-") && <HostBlitz />}
     </GameShell>
   );
 }
@@ -179,6 +219,7 @@ function PlayerPlayConnected({
 }) {
   const transport = useTransport({ role: "player", roomId, playerName });
   const phase = usePhase();
+  useAudio({ playerName });
 
   if (transport.role !== "player") return null;
 
@@ -193,6 +234,9 @@ function PlayerPlayConnected({
       )}
       {phase.startsWith("round-") && (
         <PlayerRound playerName={playerName} sendAction={transport.sendAction} />
+      )}
+      {phase.startsWith("blitz-") && (
+        <PlayerBlitz playerName={playerName} sendAction={transport.sendAction} />
       )}
     </GameShell>
   );

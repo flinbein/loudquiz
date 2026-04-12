@@ -53,3 +53,25 @@ export function checkBonusConditions(
   const bonusTime = Math.max(0, (timerEndAt - maxTimestamp));
   return { hasBonus: true, bonusTime };
 }
+
+/**
+ * Blitz scoring (see spec/game/scoring.md#блиц-раунд):
+ *   score = difficulty × playerNumber × (1 + bonusTime / totalTime)
+ *
+ * - `playerNumber` is the 1-based position of the player who answered,
+ *   counting from the first player after the captain (captain → 1 → 2 → ...).
+ * - `bonusTime` is only applied if the answer was given during `blitz-active`;
+ *   answers from `blitz-answer` get 0 bonus regardless of clock.
+ * - Wrong / missing answers score 0.
+ */
+export function calculateBlitzScore(
+  difficulty: number,
+  playerNumber: number,
+  correct: boolean,
+  bonusTime: number,
+  totalTime: number,
+): number {
+  if (!correct || playerNumber <= 0) return 0;
+  const bonusMul = calculateBonusMultiplier(bonusTime, totalTime);
+  return Math.round(difficulty * playerNumber * bonusMul);
+}

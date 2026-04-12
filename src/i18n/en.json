@@ -91,6 +91,26 @@
     "dispute": "Dispute",
     "nextRound": "Next Round"
   },
+  "blitz": {
+    "taskTitle": "Blitz task",
+    "iAmCaptain": "I'm the blitz captain!",
+    "captainHint": "Press to become blitz captain",
+    "waitForSlots": "Waiting for players to pick chain slots",
+    "pickSlot": "Pick your slot in the chain",
+    "captainPicking": "Captain is picking a task...",
+    "pickTask": "Pick a task",
+    "explainTo": "Explain with gestures to {{name}}",
+    "lastPlayerHint": "Answer what {{name}} showed you",
+    "intermediateHint": "From {{from}} → show {{to}}",
+    "waitingForAnswerer": "Waiting for {{name}} to answer",
+    "dontKnow": "I don't know",
+    "blitz-captain": { "opponentHint": "Opponents are picking a captain" },
+    "blitz-pick": { "opponentHint": "Opponents are picking a task" },
+    "blitz-ready": { "opponentHint": "Opponents are getting ready" },
+    "blitz-active": { "opponentHint": "Opponents are playing blitz" },
+    "blitz-answer": { "opponentHint": "Opponents are answering" },
+    "blitz-review": { "opponentHint": "Blitz results" }
+  },
   "joker": {
     "use": "Use joker (×2)",
     "used": "Joker used",

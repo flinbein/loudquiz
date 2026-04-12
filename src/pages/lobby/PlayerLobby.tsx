@@ -112,15 +112,15 @@ export function PlayerLobby({
                 </TeamGroup>
               );
             })}
-            {players.filter((p) => !p.team).length > 0 && (
+            {players.filter((p) => !p.team || p.team === "none").length > 0 && (
               <TeamGroup
                 label={t("team.noTeam")}
                 teamColor="none"
-                playerCount={players.filter((p) => !p.team).length}
+                playerCount={players.filter((p) => !p.team || p.team === "none").length}
               >
                 <PlayerStatusTable
                   players={players
-                    .filter((p) => !p.team)
+                    .filter((p) => !p.team || p.team === "none")
                     .map((p) => ({
                       emoji: p.emoji,
                       name: p.name,

@@ -201,18 +201,18 @@
 
 ---
 
-## Фаза 7: Аудио + Блиц-раунды [не готово]
+## Фаза 7: Аудио + Блиц-раунды [готово]
 
 **Цель:** аудио (музыка, сигнал, вибрация). Полный блиц (6 фаз).
 
-- [ ] `src/audio/audioManager.ts` — музыка (loop, fade-out 3s), сигнал (однократный), вибрация, громкость из localStorage
-- [ ] `src/hooks/useAudio.ts` — автозапуск музыки на ready/active (только для players), сигнал + вибрация на начало/конец active
+- [x] `src/audio/audioManager.ts` — музыка (loop, fade-out 3s), сигнал (однократный), вибрация, громкость из localStorage
+- [x] `src/hooks/useAudio.ts` — автозапуск музыки на ready/active (только для players), сигнал + вибрация на начало/конец active
 - [x] CalibrationPopup — попап готов: bottom sheet с music/signal/vibration/sharedHeadphones + clock calibration (host/player), Toolbar, GameShell обёртка в PlayPage, CalibrationPopupContainer связывает с zustand stores, полный набор hooks (useTestAudio, useSecondPulse, useClockTick)
-- [ ] `src/logic/blitzCheck.ts` — нормализация ответа: регистр, ё/е, спецсимволы, пробелы
-- [ ] `src/store/actions/blitz.ts` — claimBlitzCaptain, selectSlot, selectBlitzTask, submitBlitzAnswer, skipBlitzAnswer, confirmBlitzReview
-- [ ] Расширение `scoring.ts` для блица: `difficulty × playerNumber × (1 + bonusTime/totalTime)`, 0 при неправильном
-- [ ] `HostBlitz` — 6 подфаз + chain diagram в review
-- [ ] `PlayerBlitz` — по ролям: капитан, промежуточный, последний, противник
+- [x] `src/logic/blitzCheck.ts` — нормализация ответа: регистр, ё/е, спецсимволы, пробелы
+- [x] `src/store/actions/blitz.ts` — claimBlitzCaptain, selectSlot, selectBlitzTask, submitBlitzAnswer, skipBlitzAnswer, confirmBlitzReview
+- [x] Расширение `scoring.ts` для блица: `difficulty × playerNumber × (1 + bonusTime/totalTime)`, 0 при неправильном
+- [x] `HostBlitz` — 6 подфаз + chain diagram в review
+- [x] `PlayerBlitz` — по ролям: капитан, промежуточный, последний, противник
 
 **Ключевые спеки:** `spec/game/blitz.md`, `spec/systems/audio.md`, `spec/ui/host-screens/blitz.md`, `spec/ui/player-screens/blitz.md`
 
@@ -221,6 +221,28 @@
 - Unit-тесты blitz scoring
 - E2E: полный блиц-раунд
 - Ручной тест: аудио на правильных фазах, fade-out, калибровка
+
+**Выполнено:**
+- **Аудио:** `src/audio/audioManager.ts` — синглтон `audioManager` с `playMusic`/`stopMusic` (fade-out ~3s через setInterval), `playSignal` (+ `navigator.vibrate(200)` если включена тактильная отдача), setters громкости. 5 unit-тестов в `audioManager.test.ts`.
+- **Хук:** `src/hooks/useAudio.ts` — автоматически запускает музыку в фазах `round-ready`/`round-active`/`blitz-ready`/`blitz-active` только для игроков активной команды; фейдит при выходе. Сигнал + вибрация на восходящем и нисходящем фронте `*-active` фаз (edge detection через useRef). Читает громкость и hapticEnabled из `useCalibrationSettingsStore`. Подключён в `PlayPage` (хост слышит только сигнал; игроки — всё).
+- **Блиц-проверка:** `src/logic/blitzCheck.ts` — `normalizeBlitzAnswer` (lowercase → ё↔е → удаление всего не `\p{L}\p{N}`) + `checkBlitzAnswer(answer, variants)`. 9 тестов.
+- **Scoring:** `src/logic/scoring.ts` расширен `calculateBlitzScore(difficulty, playerNumber, correct, bonusTime, totalTime)` — формула `difficulty × playerNumber × (1 + bonusTime/totalTime)`, 0 при неправильном ответе или playerNumber ≤ 0.
+- **Переходы фаз:** `src/logic/phaseTransitions.ts` — `getPlayedBlitzTaskIds`, `getUnplayedBlitzTasks`, `createNextBlitzRoundState`; `getNextPhaseAfterReview` теперь учитывает блиц-задания (`round → blitz → finale`).
+- **Таймеры блица:** `src/logic/timer.ts` — `getBlitzCaptainTimerDuration` (60s), `getBlitzPickTimerDuration` (60s), `getBlitzActiveTimerDuration` (`10 + 20×responders` s), `getBlitzAnswerTimerDuration` (`20 + 5×responders` s).
+- **Actions:** `src/store/actions/blitz.ts` — полный набор хостовых действий: `claimBlitzCaptain` (с правилом «не капитан два раза подряд»), `claimBlitzSlot` (1-based, слоты заполняются по порядку), `selectBlitzTask(taskId, itemIndex)`, `setBlitzPlayerReady` (→ `blitz-active` когда все готовы), `submitBlitzAnswer` (в `blitz-active` — только последний; в `blitz-answer` — текущий в очереди от конца к началу), `skipBlitzAnswer` («я не знаю», сдвигает очередь), `getNextBlitzAnswerer` (обратный обход цепи, пропуская капитана), `enterBlitzReview` (бонус-тайм только для ответов во время `blitz-active`), `confirmBlitzReview` (хистори + очки + переход), `handleBlitzTimerExpire` (авто-капитан / авто-пик / active→answer). Интегрирован в `src/store/actions/round.ts` через `createNextBlitzRoundState`. 21 тест в `blitz.test.ts`.
+- **Транспорт:** `src/types/transport.ts` — добавлен `claim-blitz-slot; slot: number`, расширен `select-blitz-task` полем `itemIndex: number`.
+- **UI хоста:** `src/pages/blitz/HostBlitz.tsx` + `HostBlitz.module.css` — main (TaskView, TaskCard, BlitzChainDiagram в review) + sidebar (TeamScore, CircleTimer, PlayerStatusTable с ролью `blitz-player` и `blitzOrder`, SidebarActions). Таймер-экспайр обрабатывается через `handleBlitzTimerExpire`. `getBlitzPlayerInfo` мапит (phase, role) в `PlayerRole`/`PlayerStatus`.
+- **UI игрока:** `src/pages/blitz/PlayerBlitz.tsx` + `PlayerBlitz.module.css` — роутинг по `(phase, role)`:
+  - Не-активная команда → `OpponentView` (`blitz.{phase}.opponentHint`).
+  - `blitz-captain`: кнопка «я капитан» (с таймером) либо слот-грид для выбора позиции; капитан и уже-в-цепи игроки ждут.
+  - `blitz-pick`: капитан видит сетку всех неиграных заданий (`blitz-task × item`), остальные ждут.
+  - `blitz-ready`: кнопка «готов».
+  - `blitz-active`: капитан видит TaskCard и кому объяснять; промежуточные — скрытый TaskCard с хинтом «от X → к Y»; последний — форма ответа (`LastPlayerAnswerForm`).
+  - `blitz-answer`: текущий в очереди видит `AnswerOrSkipForm` (ответ / «я не знаю»); остальные ждут.
+  - `blitz-review`: TaskCard с правильным ответом, +score, кнопка «дальше».
+- **PlayPage:** `src/pages/PlayPage.tsx` — рендер `HostBlitz`/`PlayerBlitz` при `phase.startsWith("blitz-")`; центральный роутер действий расширен всеми блиц-кейсами; `set-ready` в `blitz-ready` диспатчит `setBlitzPlayerReady`; `next-round` в `blitz-review` — `confirmBlitzReview`. Хук `useAudio` подключён у host и player.
+- **i18n:** Добавлены ключи `blitz.*` в `ru.json` и `en.json` — `iAmCaptain`, `captainHint`, `waitForSlots`, `pickSlot`, `captainPicking`, `pickTask`, `explainTo`, `lastPlayerHint`, `intermediateHint`, `waitingForAnswerer`, `dontKnow` + подключи `blitz.<phase>.opponentHint` для каждой из 6 блиц-фаз.
+- **Проверка:** `tsc --noEmit` ✓, `npm test` → 226 тестов в 28 файлах ✓, `vite build` ✓ (420 KB js, 49 KB css).
 
 ---
 

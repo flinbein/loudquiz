@@ -1,9 +1,9 @@
 import { useGameStore } from "@/store/gameStore";
 import { canBeCaptain, getRandomCaptain } from "@/logic/captain";
-import { getPlayedQuestionIndices, getNextPhaseAfterReview, createNextRoundState, getTotalQuestionCount } from "@/logic/phaseTransitions";
-import { createTimer, getPickTimerDuration, getCaptainTimerDuration, getActiveTimerDuration, getAnswerTimerDuration } from "@/logic/timer";
+import { getPlayedQuestionIndices, getNextPhaseAfterReview, createNextRoundState, createNextBlitzRoundState, getTotalQuestionCount, getUnplayedBlitzTasks } from "@/logic/phaseTransitions";
+import { createTimer, getPickTimerDuration, getCaptainTimerDuration, getActiveTimerDuration, getAnswerTimerDuration, getBlitzCaptainTimerDuration } from "@/logic/timer";
 import { calculateRoundScore, calculateBonusMultiplier, checkBonusConditions } from "@/logic/scoring";
-import type { AnswerEvaluation, RoundPhase } from "@/types/game";
+import type { AnswerEvaluation, RoundPhase, RoundState, TimerState } from "@/types/game";
 
 export function claimCaptain(playerName: string): void {
   const state = useGameStore.getState();
@@ -372,21 +372,39 @@ export function confirmReview(): void {
   });
 
   const history = [...state.history, result];
+  
+  useGameStore.getState().setState({
+    history,
+    teams
+  });
+  goToNextRound();
+}
+
+export function goToNextRound(){
+  const state = useGameStore.getState();
+  const history = state.history;
   const totalQuestions = getTotalQuestionCount(state.topics);
   const nextPhase = getNextPhaseAfterReview(totalQuestions, history, state.blitzTasks.length);
-
-  const nextRound = nextPhase === "round-captain"
-    ? createNextRoundState(round.teamId)
-    : null;
-
+  const team = state.teams.find(team => team.id !== state.currentRound?.teamId) ?? state.teams[0];
+  let nextRound: RoundState | undefined, nextTimer: TimerState | undefined;
+  if (nextPhase === "round-captain") {
+    nextRound = createNextRoundState(team.id);
+    nextTimer = createTimer(getCaptainTimerDuration())
+  } else if (nextPhase === "blitz-captain") {
+    const nextBlitzTaskId =
+      nextPhase === "blitz-captain"
+        ? getUnplayedBlitzTasks(state.blitzTasks, history)[0]?.id
+        : undefined;
+    nextRound = createNextBlitzRoundState(team.id, nextBlitzTaskId);
+    nextTimer = createTimer(getBlitzCaptainTimerDuration())
+  }
   useGameStore.getState().setState({
     phase: nextPhase,
     currentRound: nextRound,
-    history,
-    teams,
-    timer: nextPhase === "round-captain" ? createTimer(getCaptainTimerDuration()) : null,
+    timer: nextTimer,
     players: state.players.map((p) => ({ ...p, ready: false })),
   });
+  
 }
 
 export function disputeReview(): void {

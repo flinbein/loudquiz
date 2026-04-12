@@ -63,37 +63,25 @@ export function Sidebar() {
   if (!round) return null;
   
   const showBonusTime = phase === "round-review" || phase === "round-result";
+  const activeTeam = teams.find(team => team.id === round.teamId);
+  const teamPlayers = players.filter((p) => p.team === activeTeam?.id);
   
   return (
     <div className={styles.sidebar}>
       <TeamScore teams={teams} />
       <TimerView/>
       {showBonusTime && <BonusTimeInfo />}
-      {teams.map((team) => {
-        const teamPlayers = players.filter((p) => p.team === team.id);
-        return (
-          <TeamGroup
-            key={team.id}
-            label={t(`team.${team.id}`)}
-            teamColor={team.id}
-            playerCount={teamPlayers.length}
-          >
-            <PlayerStatusTable
-              players={teamPlayers.map((p) => {
-                const info = getPlayerRoundInfo(phase, p.name, round, p.ready);
-                return {
-                  emoji: p.emoji,
-                  name: p.name,
-                  team: p.team,
-                  online: p.online,
-                  role: info.role,
-                  status: info.status,
-                };
-              })}
-            />
-          </TeamGroup>
-        );
-      })}
+      <TeamGroup
+        label={t(`team.${activeTeam?.id}`)}
+        teamColor={activeTeam?.id ?? "none"}
+        playerCount={teamPlayers.length}
+      >
+        <PlayerStatusTable
+          players={teamPlayers.map((p) => ({
+            ...p, ...getPlayerRoundInfo(phase, p.name, round, p.ready)
+          }))}
+        />
+      </TeamGroup>
       <SidebarActions />
     </div>
   )

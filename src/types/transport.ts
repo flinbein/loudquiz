@@ -56,7 +56,8 @@ export type PlayerAction =
   | { kind: "activate-joker" }
   | { kind: "submit-answer"; text: string }
   | { kind: "claim-blitz-captain" }
-  | { kind: "select-blitz-task"; taskId: string }
+  | { kind: "claim-blitz-slot"; slot: number }
+  | { kind: "select-blitz-item"; itemIndex: number }
   | { kind: "submit-blitz-answer"; text: string }
   | { kind: "skip-blitz-answer" }
   | { kind: "suggest-topic"; text: string }

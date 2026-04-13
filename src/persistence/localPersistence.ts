@@ -36,11 +36,22 @@ export function setApiKey(key: string): void {
 // Player name
 
 export function getPlayerName(): string {
+  try {
+    const session = sessionStorage.getItem(KEYS.playerName);
+    if (session) return session;
+  } catch {
+    // sessionStorage unavailable
+  }
   return localStorage.getItem(KEYS.playerName) ?? "";
 }
 
 export function setPlayerName(name: string): void {
   localStorage.setItem(KEYS.playerName, name);
+  try {
+    sessionStorage.setItem(KEYS.playerName, name);
+  } catch {
+    // sessionStorage may be full or unavailable
+  }
 }
 
 // Calibration

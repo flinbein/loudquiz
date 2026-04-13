@@ -4,6 +4,9 @@ import {
   loadGameState,
   clearGameState,
   isHost,
+  saveRoomId,
+  loadRoomId,
+  clearRoomId,
 } from "./sessionPersistence";
 import {
   getApiKey,
@@ -133,5 +136,50 @@ describe("localPersistence", () => {
 
     clearUsedQuestions();
     expect(getUsedQuestions()).toEqual([]);
+  });
+});
+
+describe("roomId persistence", () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
+  it("saves and loads roomId", () => {
+    saveRoomId("123456789");
+    expect(loadRoomId()).toBe("123456789");
+  });
+
+  it("returns null when no roomId saved", () => {
+    expect(loadRoomId()).toBeNull();
+  });
+
+  it("clears roomId", () => {
+    saveRoomId("123456789");
+    clearRoomId();
+    expect(loadRoomId()).toBeNull();
+  });
+});
+
+describe("playerName with sessionStorage priority", () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+  });
+
+  it("reads from sessionStorage first", () => {
+    sessionStorage.setItem("loud-quiz-player-name", "SessionAlice");
+    localStorage.setItem("loud-quiz-player-name", "LocalBob");
+    expect(getPlayerName()).toBe("SessionAlice");
+  });
+
+  it("falls back to localStorage", () => {
+    localStorage.setItem("loud-quiz-player-name", "LocalBob");
+    expect(getPlayerName()).toBe("LocalBob");
+  });
+
+  it("setPlayerName writes to both storages", () => {
+    setPlayerName("Charlie");
+    expect(sessionStorage.getItem("loud-quiz-player-name")).toBe("Charlie");
+    expect(localStorage.getItem("loud-quiz-player-name")).toBe("Charlie");
   });
 });

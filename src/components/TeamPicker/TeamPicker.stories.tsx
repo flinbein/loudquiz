@@ -7,15 +7,15 @@ const EMOJIS = ["👻", "🤖", "🦊", "👽", "🐙", "🎃", "🐔"];
 function usePlayer(team: TeamId  = "none"){
   const [player, setPlayer] = useState<PlayerData>({
     ready: false,
-    emoji: EMOJIS[0],
-    team: "none",
+    emoji: EMOJIS[0] ?? "",
+    team: team,
     online: true,
     name: "Василий Иванович",
   });
   
   return [
     player,
-    () => setPlayer(p => ({ ...p, emoji: EMOJIS[(EMOJIS.indexOf(p.emoji) + 1) % EMOJIS.length] })),
+    () => setPlayer(p => ({ ...p, emoji: EMOJIS[(EMOJIS.indexOf(p.emoji) + 1) % EMOJIS.length] ?? "" })),
     (team: TeamId) => setPlayer(p => ({ ...p, team}))
   ] as const
 }

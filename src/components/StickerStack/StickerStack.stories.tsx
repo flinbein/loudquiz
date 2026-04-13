@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Story } from "@ladle/react";
 import type { ComponentProps } from "react";
-import type { Sticker } from "@/components/Sticker/Sticker";
+import type { Sticker, StickerProps } from "@/components/Sticker/Sticker";
 import { StickerStack } from "./StickerStack";
 
 const makeSticker = (
@@ -66,9 +66,9 @@ export const MixedTeams: Story = () => {
 };
 
 const DND_GROUPS = [
-  [{ player: { emoji: "😈", name: "Alice", team: "red" as const }, answerText: "Кошка" }],
-  [{ player: { emoji: "👹", name: "Bob", team: "red" as const }, answerText: "Кот" }],
-  [{ player: { emoji: "👺", name: "Carol", team: "red" as const }, answerText: "Собака" }],
+  [{ player: { emoji: "🐦", name: "Alice", team: "red" }, answerText: "Кошка" } as StickerProps],
+  [{ player: { emoji: "🐬", name: "Bob", team: "blue" }, answerText: "Кот" } as StickerProps] ,
+  [{ player: { emoji: "🐢", name: "Carol", team: "none" }, answerText: "Собака"} as StickerProps] ,
 ]
 export const DragAndDrop: Story = () => {
   const [groups, setGroups] = useState(DND_GROUPS);
@@ -77,7 +77,7 @@ export const DragAndDrop: Story = () => {
     const sourceIdx = groups.findIndex((_, i) => String(i) === sourceData);
     if (sourceIdx === -1 || sourceIdx === targetIdx) return;
     setGroups((prev) => {
-      const merged = [...prev[targetIdx], ...prev[sourceIdx]];
+      const merged = [...(prev[targetIdx] ?? []), ...(prev[sourceIdx] ?? [])];
       return prev.filter((_, i) => i !== sourceIdx && i !== targetIdx).concat([merged]);
     });
   }
@@ -85,15 +85,15 @@ export const DragAndDrop: Story = () => {
   return (
     <div style={{ display: "flex", gap: 16 }}>
       {groups.map((group, i) => (
-        <StickerStack
-          key={i}
-          stickers={group}
-          draggable
-          onClickBadge={() => setGroups(DND_GROUPS)}
-          dragData={String(i)}
-          onDrop={(data) => handleDrop(i, data)}
-          onClickSticker={() => console.log("toggle", i)}
-        />
+        <div key={group.map(g => g.player?.name).join("\0")} style={{width: 200}}>
+          <StickerStack
+            stickers={group}
+            draggable
+            onClickBadge={() => setGroups(DND_GROUPS)}
+            dragData={String(i)}
+            onDrop={(data) => handleDrop(i, data)}
+          />
+        </div>
       ))}
     </div>
   );

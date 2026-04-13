@@ -5,7 +5,6 @@ import type {
   PlayerAction,
   SyncResponseMessage,
 } from "@/transport/interface";
-import type { GameState } from "@/types/game";
 import { createTransport } from "@/transport/factory";
 import { useGameStore } from "@/store/gameStore";
 import { filterStateForPlayer } from "@/store/stateFilter";
@@ -97,7 +96,7 @@ function useHostTransport(): UseTransportHostResult {
     const transport = createTransport("b-init");
     transportRef.current = transport;
 
-    transport.onPeerConnect((peerId) => {
+    transport.onPeerConnect(() => {
       // Player will identify themselves via join action
       setConnected(true);
     });

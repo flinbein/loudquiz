@@ -52,7 +52,7 @@ export const EmojiChange: Story = () => {
   return (
     <div style={{ height: 150, display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
       <PlayerAvatarClick
-        emoji={EMOJIS[idx % EMOJIS.length]}
+        emoji={EMOJIS[idx % EMOJIS.length]!}
         name="Click me"
         team="red"
         onClick={() => setIdx((i) => i + 1)}
@@ -93,7 +93,7 @@ export const Status: Story = () => {
       <button onClick={() => setTeam("red")}>Red</button>
       <button onClick={() => setTeam("blue")}>Blue</button>
       <button onClick={() => setTeam("none")}>No team</button>
-      <button onClick={() => setTeam(v => teams[(teams.indexOf(v)+1)%teams.length])}>Next</button>
+      <button onClick={() => setTeam(v => teams[(teams.indexOf(v)+1)%teams.length] ?? v)}>Next</button>
       <button onClick={() => setOnline(v => !v)}>Online/offline</button>
     </div>
   );

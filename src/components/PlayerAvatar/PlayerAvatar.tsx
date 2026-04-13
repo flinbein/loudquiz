@@ -17,15 +17,15 @@ function formatName(name: string): string {
   const cleaned = name.replace(/[?!*_<>(){}\[\]'"`.,;:^+=]/g, "").trim();
   const words = cleaned.split(/[\s\-_]+/).filter(Boolean);
   if (words.length >= 2) {
-    return (words[0][0] + words[1][0]).toUpperCase();
+    return (words[0]?.[0] ?? '' + words[1]?.[0] ?? '').toUpperCase();
   }
   return cleaned.slice(0, 3).toUpperCase();
 }
 
 const teamClass: Record<TeamId, string> = {
-  red: styles.teamRed,
-  blue: styles.teamBlue,
-  none: styles.teamNone,
+  red: styles.teamRed!,
+  blue: styles.teamBlue!,
+  none: styles.teamNone!,
 };
 
 export function PlayerAvatar({
@@ -74,8 +74,8 @@ export function PlayerAvatar({
           styles.avatar,
           teamStatus.team && teamClass[teamStatus.team],
           {
-            [styles.offline]:!teamStatus.online,
-            [styles.avatarAnimate]: animatingTeamStatus,
+            [styles.offline!]:!teamStatus.online,
+            [styles.avatarAnimate!]: animatingTeamStatus,
           }
         )}
         data-clickable={onClick ? "true" : undefined}

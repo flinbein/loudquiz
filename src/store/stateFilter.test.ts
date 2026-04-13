@@ -30,7 +30,6 @@ function createTestState(overrides?: Partial<GameState>): GameState {
     ],
     blitzTasks: [
       {
-        id: "blitz-1",
         items: [
           { text: "Cat", difficulty: 200 },
           { text: "Democracy", difficulty: 380 },
@@ -61,20 +60,20 @@ describe("filterStateForPlayer", () => {
     it("captain sees question text in round-active", () => {
       const state = createTestState();
       const filtered = filterStateForPlayer(state, "Alice");
-      expect(filtered.topics[0].questions[0].text).toBe("Name a big cat");
+      expect(filtered.topics[0]?.questions[0]?.text).toBe("Name a big cat");
     });
 
     it("responder does NOT see question text in round-active (single mode)", () => {
       const state = createTestState();
       const filtered = filterStateForPlayer(state, "Bob");
-      expect(filtered.topics[0].questions[0].text).toBe("");
+      expect(filtered.topics[0]?.questions[0]?.text).toBe("");
     });
 
     it("non-targeted questions remain visible", () => {
       const state = createTestState();
       const filtered = filterStateForPlayer(state, "Bob");
       // questionIndex=0 is hidden, but question at index 1 should remain
-      expect(filtered.topics[0].questions[1].text).toBe("Name a fish");
+      expect(filtered.topics[0]?.questions[1]?.text).toBe("Name a fish");
     });
 
     it("opponent sees question text in dual mode", () => {
@@ -99,7 +98,7 @@ describe("filterStateForPlayer", () => {
       });
 
       const filtered = filterStateForPlayer(state, "Dave");
-      expect(filtered.topics[0].questions[0].text).toBe("Name a big cat");
+      expect(filtered.topics[0]?.questions[0]?.text).toBe("Name a big cat");
     });
 
     it("active team responder does NOT see question in dual mode", () => {
@@ -124,7 +123,7 @@ describe("filterStateForPlayer", () => {
       });
 
       const filtered = filterStateForPlayer(state, "Bob");
-      expect(filtered.topics[0].questions[0].text).toBe("");
+      expect(filtered.topics[0]?.questions[0]?.text).toBe("");
     });
   });
 
@@ -132,19 +131,19 @@ describe("filterStateForPlayer", () => {
     it("player sees own answer before review", () => {
       const state = createTestState();
       const filtered = filterStateForPlayer(state, "Bob");
-      expect(filtered.currentRound!.answers["Bob"].text).toBe("lion");
+      expect(filtered.currentRound?.answers?.["Bob"]?.text).toBe("lion");
     });
 
     it("player does NOT see other answers before review", () => {
       const state = createTestState();
       const filtered = filterStateForPlayer(state, "Bob");
-      expect(filtered.currentRound!.answers["Charlie"].text).toBe("");
+      expect(filtered.currentRound?.answers?.["Charlie"]?.text).toBe("");
     });
 
     it("all answers visible during round-review", () => {
       const state = createTestState({ phase: "round-review" });
       const filtered = filterStateForPlayer(state, "Bob");
-      expect(filtered.currentRound!.answers["Charlie"].text).toBe("tiger");
+      expect(filtered.currentRound?.answers?.["Charlie"]?.text).toBe("tiger");
     });
   });
 
@@ -156,7 +155,7 @@ describe("filterStateForPlayer", () => {
           type: "blitz",
           teamId: "red",
           captainName: "Alice",
-          blitzTaskId: "blitz-1",
+          blitzTaskIndex: 0,
           jokerActive: false,
           answers: {},
           activeTimerStartedAt: 0,
@@ -164,7 +163,7 @@ describe("filterStateForPlayer", () => {
         },
       });
       const filtered = filterStateForPlayer(state, "Alice");
-      expect(filtered.blitzTasks[0].items[0].text).toBe("Cat");
+      expect(filtered.blitzTasks[0]?.items?.[0]?.text).toBe("Cat");
     });
 
     it("non-captain does NOT see blitz task items", () => {
@@ -174,7 +173,7 @@ describe("filterStateForPlayer", () => {
           type: "blitz",
           teamId: "red",
           captainName: "Alice",
-          blitzTaskId: "blitz-1",
+          blitzTaskIndex: 0,
           jokerActive: false,
           answers: {},
           activeTimerStartedAt: 0,
@@ -182,7 +181,7 @@ describe("filterStateForPlayer", () => {
         },
       });
       const filtered = filterStateForPlayer(state, "Bob");
-      expect(filtered.blitzTasks[0].items[0].text).toBe("");
+      expect(filtered.blitzTasks?.[0]?.items?.[0]?.text).toBe("");
     });
   });
 

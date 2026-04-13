@@ -140,17 +140,17 @@ describe("submitAnswer", () => {
     submitAnswer("Bob", "my answer");
     const answers = useGameStore.getState().currentRound!.answers;
     expect(answers.Bob).toBeDefined();
-    expect(answers.Bob.text).toBe("my answer");
+    expect(answers.Bob?.text).toBe("my answer");
   });
 
   it("stores empty text for give-up", () => {
     submitAnswer("Bob", "");
-    expect(useGameStore.getState().currentRound!.answers.Bob.text).toBe("");
+    expect(useGameStore.getState().currentRound?.answers?.Bob?.text).toBe("");
   });
 
   it("rejects captain submitting", () => {
     submitAnswer("Alice", "answer");
-    expect(useGameStore.getState().currentRound!.answers.Alice).toBeUndefined();
+    expect(useGameStore.getState().currentRound?.answers?.Alice).toBeUndefined();
   });
 });
 
@@ -300,8 +300,8 @@ describe("confirmReview", () => {
     confirmReview();
     const s = useGameStore.getState();
     expect(s.history).toHaveLength(1);
-    expect(s.history[0].score).toBe(100); // 100 × 1 group (merged into one stack)
-    expect(s.teams[0].score).toBe(100);
+    expect(s.history[0]?.score).toBe(100); // 100 × 1 group (merged into one stack)
+    expect(s.teams[0]?.score).toBe(100);
     // 3 unplayed questions remain, so next phase is round-captain
     expect(s.phase).toBe("round-captain");
     expect(s.currentRound!.captainName).toBe("");
@@ -329,6 +329,6 @@ describe("disputeReview", () => {
     disputeReview();
     const review = useGameStore.getState().currentRound!.reviewResult!;
     expect(review.score).toBe(0);
-    expect(review.evaluations[0].correct).toBeTruthy();
+    expect(review.evaluations[0]?.correct).toBeTruthy();
   });
 });

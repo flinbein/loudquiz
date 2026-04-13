@@ -4,7 +4,7 @@ import { createNextRoundState } from "@/logic/phaseTransitions";
 import { createTimer, getCaptainTimerDuration } from "@/logic/timer";
 import { TeamId } from "@/types/game";
 
-export function handleJoin(peerId: string, name: string): void {
+export function handleJoin(_peerId: string, name: string): void {
   const state = useGameStore.getState();
   const existing = state.players.find((p) => p.name === name);
 

@@ -4,7 +4,6 @@ import { useGameStore } from "@/store/gameStore";
 import { useCurrentRound, usePhase, usePlayers } from "@/store/selectors";
 import { canBeCaptain } from "@/logic/captain";
 import { getNextBlitzAnswerer } from "@/store/actions/blitz";
-import { TaskCard } from "@/components/TaskCard/TaskCard";
 import { CircleTimer } from "@/components/CircleTimer/CircleTimer";
 import { TimerButton } from "@/components/TimerButton/TimerButton";
 import { TimerInput } from "@/components/TimerInput/TimerInput";
@@ -12,6 +11,7 @@ import { toLocalTime } from "@/store/clockSyncStore";
 import type { BlitzPhase } from "@/types/game";
 import type { PlayerAction } from "@/types/transport";
 import styles from "./PlayerBlitz.module.css";
+import { TaskCardBlock } from "@/pages/blocks/TaskCardBlock";
 
 interface PlayerBlitzProps {
   playerName: string;
@@ -27,55 +27,34 @@ export function PlayerBlitz({ playerName, sendAction }: PlayerBlitzProps) {
   const phase = usePhase() as BlitzPhase;
   const round = useCurrentRound();
   const players = usePlayers();
-  const { t } = useTranslation();
-
+  
   if (!round || round.type !== "blitz") return null;
 
   const me = players.find((p) => p.name === playerName);
   const isActiveTeam = me?.team === round.teamId;
   const isCaptain = round.captainName === playerName;
   const order = round.playerOrder ?? [];
-  const isLast = order.length > 0 && order[order.length - 1] === playerName;
   const isInChain = order.includes(playerName);
 
   if (!isActiveTeam) {
     return <OpponentView />;
   }
+  
+  if (phase === "blitz-captain") return (
+    <BlitzCaptainPhase
+      playerName={playerName}
+      sendAction={sendAction}
+      order={order}
+      isCaptain={isCaptain}
+      isInChain={isInChain}
+    />
+  );
+  
+  if (phase === "blitz-pick") return (
+    <BlitzPickPhase playerName={playerName} sendAction={sendAction} isCaptain={isCaptain} />
+  );
 
-  switch (phase) {
-    case "blitz-captain":
-      return (
-        <BlitzCaptainPhase
-          playerName={playerName}
-          sendAction={sendAction}
-          order={order}
-          isCaptain={isCaptain}
-          isInChain={isInChain}
-        />
-      );
-    case "blitz-pick":
-      return <BlitzPickPhase playerName={playerName} sendAction={sendAction} isCaptain={isCaptain} />;
-    case "blitz-ready":
-      return <BlitzReadyPhase playerName={playerName} sendAction={sendAction} />;
-    case "blitz-active":
-      return (
-        <BlitzActivePhase
-          playerName={playerName}
-          sendAction={sendAction}
-          isCaptain={isCaptain}
-          isLast={isLast}
-        />
-      );
-    case "blitz-answer":
-      return <BlitzAnswerPhase playerName={playerName} sendAction={sendAction} />;
-    case "blitz-review":
-      return <BlitzReviewPhase sendAction={sendAction} />;
-    default:
-      return null;
-  }
-
-  // t() reference kept below for phase labels in sub-views
-  void t;
+  return <BlitzGame playerName={playerName} sendAction={sendAction} />
 }
 
 function OpponentView() {
@@ -84,6 +63,8 @@ function OpponentView() {
   return (
     <div className={styles.container}>
       <div className={styles.phaseInfo}>{t(`blitz.${phase}.opponentHint`)}</div>
+      <TaskCardBlock alwaysOpen />
+      <TimerView />
     </div>
   );
 }
@@ -199,7 +180,7 @@ function BlitzPickPhase({
 
   // Captain picks an item (word) from the current blitz task. The task itself
   // was pre-assigned when the round was created.
-  const currentTask = blitzTasks.find((bt) => bt.id === round?.blitzTaskId);
+  const currentTask = blitzTasks[round?.blitzTaskIndex ?? -1];
   if (!currentTask) return null;
 
   return (
@@ -226,94 +207,100 @@ function BlitzPickPhase({
   );
 }
 
-function BlitzReadyPhase({ playerName, sendAction }: PhaseProps) {
-  const { t } = useTranslation();
-  const players = usePlayers();
-  const me = players.find((p) => p.name === playerName);
-  return (
-    <div className={styles.container}>
-      <button
-        className={styles.readyBtn}
-        disabled={me?.ready}
-        onClick={() => sendAction({ kind: "set-ready", ready: true })}
-      >
-        {me?.ready ? t("lobby.waiting") : t("round.readyBtn")}
-      </button>
-    </div>
-  );
-}
-
-function BlitzActivePhase({
+function BlitzGame({
   playerName,
   sendAction,
-  isCaptain,
-  isLast,
-}: PhaseProps & { isCaptain: boolean; isLast: boolean }) {
+}: PhaseProps) {
+  const { t } = useTranslation();
+  const phase = usePhase();
+  const round = useCurrentRound();
+  const players = usePlayers();
+  const me = players.find((p) => p.name === playerName);
+  
+  const isCaptain = round?.captainName === playerName;
+  const order = round?.playerOrder ?? [];
+  const isLast = order.length > 0 && order[order.length - 1] === playerName;
+  const answererName = round ? getNextBlitzAnswerer(order, round.answers) : undefined;
+  
+  return (
+    <div className={styles.container}>
+      <TaskCardBlock />
+      {phase === "blitz-ready" && (
+        <button
+          className={styles.readyBtn}
+          disabled={me?.ready}
+          onClick={() => sendAction({ kind: "set-ready", ready: true })}
+        >
+          {me?.ready ? t("lobby.waiting") : t("round.readyBtn")}
+        </button>
+      )}
+      {phase === "round-answer" && (
+        <BlitzHint playerName={playerName} />
+      )}
+      {(phase === "blitz-active" || phase === "blitz-answer") && isCaptain && (
+        <TimerView />
+      )}
+      {phase === "blitz-active" && isLast && (
+        <LastPlayerAnswerForm sendAction={sendAction} />
+      )}
+      {phase === "blitz-answer" && (
+        (playerName === answererName) ? (
+          <AnswerOrSkipForm sendAction={sendAction} />
+        ) : (
+          <div className={styles.phaseInfo}>
+            {t("blitz.waitingForAnswerer", { name: answererName ?? "" })}
+          </div>
+        )
+      )}
+      {phase === "round-review" && (
+        <>
+          <div className={styles.scoreDisplay}>+{round?.reviewResult?.score ?? 0}</div>
+          <button className={styles.nextBtn} onClick={() => sendAction({ kind: "next-round" })}>
+            {t("round.nextRound")}
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+interface BlitzHintProps {
+  playerName?: string;
+}
+function BlitzHint({playerName}: BlitzHintProps){
   const { t } = useTranslation();
   const round = useCurrentRound();
   const players = usePlayers();
-  const blitzTasks = useGameStore((s) => s.blitzTasks);
-
-  const task = blitzTasks.find((t) => t.id === round?.blitzTaskId);
-  const item = task && round?.blitzItemIndex != null ? task.items[round.blitzItemIndex] : undefined;
+  
+  if (!playerName) return null;
+  
   const order = round?.playerOrder ?? [];
   const myIndex = order.indexOf(playerName);
   const nextPlayer = myIndex >= 0 && myIndex < order.length - 1 ? players.find((p) => p.name === order[myIndex + 1]) : undefined;
   const prevPlayer = myIndex > 0 ? players.find((p) => p.name === order[myIndex - 1]) : undefined;
-
-  if (isCaptain) {
-    return (
-      <div className={styles.container}>
-        <TaskCard
-          topic=""
-          difficulty={item?.difficulty ?? 0}
-          question={item?.text ?? ""}
-          hidden={false}
-        />
-        <div className={styles.phaseInfo}>
-          {t("blitz.explainTo", { name: nextPlayer?.name ?? "" })}
-        </div>
-        <TimerView />
-      </div>
-    );
-  }
-
-  if (isLast) {
-    return (
-      <div className={styles.container}>
-        <TaskCard
-          topic=""
-          difficulty={item?.difficulty ?? 0}
-          question=""
-          hidden={true}
-        />
-        <div className={styles.phaseInfo}>
-          {t("blitz.lastPlayerHint", { name: prevPlayer?.name ?? "" })}
-        </div>
-        <LastPlayerAnswerForm sendAction={sendAction} />
-      </div>
-    );
-  }
-
-  // Intermediate responder
-  return (
-    <div className={styles.container}>
-      <TaskCard
-        topic=""
-        difficulty={item?.difficulty ?? 0}
-        question=""
-        hidden={true}
-      />
-      <div className={styles.phaseInfo}>
-        {t("blitz.intermediateHint", {
-          from: prevPlayer?.name ?? "",
-          to: nextPlayer?.name ?? "",
-        })}
-      </div>
-      <TimerView />
+  
+  if (nextPlayer && prevPlayer) return (
+    <div className={styles.phaseInfo}>
+      {t("blitz.intermediateHint", {
+        from: prevPlayer?.name ?? "",
+        to: nextPlayer?.name ?? "",
+      })}
     </div>
   );
+  
+  if (nextPlayer) return (
+    <div className={styles.phaseInfo}>
+      {t("blitz.explainTo", { name: nextPlayer?.name ?? "" })}
+    </div>
+  );
+  if (prevPlayer) return (
+    <div className={styles.phaseInfo}>
+      {t("blitz.lastPlayerHint", { name: prevPlayer?.name ?? "" })}
+    </div>
+  );
+  return null;
 }
+
 
 function LastPlayerAnswerForm({ sendAction }: { sendAction: (action: PlayerAction) => void }) {
   const timer = useGameStore((s) => s.timer);
@@ -341,43 +328,6 @@ function LastPlayerAnswerForm({ sendAction }: { sendAction: (action: PlayerActio
       >
         {t("round.submit")}
       </button>
-    </div>
-  );
-}
-
-function BlitzAnswerPhase({ playerName, sendAction }: PhaseProps) {
-  const { t } = useTranslation();
-  const round = useCurrentRound();
-  const players = usePlayers();
-  const blitzTasks = useGameStore((s) => s.blitzTasks);
-  const order = round?.playerOrder ?? [];
-  const up = round ? getNextBlitzAnswerer(order, round.answers) : undefined;
-  const upPlayer = players.find((p) => p.name === up);
-
-  const task = blitzTasks.find((t) => t.id === round?.blitzTaskId);
-  const item = task && round?.blitzItemIndex != null ? task.items[round.blitzItemIndex] : undefined;
-
-  if (up !== playerName) {
-    return (
-      <div className={styles.container}>
-        <TaskCard
-          topic={t("blitz.taskTitle")}
-          difficulty={item?.difficulty ?? 0}
-          question=""
-          hidden={true}
-        />
-        <div className={styles.phaseInfo}>
-          {t("blitz.waitingForAnswerer", { name: upPlayer?.name ?? "" })}
-        </div>
-        <TimerView />
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.container}>
-      <TaskCard topic="" difficulty={item?.difficulty ?? 0} question="" hidden={true} />
-      <AnswerOrSkipForm sendAction={sendAction} />
     </div>
   );
 }
@@ -420,33 +370,10 @@ function AnswerOrSkipForm({ sendAction }: { sendAction: (action: PlayerAction) =
   );
 }
 
-function BlitzReviewPhase({ sendAction }: { sendAction: (action: PlayerAction) => void }) {
-  const { t } = useTranslation();
-  const round = useCurrentRound();
-  const blitzTasks = useGameStore((s) => s.blitzTasks);
-  const task = blitzTasks.find((t) => t.id === round?.blitzTaskId);
-  const item = task && round?.blitzItemIndex != null ? task.items[round.blitzItemIndex] : undefined;
-  const score = round?.reviewResult?.score ?? 0;
-
-  return (
-    <div className={styles.container}>
-      <TaskCard
-        topic=""
-        difficulty={item?.difficulty ?? 0}
-        question={item?.text ?? ""}
-        hidden={false}
-      />
-      <div className={styles.scoreDisplay}>+{score}</div>
-      <button className={styles.nextBtn} onClick={() => sendAction({ kind: "next-round" })}>
-        {t("round.nextRound")}
-      </button>
-    </div>
-  );
-}
-
 function TimerView() {
   const timer = useGameStore((s) => s.timer);
+  if (!timer) return null;
   return (
-    <CircleTimer startedAt={toLocalTime(timer?.startedAt)} durationMs={timer?.duration ?? 0} />
+    <CircleTimer startedAt={toLocalTime(timer.startedAt)} durationMs={timer.duration ?? 0} />
   );
 }

@@ -1,7 +1,6 @@
 import { useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { PlayerAction } from "@/types/transport";
-import type { TeamId } from "@/types/game";
 import { usePlayers, useSettings, useTeams } from "@/store/selectors";
 import { isAllPlayersReady } from "@/store/selectors";
 import { canStartGame } from "@/store/actions/lobby";

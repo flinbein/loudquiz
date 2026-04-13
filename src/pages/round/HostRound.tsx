@@ -3,7 +3,7 @@ import { usePhase, useCurrentRound, useTimer as useTimerState, } from "@/store/s
 import { handleTimerExpire } from "@/store/actions/round";
 import type { RoundPhase } from "@/types/game";
 import styles from "./HostRound.module.css";
-import { Sidebar } from "./HostRound.Sidebar";
+import { SidebarBlock } from "@/pages/blocks/SidebarBlock";
 import { MainContent } from "./HostRound.Main";
 
 export function HostRound() {
@@ -23,7 +23,7 @@ export function HostRound() {
     }
     const id = setTimeout(() => {
       handleTimerExpire(phase);
-    }, remaining * 1000);
+    }, remaining);
     return () => clearTimeout(id);
   }, [timer, phase]);
 
@@ -32,7 +32,7 @@ export function HostRound() {
   return (
     <div className={styles.layout}>
       <MainContent/>
-      <Sidebar />
+      <SidebarBlock />
     </div>
   );
 }

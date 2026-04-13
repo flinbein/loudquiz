@@ -3,7 +3,7 @@ import type { PlayerData, RoundResult } from "@/types/game";
 export function canBeCaptain(playerName: string, history: RoundResult[]): boolean {
   if (history.length === 0) return true;
   const lastRound = history[history.length - 1];
-  return lastRound.captainName !== playerName;
+  return lastRound?.captainName !== playerName;
 }
 
 export function getEligibleCaptains(
@@ -21,5 +21,5 @@ export function getRandomCaptain(
 ): string {
   const eligible = getEligibleCaptains(teamPlayers, history);
   const index = Math.floor(Math.random() * eligible.length);
-  return eligible[index].name;
+  return eligible[index]!.name;
 }

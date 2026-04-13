@@ -12,9 +12,9 @@ export interface TaskCardProps {
 }
 
 const nameColorClass: Record<TeamId, string> = {
-  red: styles.captainNameRed,
-  blue: styles.captainNameBlue,
-  none: styles.captainNameNone,
+  red: styles.captainNameRed!,
+  blue: styles.captainNameBlue!,
+  none: styles.captainNameNone!,
 };
 
 export function TaskCard({

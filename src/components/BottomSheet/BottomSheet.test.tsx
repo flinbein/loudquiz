@@ -87,7 +87,7 @@ describe("BottomSheet", () => {
     );
     const buttons = screen.getAllByRole("button");
     const last = buttons[buttons.length - 1];
-    last.focus();
+    last?.focus();
     expect(document.activeElement).toBe(last);
     await user.keyboard("{Tab}");
     expect(document.activeElement).toBe(buttons[0]);
@@ -103,7 +103,7 @@ describe("BottomSheet", () => {
       </BottomSheet>,
     );
     const buttons = screen.getAllByRole("button");
-    buttons[0].focus();
+    buttons[0]?.focus();
     expect(document.activeElement).toBe(buttons[0]);
     await user.keyboard("{Shift>}{Tab}{/Shift}");
     expect(document.activeElement).toBe(buttons[buttons.length - 1]);

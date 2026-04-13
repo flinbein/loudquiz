@@ -76,7 +76,6 @@ export interface BlitzItem {
 }
 
 export interface BlitzTask {
-  id: string;
   items: BlitzItem[];
 }
 
@@ -114,7 +113,7 @@ export interface RoundState {
   teamId: TeamId;
   captainName: string;
   questionIndex?: number;
-  blitzTaskId?: string;
+  blitzTaskIndex?: number;
   blitzItemIndex?: number;
   jokerActive: boolean;
   playerOrder?: string[];
@@ -126,10 +125,10 @@ export interface RoundState {
 
 export interface RoundResult {
   type: "round" | "blitz";
-  teamId: string;
+  teamId: TeamId;
   captainName: string;
   questionIndex?: number;
-  blitzTaskId?: string;
+  blitzTaskIndex?: number;
   score: number;
   jokerUsed: boolean;
 }

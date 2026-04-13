@@ -1,6 +1,5 @@
-import { type Ref, type InputHTMLAttributes, useEffect, useRef } from "react";
+import { type InputHTMLAttributes, useEffect, useRef } from "react";
 import cn from "classnames";
-import { useCountdown, type CountdownHandle } from "@/hooks/useCountdown";
 import styles from "./TimerInput.module.css";
 import { Timer } from "@/components/Timer/Timer";
 
@@ -20,9 +19,9 @@ export function TimerInput({ startedAt, durationMs, warningTimeMs =10000, classN
     let rafId: number;
     function render(progress: number, warning: boolean){
       if (warning) {
-        wrapperRef.current?.classList?.add(styles.warning);
+        wrapperRef.current?.classList?.add(styles.warning!);
       } else {
-        wrapperRef.current?.classList?.remove(styles.warning);
+        wrapperRef.current?.classList?.remove(styles.warning!);
       }
       const widthPercent = progress * 100;
       barRef.current!.style.width = `${widthPercent}%`;

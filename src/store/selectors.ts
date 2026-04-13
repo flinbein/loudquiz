@@ -75,9 +75,9 @@ export function getQuestionByLinearIndex(
 ): { topic: Topic; topicIndex: number; question: Question; questionIndex: number } | undefined {
   let remaining = linearIndex;
   for (let ti = 0; ti < state.topics.length; ti++) {
-    const topic = state.topics[ti];
+    const topic = state.topics[ti]!;
     if (remaining < topic.questions.length) {
-      return { topic, topicIndex: ti, question: topic.questions[remaining], questionIndex: remaining };
+      return { topic, topicIndex: ti, question: topic.questions[remaining]!, questionIndex: remaining };
     }
     remaining -= topic.questions.length;
   }
@@ -87,16 +87,14 @@ export function getQuestionByLinearIndex(
 export function toLinearQuestionIndex(state: GameState, topicIndex: number, questionIndex: number): number {
   let linear = 0;
   for (let i = 0; i < topicIndex; i++) {
-    linear += state.topics[i].questions.length;
+    linear += state.topics[i]?.questions?.length ?? 0;
   }
   return linear + questionIndex;
 }
 
 export function getCurrentBlitzTask(state: GameState) {
-  if (!state.currentRound || !state.currentRound.blitzTaskId) return undefined;
-  return state.blitzTasks.find(
-    (t) => t.id === state.currentRound!.blitzTaskId,
-  );
+  if (!state.currentRound || state.currentRound.blitzTaskIndex == null) return undefined;
+  return state.blitzTasks[state.currentRound.blitzTaskIndex];
 }
 
 // Game progress
@@ -125,6 +123,10 @@ export function useTeams() {
 
 export function useCurrentRound() {
   return useGameStore((s) => s.currentRound);
+}
+
+export function useCurrentQuestion() {
+  return useGameStore(getCurrentQuestion);
 }
 
 export function useSettings() {

@@ -24,9 +24,9 @@ export function TimerButton(
     let rafId: number;
     function render(progress: number, warning: boolean){
       if (warning) {
-        buttonRef.current?.classList?.add(styles.warning);
+        buttonRef.current?.classList?.add(styles.warning!);
       } else {
-        buttonRef.current?.classList?.remove(styles.warning);
+        buttonRef.current?.classList?.remove(styles.warning!);
       }
       const widthPercent = progress * 100;
       barRef.current!.style.width = `${widthPercent}%`;

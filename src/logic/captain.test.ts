@@ -46,7 +46,7 @@ describe("getEligibleCaptains", () => {
   });
 
   it("returns all if everyone was last captain (edge case with 1 player)", () => {
-    const single = [players[0]];
+    const single = [players[0]!];
     const history = [makeResult("Alice")];
     const eligible = getEligibleCaptains(single, history);
     expect(eligible).toHaveLength(1);
@@ -61,7 +61,7 @@ describe("getRandomCaptain", () => {
   });
 
   it("returns the only player when team size is 1", () => {
-    const single = [players[0]];
+    const single = [players[0]!];
     const captain = getRandomCaptain(single, [makeResult("Alice")]);
     expect(captain).toBe("Alice");
   });

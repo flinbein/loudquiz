@@ -62,15 +62,15 @@ export function BottomSheet({
       if (e.shiftKey) {
         if (active === first || active === dialog) {
           e.preventDefault();
-          last.focus();
+          last?.focus();
         }
       } else {
         if (active === last) {
           e.preventDefault();
-          first.focus();
+          first?.focus();
         } else if (active === dialog) {
           e.preventDefault();
-          first.focus();
+          first?.focus();
         }
       }
     }

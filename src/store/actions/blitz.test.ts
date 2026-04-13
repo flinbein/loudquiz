@@ -33,14 +33,12 @@ function setupBlitzState(overrides?: Partial<GameState>) {
     topics: [],
     blitzTasks: [
       {
-        id: "b1",
         items: [
           { text: "Коза", difficulty: 200 },
           { text: "Крем-брюле", difficulty: 300 },
         ],
       },
       {
-        id: "b2",
         items: [{ text: "Мост", difficulty: 250 }],
       },
     ],
@@ -48,7 +46,7 @@ function setupBlitzState(overrides?: Partial<GameState>) {
       type: "blitz",
       teamId: "red",
       captainName: "",
-      blitzTaskId: "b1",
+      blitzTaskIndex: 0,
       jokerActive: false,
       answers: {},
       playerOrder: [],
@@ -79,7 +77,7 @@ describe("claimBlitzCaptain", () => {
 
   it("rejects consecutive captain", () => {
     setupBlitzState({
-      history: [{ type: "blitz", teamId: "red", captainName: "Alice", blitzTaskId: "bx", score: 100, jokerUsed: false }],
+      history: [{ type: "blitz", teamId: "red", captainName: "Alice", blitzTaskIndex: 10, score: 100, jokerUsed: false }],
     });
     claimBlitzCaptain("Alice");
     expect(useGameStore.getState().currentRound!.captainName).toBe("");
@@ -120,7 +118,7 @@ describe("selectBlitzItem", () => {
         ...useGameStore.getState().currentRound!,
         captainName: "Alice",
         playerOrder: ["Alice", "Bob", "Carol"],
-        blitzTaskId: "b1",
+        blitzTaskIndex: 0,
       },
     });
   });
@@ -129,15 +127,15 @@ describe("selectBlitzItem", () => {
     selectBlitzItem(1);
     const s = useGameStore.getState();
     expect(s.phase).toBe("blitz-ready");
-    expect(s.currentRound!.blitzTaskId).toBe("b1");
-    expect(s.currentRound!.blitzItemIndex).toBe(1);
+    expect(s.currentRound?.blitzTaskIndex).toBe(0);
+    expect(s.currentRound?.blitzItemIndex).toBe(1);
   });
 
   it("rejects when no task is assigned to the round", () => {
     useGameStore.setState({
       currentRound: {
         ...useGameStore.getState().currentRound!,
-        blitzTaskId: undefined,
+        blitzTaskIndex: undefined,
       },
     });
     selectBlitzItem(0);
@@ -158,7 +156,7 @@ describe("setBlitzPlayerReady", () => {
         ...useGameStore.getState().currentRound!,
         captainName: "Alice",
         playerOrder: ["Alice", "Bob", "Carol"],
-        blitzTaskId: "b1",
+        blitzTaskIndex: 0,
         blitzItemIndex: 0,
       },
     });
@@ -190,7 +188,7 @@ describe("submitBlitzAnswer in blitz-active", () => {
         ...useGameStore.getState().currentRound!,
         captainName: "Alice",
         playerOrder: ["Alice", "Bob", "Carol"],
-        blitzTaskId: "b1",
+        blitzTaskIndex: 0,
         blitzItemIndex: 0, // "Коза"
         activeTimerStartedAt: performance.now(),
       },
@@ -208,14 +206,14 @@ describe("submitBlitzAnswer in blitz-active", () => {
     submitBlitzAnswer("Carol", "коза");
     const review = useGameStore.getState().currentRound!.reviewResult;
     expect(review).toBeDefined();
-    expect(review!.evaluations[0].correct).toBe(true);
+    expect(review!.evaluations[0]?.correct).toBe(true);
     expect(review!.score).toBeGreaterThan(0);
   });
 
   it("wrong answer scores 0", () => {
     submitBlitzAnswer("Carol", "Корова");
     const review = useGameStore.getState().currentRound!.reviewResult;
-    expect(review!.evaluations[0].correct).toBe(false);
+    expect(review!.evaluations[0]?.correct).toBe(false);
     expect(review!.score).toBe(0);
   });
 });
@@ -228,7 +226,7 @@ describe("skipBlitzAnswer", () => {
         ...useGameStore.getState().currentRound!,
         captainName: "Alice",
         playerOrder: ["Alice", "Bob", "Carol"],
-        blitzTaskId: "b1",
+        blitzTaskIndex: 0,
         blitzItemIndex: 0,
         activeTimerStartedAt: performance.now() - 1_000_000, // already past
       },
@@ -268,7 +266,7 @@ describe("confirmBlitzReview", () => {
         ...useGameStore.getState().currentRound!,
         captainName: "Alice",
         playerOrder: ["Alice", "Bob", "Carol"],
-        blitzTaskId: "b1",
+        blitzTaskIndex: 0,
         reviewResult: {
           evaluations: [{ playerName: "Carol", correct: true }],
           groups: [["Carol"]],
@@ -286,7 +284,7 @@ describe("confirmBlitzReview", () => {
     confirmBlitzReview();
     const s = useGameStore.getState();
     expect(s.history.length).toBe(1);
-    expect(s.history[0].score).toBe(400);
+    expect(s.history[0]?.score).toBe(400);
     expect(s.teams.find((t) => t.id === "red")!.score).toBe(400);
     // second blitz task remains unplayed
     expect(s.phase).toBe("blitz-captain");
@@ -296,7 +294,7 @@ describe("confirmBlitzReview", () => {
   it("transitions to finale when no blitz tasks remain", () => {
     useGameStore.setState({
       history: [
-        { type: "blitz", teamId: "red", captainName: "Bob", blitzTaskId: "b2", score: 200, jokerUsed: false },
+        { type: "blitz", teamId: "red", captainName: "Bob", blitzTaskIndex: 1, score: 200, jokerUsed: false },
       ],
     });
     confirmBlitzReview();
@@ -324,7 +322,7 @@ describe("handleBlitzTimerExpire", () => {
         ...useGameStore.getState().currentRound!,
         captainName: "Alice",
         playerOrder: ["Alice", "Bob", "Carol"],
-        blitzTaskId: "b1",
+        blitzTaskIndex: 0,
         blitzItemIndex: 0,
       },
     });

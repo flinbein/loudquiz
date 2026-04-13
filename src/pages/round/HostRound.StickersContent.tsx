@@ -1,5 +1,10 @@
-import { useMemo, useState } from "react";
-import { usePhase, useCurrentRound, usePlayers } from "@/store/selectors";
+import { useMemo } from "react";
+import {
+  usePhase,
+  useCurrentRound,
+  usePlayers,
+  useCurrentQuestion,
+} from "@/store/selectors";
 import { evaluateGroup, mergeAnswerGroups, splitAnswerFromGroup, } from "@/store/actions/round";
 import { StickerStack } from "@/components/StickerStack/StickerStack";
 import type { RoundPhase } from "@/types/game";
@@ -9,6 +14,7 @@ export function StickersContent(){
   const phase = usePhase() as RoundPhase;
   const round = useCurrentRound();
   const players = usePlayers();
+  const question = useCurrentQuestion();
   const review = round?.reviewResult;
   const groups = review?.groups ?? [];
   
@@ -32,7 +38,7 @@ export function StickersContent(){
   if (showAnswers) return (
     <div className={styles.stickersGrid}>
       {nonEmptyGroups.map((group) => {
-        const representativePlayer = group[0];
+        const representativePlayer = group[0]!;
         const stickers = group.map((playerName) => {
           const player = players.find((p) => p.name === playerName);
           const answer = round?.answers[playerName];
@@ -41,7 +47,7 @@ export function StickersContent(){
           );
           const correct = eval_?.correct;
           const stickerStamp =
-            correct === true ? "✓" : correct === false ? "✗" : undefined;
+            correct === true ? `+${question?.difficulty}` : correct === false ? "✗" : undefined;
           const stickerStampColor: "green" | "red" =
             correct === false ? "red" : "green";
           return {
@@ -63,19 +69,10 @@ export function StickersContent(){
               onDrop={(phase === "round-review") ? (dragData) => {
                 mergeAnswerGroups(dragData, representativePlayer);
               } : undefined}
-              onClickSticker={(phase === "round-review") ? () => {
-                // Toggle evaluation for entire group: null → true → false → null
-                const evaluation = review?.evaluations.find(
-                  (e) => e.playerName === representativePlayer,
-                );
-                const current = evaluation?.correct ?? null;
-                const next =
-                  current === null ? true : current ? false : null;
-                evaluateGroup(group, next);
-              } : undefined}
+              onClickSticker={(phase === "round-review") ? () => evaluateGroup(group) : undefined}
               onClickBadge={(phase === "round-review") ? () => {
                 // Split last player from group
-                const lastPlayer = group[group.length - 1];
+                const lastPlayer = group[group.length - 1]!;
                 splitAnswerFromGroup(lastPlayer);
               } : undefined}
             />

@@ -16,7 +16,7 @@ export const Reset: Story = () => {
   const [startedAt, setStartedAt] = useState(performance.now());
   return <div>
     <button type="button" onClick={() => setStartedAt(() => performance.now())}>reset (13s)</button>
-    <CircleTimer startedAt={performance.now()} durationMs={13000} />
+    <CircleTimer startedAt={startedAt} durationMs={13000} />
   </div>
 }
 export const Warning: Story = () => <CircleTimer startedAt={performance.now()} durationMs={8000} warningTimeMs={10000}/>;

@@ -2,9 +2,9 @@ import type { TeamId } from "@/types/game";
 import styles from "./TeamGroup.module.css";
 
 const colorClass: Record<TeamId, string> = {
-  red: styles.red,
-  blue: styles.blue,
-  none: styles.none,
+  red: styles.red!,
+  blue: styles.blue!,
+  none: styles.none!,
 };
 
 export interface TeamGroupProps {

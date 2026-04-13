@@ -1,5 +1,4 @@
 import { useRef, useCallback, useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { PlayerData, TeamId } from "@/types/game";
 import { PlayerAvatar } from "@/components/PlayerAvatar/PlayerAvatar";
 import styles from "./TeamPicker.module.css";
@@ -71,12 +70,12 @@ export function TeamPicker({
      {teamMode === "single" && <div className={`${styles.block} ${styles.blockNone}`}>{noneCount}</div>}
      
      {teamMode === "dual" && <div
-       className={cn(styles.block, styles.blockRed, {[styles.blockActive]: player.team === "red" })}
+       className={cn(styles.block, styles.blockRed, {[styles.blockActive!]: player.team === "red" })}
        onClick={(player.team !== "red") ? () => onSelectTeam("red") : undefined}
      >{redCount}</div>
      }
      {teamMode === "dual" && <div
-       className={cn(styles.block, styles.blockBlue, {[styles.blockActive]: player.team === "blue" })}
+       className={cn(styles.block, styles.blockBlue, {[styles.blockActive!]: player.team === "blue" })}
        onClick={(player.team !== "blue") ? () => onSelectTeam("blue") : undefined}
      >{blueCount}</div>}
      
@@ -85,8 +84,8 @@ export function TeamPicker({
        className={cn(
          styles.avatar,
          {
-           [styles.avatarAnimated]: showDragAnimation,
-           [styles.avatarDrag]: teamMode === "dual",
+           [styles.avatarAnimated!]: showDragAnimation,
+           [styles.avatarDrag!]: teamMode === "dual",
          })}
        onPointerDown={handlePointerDown}
        onPointerUp={handlePointerUp}

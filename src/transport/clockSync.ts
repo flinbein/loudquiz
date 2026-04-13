@@ -32,9 +32,9 @@ export function pickBestSample(samples: readonly SyncSample[]): number {
   }
   let best = samples[0];
   for (let i = 1; i < samples.length; i++) {
-    if (samples[i].rtt < best.rtt) best = samples[i];
+    if (samples[i]!.rtt < best!.rtt) best = samples[i];
   }
-  return best.offset;
+  return best!.offset;
 }
 
 export interface RunSyncHandshakeOptions {

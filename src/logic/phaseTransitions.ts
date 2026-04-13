@@ -1,4 +1,4 @@
-import type { GamePhase, RoundPhase, RoundState, RoundResult, Topic, TeamId, BlitzTask } from "@/types/game";
+import type { GamePhase, RoundPhase, RoundState, RoundResult, Topic, TeamId } from "@/types/game";
 
 const ROUND_PHASE_ORDER: RoundPhase[] = [
   "round-captain",
@@ -12,7 +12,7 @@ const ROUND_PHASE_ORDER: RoundPhase[] = [
 
 export function getNextRoundPhase(current: RoundPhase): RoundPhase {
   const index = ROUND_PHASE_ORDER.indexOf(current);
-  return ROUND_PHASE_ORDER[index + 1];
+  return ROUND_PHASE_ORDER[index + 1]!;
 }
 
 export function getNextPhaseAfterReview(
@@ -33,18 +33,10 @@ export function getPlayedQuestionIndices(history: RoundResult[]): number[] {
     .map((r) => r.questionIndex!);
 }
 
-export function getPlayedBlitzTaskIds(history: RoundResult[]): string[] {
+export function getPlayedBlitzTaskIds(history: RoundResult[]): number[] {
   return history
-    .filter((r) => r.type === "blitz" && r.blitzTaskId != null)
-    .map((r) => r.blitzTaskId!);
-}
-
-export function getUnplayedBlitzTasks(
-  blitzTasks: BlitzTask[],
-  history: RoundResult[],
-): BlitzTask[] {
-  const played = new Set(getPlayedBlitzTaskIds(history));
-  return blitzTasks.filter((t) => !played.has(t.id));
+    .filter((r) => r.type === "blitz" && r.blitzTaskIndex != null)
+    .map((r) => r.blitzTaskIndex!);
 }
 
 export function getTotalQuestionCount(topics: Topic[]): number {
@@ -65,13 +57,13 @@ export function createNextRoundState(teamId: TeamId): RoundState {
 
 export function createNextBlitzRoundState(
   teamId: TeamId,
-  blitzTaskId?: string,
+  blitzTaskIndex?: number,
 ): RoundState {
   return {
     type: "blitz",
     teamId,
     captainName: "",
-    blitzTaskId,
+    blitzTaskIndex,
     jokerActive: false,
     answers: {},
     playerOrder: [],

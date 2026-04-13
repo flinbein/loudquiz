@@ -1,4 +1,4 @@
-import { useState, type ComponentProps, useMemo, type DragEvent, useCallback } from "react";
+import { useState, type ComponentProps, type DragEvent, useCallback } from "react";
 import cn from "classnames";
 import { Sticker } from "@/components/Sticker/Sticker";
 import styles from "./StickerStack.module.css";
@@ -21,11 +21,11 @@ export function StickerStack({ stickers, onClickBadge, onClickSticker, draggable
   
   const clickSticker = useCallback(() => {
     onClickSticker?.((stickers.length + topIndex) % stickers.length);
-  }, [topIndex, stickers.length]);
+  }, [onClickSticker, topIndex, stickers.length]);
 
   function handleDragStart(e: DragEvent) {
     if (!dragData) return;
-    e.dataTransfer.setData("text/plain", dragData);
+    e.dataTransfer.setData("application/loud-quiz-sticker", dragData);
     e.dataTransfer.effectAllowed = "move";
     setIsDragging(true);
   }
@@ -48,7 +48,7 @@ export function StickerStack({ stickers, onClickBadge, onClickSticker, draggable
   function handleDrop(e: DragEvent) {
     e.preventDefault();
     setIsDropOver(false);
-    const data = e.dataTransfer.getData("text/plain");
+    const data = e.dataTransfer.getData("application/loud-quiz-sticker");
     if (data && data !== dragData) {
       onDrop?.(data);
     }
@@ -67,7 +67,7 @@ export function StickerStack({ stickers, onClickBadge, onClickSticker, draggable
         data-dragging={isDragging || undefined}
         data-drop-over={isDropOver || undefined}
       >
-        <Sticker {...stickers[0]} onClickSticker={onClickSticker ? clickSticker : undefined} />
+        <Sticker {...stickers[0]!} onClickSticker={onClickSticker ? clickSticker : undefined} />
       </div>
     );
   }

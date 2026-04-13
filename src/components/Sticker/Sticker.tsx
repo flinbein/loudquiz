@@ -43,7 +43,6 @@ export function Sticker({
   hideAvatar = false,
 }: StickerProps) {
   const rotation = useMemo(() => randomRange(-4, 4), []);
-  const stampRotation = useMemo(() => randomRange(-10, 10), []);
   const team = player?.team;
 
   return (
@@ -77,16 +76,25 @@ export function Sticker({
           {aiComment && <p className={styles.aiComment}>{aiComment}</p>}
         </div>
         <div className={styles.stampArea}>
-          {stampText && (
-            <div
-              className={`${styles.stamp} ${stampColorClass[stampColor]}`}
-              style={{ "--stamp-rotation": `${stampRotation}deg` } as React.CSSProperties}
-            >
-              {stampText}
-            </div>
-          )}
+          {stampText && <StampText key={`${stampColor}:${stampText}`} stampColor={stampColor} stampText={stampText} />}
         </div>
       </div>
     </div>
   );
+}
+
+interface StampTextProps {
+  stampColor: "green" | "red";
+  stampText?: string;
+}
+function StampText({stampText, stampColor}: StampTextProps){
+  const stampRotation = useMemo(() => randomRange(-20, 20), []);
+  return (
+    <div
+      className={`${styles.stamp} ${stampColorClass[stampColor]}`}
+      style={{ "--stamp-rotation": `${stampRotation}deg` } as React.CSSProperties}
+    >
+      {stampText}
+    </div>
+  )
 }

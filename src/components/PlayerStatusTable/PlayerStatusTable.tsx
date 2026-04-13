@@ -57,9 +57,9 @@ function StatusDisplay({ status }: { status?: PlayerStatus }) {
 }
 
 const nameColorClass: Record<TeamId, string> = {
-  red: styles.nameRed,
-  blue: styles.nameBlue,
-  none: styles.nameNone,
+  red: styles.nameRed!,
+  blue: styles.nameBlue!,
+  none: styles.nameNone!,
 };
 
 function getOrder(players: PlayerStatusRow[]): string {

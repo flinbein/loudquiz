@@ -147,6 +147,9 @@
 
 /* Stamp */
 .stamp {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.1em;

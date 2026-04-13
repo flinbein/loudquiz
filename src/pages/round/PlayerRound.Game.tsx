@@ -3,14 +3,12 @@ import { useGameStore } from "@/store/gameStore";
 import type { PlayerAction } from "@/types/transport";
 import styles from "./PlayerRound.module.css";
 import { useCurrentRound, usePhase, usePlayers } from "@/store/selectors";
-import type { Question, RoundPhase } from "@/types/game";
-import { TaskCard } from "@/components/TaskCard/TaskCard";
-import { Timer } from "@/components/Timer/Timer";
 import { TimerInput } from "@/components/TimerInput/TimerInput";
 import { toLocalTime } from "@/store/clockSyncStore";
 import { useState } from "react";
 import { Sticker } from "@/components/Sticker/Sticker";
 import { CircleTimer } from "@/components/CircleTimer/CircleTimer";
+import { TaskCardBlock } from "@/pages/blocks/TaskCardBlock";
 
 interface PlayerRoundGameProps {
   playerName: string;
@@ -19,13 +17,12 @@ interface PlayerRoundGameProps {
 
 export function PlayerRoundGame({ playerName, sendAction }: PlayerRoundGameProps){
   const { t } = useTranslation();
-  const phase = usePhase() as RoundPhase;
+  const phase = usePhase();
   const players = usePlayers();
   const topics = useGameStore((s) => s.topics);
   const round = useCurrentRound();
   
   const myPlayer = players.find((p) => p.name === playerName);
-  const captainPlayer = players.find((p) => p.name === round?.captainName);
   const isCaptain = round?.captainName === playerName;
   
   const currentQuestion = (() => {
@@ -40,24 +37,11 @@ export function PlayerRoundGame({ playerName, sendAction }: PlayerRoundGameProps
     return undefined;
   })();
   
-  const taskVisible = (
-    phase === "round-active" && isCaptain
-    || phase === "round-answer" && isCaptain
-    || phase === "round-review"
-    || phase === "round-result"
-  );
-  
   const myAnswerTextState = round?.answers?.[playerName]?.text;
   
   return (
     <div className={styles.container}>
-      <TaskCard
-        topic={currentQuestion?.topic.name}
-        player={captainPlayer}
-        difficulty={currentQuestion?.question.difficulty ?? 0}
-        question={currentQuestion?.question.text ?? ""}
-        hidden={!taskVisible}
-      />
+      <TaskCardBlock playerName={playerName} />
       {phase === "round-ready" && (
         <button
           className={styles.readyBtn}
@@ -83,7 +67,7 @@ export function PlayerRoundGame({ playerName, sendAction }: PlayerRoundGameProps
         <AnswerForm sendAction={sendAction} />
       )}
       {Boolean(myAnswerTextState) && currentQuestion && (
-        <StickerBlock question={currentQuestion.question} playerName={playerName} />
+        <StickerBlock difficulty={currentQuestion.question?.difficulty ?? 0} playerName={playerName} />
       )}
       {myAnswerTextState === "" && (
         <div className={styles.phaseInfo}>{t("round.gaveUp")}</div>
@@ -160,14 +144,14 @@ function AnswerForm({sendAction}: AnswerFormProps){
 
 interface StickerBlockProps {
   playerName: string;
-  question: Question;
+  difficulty: number;
 }
-function StickerBlock({playerName, question}: StickerBlockProps){
+function StickerBlock({playerName, difficulty}: StickerBlockProps){
   const players = usePlayers();
   const round = useCurrentRound();
   
   const myPlayer = players.find((p) => p.name === playerName);
-  const myAnswerTextState = round?.answers[playerName].text;
+  const myAnswerTextState = round?.answers[playerName]?.text;
   
   const myEvaluation = round?.reviewResult?.evaluations.find(
     (e) => e.playerName === playerName,
@@ -175,7 +159,7 @@ function StickerBlock({playerName, question}: StickerBlockProps){
   
   const stampText =
     myEvaluation?.correct === true
-      ? `+${question?.difficulty ?? 0}`
+      ? `+${difficulty}`
       : myEvaluation?.correct === false
         ? "✗"
         : undefined;

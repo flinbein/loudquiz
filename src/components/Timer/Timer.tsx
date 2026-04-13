@@ -31,15 +31,15 @@ export const Timer = memo(({ startedAt, durationMs, warningTimeMs = 10000 }: Tim
       minutesElement.textContent = String(m).padStart(2, "0")
       secondsElement.textContent = String(s).padStart(2, "0")
       if (secondsRef.current > 0 && secondsRef.current * 1000 <= warningTimeMs) {
-        wrapperElement.classList.add(styles.warning);
+        wrapperElement.classList.add(styles.warning!);
       } else {
-        wrapperElement.classList.remove(styles.warning);
+        wrapperElement.classList.remove(styles.warning!);
       }
       
       if (secondsRef.current > 0) {
-        wrapperElement.classList.remove(styles.expired);
+        wrapperElement.classList.remove(styles.expired!);
       } else {
-        wrapperElement.classList.add(styles.expired);
+        wrapperElement.classList.add(styles.expired!);
       }
     };
 

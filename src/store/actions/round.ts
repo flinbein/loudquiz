@@ -1,6 +1,6 @@
 import { useGameStore } from "@/store/gameStore";
 import { canBeCaptain, getRandomCaptain } from "@/logic/captain";
-import { getPlayedQuestionIndices, getNextPhaseAfterReview, createNextRoundState, createNextBlitzRoundState, getTotalQuestionCount, getUnplayedBlitzTasks } from "@/logic/phaseTransitions";
+import { getPlayedQuestionIndices, getNextPhaseAfterReview, createNextRoundState, createNextBlitzRoundState, getTotalQuestionCount } from "@/logic/phaseTransitions";
 import { createTimer, getPickTimerDuration, getCaptainTimerDuration, getActiveTimerDuration, getAnswerTimerDuration, getBlitzCaptainTimerDuration } from "@/logic/timer";
 import { calculateRoundScore, calculateBonusMultiplier, checkBonusConditions } from "@/logic/scoring";
 import type { AnswerEvaluation, RoundPhase, RoundState, TimerState } from "@/types/game";
@@ -214,9 +214,14 @@ export function initReview(): void {
   });
 }
 
-export function evaluateGroup(groupPlayers: string[], correct: boolean | null): void {
+export function evaluateGroup(groupPlayers: string[], correctValue?: boolean): void {
+  console.log("===evaluateGroup", groupPlayers, correctValue);
   const state = useGameStore.getState();
   if (state.phase !== "round-review" || !state.currentRound?.reviewResult) return;
+  
+  const correct = correctValue ?? state.currentRound.reviewResult.evaluations
+    .filter(e => groupPlayers.includes(e.playerName))
+    .some(e => !e.correct);
 
   const evaluations = state.currentRound.reviewResult.evaluations.map((e) =>
     groupPlayers.includes(e.playerName) ? { ...e, correct } : e,
@@ -257,7 +262,7 @@ export function confirmScore(): void {
     let remaining = round.questionIndex;
     for (const topic of state.topics) {
       if (remaining < topic.questions.length) {
-        difficulty = topic.questions[remaining].difficulty;
+        difficulty = topic.questions[remaining]?.difficulty ?? 0;
         break;
       }
       remaining -= topic.questions.length;
@@ -304,7 +309,7 @@ export function mergeAnswerGroups(sourcePlayer: string, targetPlayer: string): v
   const targetGroupIdx = review.groups.findIndex((g) => g.includes(targetPlayer));
   if (sourceGroupIdx === -1 || targetGroupIdx === -1 || sourceGroupIdx === targetGroupIdx) return;
 
-  const merged = [...review.groups[sourceGroupIdx], ...review.groups[targetGroupIdx]];
+  const merged = [...(review?.groups[sourceGroupIdx] ?? []), ...(review.groups[targetGroupIdx] ?? [])];
   const groups = review.groups.filter((_, i) => i !== sourceGroupIdx && i !== targetGroupIdx);
   groups.push(merged);
 
@@ -315,7 +320,7 @@ export function mergeAnswerGroups(sourcePlayer: string, targetPlayer: string): v
   useGameStore.getState().setState({
     currentRound: {
       ...state.currentRound,
-      reviewResult: { ...review, groups, evaluations },
+      reviewResult: { ...review, groups, evaluations, bonusTimeApplied: false },
     },
   });
 }
@@ -326,7 +331,7 @@ export function splitAnswerFromGroup(playerName: string): void {
 
   const review = state.currentRound.reviewResult;
   const groupIdx = review.groups.findIndex((g) => g.includes(playerName));
-  if (groupIdx === -1 || review.groups[groupIdx].length <= 1) return;
+  if (groupIdx === -1 || (review.groups[groupIdx]?.length ?? 0) <= 1) return;
 
   const groups = review.groups.map((g, i) =>
     i === groupIdx ? g.filter((n) => n !== playerName) : g,
@@ -385,17 +390,14 @@ export function goToNextRound(){
   const history = state.history;
   const totalQuestions = getTotalQuestionCount(state.topics);
   const nextPhase = getNextPhaseAfterReview(totalQuestions, history, state.blitzTasks.length);
-  const team = state.teams.find(team => team.id !== state.currentRound?.teamId) ?? state.teams[0];
+  const team = state.teams.find(team => team.id !== state.currentRound?.teamId) ?? state.teams[0]!;
   let nextRound: RoundState | undefined, nextTimer: TimerState | undefined;
   if (nextPhase === "round-captain") {
     nextRound = createNextRoundState(team.id);
     nextTimer = createTimer(getCaptainTimerDuration())
   } else if (nextPhase === "blitz-captain") {
-    const nextBlitzTaskId =
-      nextPhase === "blitz-captain"
-        ? getUnplayedBlitzTasks(state.blitzTasks, history)[0]?.id
-        : undefined;
-    nextRound = createNextBlitzRoundState(team.id, nextBlitzTaskId);
+    const nextBlitzTaskIndex = (state.currentRound?.blitzTaskIndex ?? -1) + 1;
+    nextRound = createNextBlitzRoundState(team.id, nextBlitzTaskIndex);
     nextTimer = createTimer(getBlitzCaptainTimerDuration())
   }
   useGameStore.getState().setState({

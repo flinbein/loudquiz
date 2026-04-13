@@ -1,19 +1,10 @@
 import { useGameStore } from "@/store/gameStore";
 import { canBeCaptain, getRandomCaptain } from "@/logic/captain";
 import {
-  createNextBlitzRoundState,
-  createNextRoundState,
-  getNextPhaseAfterReview,
-  getTotalQuestionCount,
-  getUnplayedBlitzTasks,
-} from "@/logic/phaseTransitions";
-import {
   createTimer,
   getBlitzActiveTimerDuration,
   getBlitzAnswerTimerDuration,
-  getBlitzCaptainTimerDuration,
   getBlitzPickTimerDuration,
-  getCaptainTimerDuration,
 } from "@/logic/timer";
 import { checkBlitzAnswer } from "@/logic/blitzCheck";
 import {
@@ -102,9 +93,9 @@ export function selectBlitzItem(itemIndex: number): void {
   const state = useGameStore.getState();
   if (state.phase !== "blitz-pick") return;
   const round = state.currentRound;
-  if (!round || round.type !== "blitz" || !round.blitzTaskId) return;
+  if (!round || round.type !== "blitz" || round?.blitzTaskIndex == null) return;
 
-  const task = state.blitzTasks.find((t) => t.id === round.blitzTaskId);
+  const task = state.blitzTasks[round.blitzTaskIndex];
   if (!task) return;
   if (itemIndex < 0 || itemIndex >= task.items.length) return;
 
@@ -136,17 +127,31 @@ export function setBlitzPlayerReady(playerName: string): void {
   const allReady = teamPlayers.every((p) => p.ready);
 
   if (allReady) {
-    const respondersCount = teamPlayers.length - 1;
-    const activeTimer = createTimer(getBlitzActiveTimerDuration(respondersCount));
-    useGameStore.getState().setState({
-      phase: "blitz-active",
-      players,
-      timer: activeTimer,
-      currentRound: { ...round, activeTimerStartedAt: activeTimer.startedAt },
-    });
+    startBlitzTask();
   } else {
     useGameStore.getState().setState({ players });
   }
+}
+
+export function startBlitzTask(){
+  const state = useGameStore.getState();
+  if (state.phase !== "blitz-ready" || !state.currentRound) return;
+  
+  const players = state.players.map((p) =>
+    (p.team === state.currentRound?.teamId && !p.ready) ? { ...p, ready: true } : p,
+  );
+  const teamPlayers = players.filter((p) => p.team === state.currentRound?.teamId);
+  const respondersCount = teamPlayers.length - 1;
+  const activeTimer = createTimer(getBlitzActiveTimerDuration(respondersCount));
+  
+  useGameStore.getState().setState({
+    phase: "blitz-active",
+    players: state.players.map((p) =>
+      (p.team === state.currentRound?.teamId && !p.ready) ? { ...p, ready: true } : p,
+    ),
+    timer: activeTimer,
+    currentRound: { ...state.currentRound, activeTimerStartedAt: activeTimer.startedAt },
+  });
 }
 
 // ---------- blitz-active / blitz-answer ----------
@@ -227,7 +232,7 @@ export function getNextBlitzAnswerer(
 ): string | undefined {
   for (let i = order.length - 1; i >= 1; i--) {
     const name = order[i];
-    if (!answers[name]) return name;
+    if (!name || !answers[name]) return name;
   }
   return undefined;
 }
@@ -238,9 +243,9 @@ function enterBlitzReview(): void {
   const state = useGameStore.getState();
   const round = state.currentRound;
   if (!round || round.type !== "blitz") return;
-  if (!round.blitzTaskId || round.blitzItemIndex == null) return;
+  if (round.blitzTaskIndex == null || round.blitzItemIndex == null) return;
 
-  const task = state.blitzTasks.find((t) => t.id === round.blitzTaskId);
+  const task = state.blitzTasks[round.blitzTaskIndex];
   const item = task?.items[round.blitzItemIndex];
   if (!task || !item) return;
 
@@ -252,7 +257,7 @@ function enterBlitzReview(): void {
   let answererName: string | undefined;
   for (let i = 1; i < order.length; i++) {
     const name = order[i];
-    const ans = round.answers[name];
+    const ans = name ? round.answers[name] : undefined;
     if (ans && ans.text !== "") {
       answererName = name;
       break;
@@ -268,13 +273,13 @@ function enterBlitzReview(): void {
   if (answererName) {
     const answer = round.answers[answererName];
     const playerNumber = order.indexOf(answererName); // captain=0, 1,2,...
-    correct = checkBlitzAnswer(answer.text, [item.text]);
+    correct = checkBlitzAnswer(answer?.text ?? "", [item.text]);
 
     // Bonus only if answered during blitz-active (before timer expiry).
     const activeEndAt = round.activeTimerStartedAt + activeDuration;
-    const answeredInActive = answer.timestamp <= activeEndAt;
+    const answeredInActive = (answer?.timestamp ?? 0) <= activeEndAt;
     if (correct && answeredInActive) {
-      bonusTime = Math.max(0, activeEndAt - answer.timestamp);
+      bonusTime = Math.max(0, activeEndAt - (answer?.timestamp ?? 0));
       bonusTimeApplied = bonusTime > 0;
     }
     score = calculateBlitzScore(
@@ -317,15 +322,15 @@ export function confirmBlitzReview(): void {
     type: "blitz",
     teamId: round.teamId,
     captainName: round.captainName,
-    blitzTaskId: round.blitzTaskId,
+    blitzTaskIndex: round.blitzTaskIndex,
     score: round.reviewResult.score,
     jokerUsed: false,
   };
 
-  const teams = state.teams.map((t) =>
-    t.id === round.teamId
-      ? { ...t, score: t.score + round.reviewResult!.score }
-      : t,
+  const teams = state.teams.map((teamData) =>
+    teamData.id === round.teamId
+      ? { ...teamData, score: teamData.score + round.reviewResult!.score }
+      : teamData,
   );
 
   const history = [...state.history, result];
@@ -390,7 +395,7 @@ function forceBlitzCaptainAndOrder(): void {
   const others = teamPlayers.filter((p) => p.name !== captain);
   for (let i = others.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [others[i], others[j]] = [others[j], others[i]];
+    [others[i], others[j]] = [others[j]!, others[i]!];
   }
   const playerOrder = [captain, ...others.map((p) => p.name)];
 
@@ -404,9 +409,9 @@ function forceBlitzCaptainAndOrder(): void {
 function autoPickBlitzTask(): void {
   const state = useGameStore.getState();
   const round = state.currentRound;
-  if (!round || round.type !== "blitz" || !round.blitzTaskId) return;
+  if (!round || round.type !== "blitz" || !round.blitzTaskIndex) return;
 
-  const task = state.blitzTasks.find((t) => t.id === round.blitzTaskId);
+  const task = state.blitzTasks[round.blitzTaskIndex];
   if (!task || task.items.length === 0) return;
   // Pick the first item on timeout; the UI lets the captain pick any other.
   selectBlitzItem(0);

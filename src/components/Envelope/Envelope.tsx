@@ -15,9 +15,9 @@ export interface EnvelopeProps {
 }
 
 const paperClass: Record<TeamId, string> = {
-  red: styles.paperRed,
-  blue: styles.paperBlue,
-  none: styles.paperNone,
+  red: styles.paperRed!,
+  blue: styles.paperBlue!,
+  none: styles.paperNone!,
 };
 
 export function Envelope({
@@ -35,8 +35,8 @@ export function Envelope({
       className={cn(
         styles.envelope,
         {
-          [styles.open]: open,
-          [styles.active]: active
+          [styles.open!]: open,
+          [styles.active!]: active
         })
       }
       data-clickable={onClick ? "true" : undefined}

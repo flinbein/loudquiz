@@ -31,7 +31,7 @@ describe("CalibrationPopupContainer", () => {
     const switches = screen.getAllByRole("switch");
     // The last switch in the list is SharedHeadphonesRow per render order
     // (Music ▶, Signal ♪ test, Vibration test, Vibration toggle, Shared)
-    const sharedSwitch = switches[switches.length - 1];
+    const sharedSwitch = switches[switches.length - 1]!;
     await userEvent.click(sharedSwitch);
     expect(useCalibrationSettingsStore.getState().sharedHeadphones).toBe(true);
   });
@@ -40,7 +40,7 @@ describe("CalibrationPopupContainer", () => {
     act(() => useCalibrationUiStore.getState().setOpen(true));
     render(<CalibrationPopupContainer role="player" />);
     const sliders = screen.getAllByRole("slider");
-    const musicSlider = sliders[0];
+    const musicSlider = sliders[0]!;
     fireEvent.input(musicSlider, { target: { value: "40" } });
     expect(useCalibrationSettingsStore.getState().musicVolume).toBe(0.4);
   });

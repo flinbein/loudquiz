@@ -15,7 +15,7 @@ export const Reset: Story = () => {
   const [startedAt, setStartedAt] = useState(performance.now());
   return <div>
     <button type="button" onClick={() => setStartedAt(() => performance.now())}>reset (13s)</button>
-    <Timer startedAt={performance.now()} durationMs={13000} />
+    <Timer startedAt={startedAt} durationMs={13000} />
   </div>
 }
 export const PreWarning: Story = () => <Timer startedAt={performance.now()} durationMs={13000} warningTimeMs={10000}/>;

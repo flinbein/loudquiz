@@ -38,21 +38,21 @@ describe("lobby actions", () => {
       handleJoin("peer1", "Алексей");
       const state = useGameStore.getState();
       expect(state.players).toHaveLength(1);
-      expect(state.players[0].name).toBe("Алексей");
-      expect(state.players[0].emoji).toBeTruthy();
-      expect(state.players[0].online).toBe(true);
-      expect(state.players[0].ready).toBe(false);
+      expect(state.players[0]?.name).toBe("Алексей");
+      expect(state.players[0]?.emoji).toBeTruthy();
+      expect(state.players[0]?.online).toBe(true);
+      expect(state.players[0]?.ready).toBe(false);
     });
 
     it("assigns to none team in single mode", () => {
       resetStoreSingle();
       handleJoin("peer1", "Алексей");
-      expect(useGameStore.getState().players[0].team).toBe("none");
+      expect(useGameStore.getState().players[0]?.team).toBe("none");
     });
 
     it("assigns none team in dual mode", () => {
       handleJoin("peer1", "Алексей");
-      expect(useGameStore.getState().players[0].team).toBe("none");
+      expect(useGameStore.getState().players[0]?.team).toBe("none");
     });
 
     it("reconnects existing player by name", () => {
@@ -64,14 +64,14 @@ describe("lobby actions", () => {
       handleJoin("peer2", "Алексей");
       const state = useGameStore.getState();
       expect(state.players).toHaveLength(1);
-      expect(state.players[0].online).toBe(true);
+      expect(state.players[0]?.online).toBe(true);
     });
 
     it("assigns unique emojis to different players", () => {
       handleJoin("peer1", "Player1");
       handleJoin("peer2", "Player2");
       const state = useGameStore.getState();
-      expect(state.players[0].emoji).not.toBe(state.players[1].emoji);
+      expect(state.players[0]?.emoji).not.toBe(state.players[1]?.emoji);
     });
   });
 
@@ -79,7 +79,7 @@ describe("lobby actions", () => {
     it("sets player team", () => {
       handleJoin("peer1", "Алексей");
       handleSetTeam("Алексей", "red");
-      expect(useGameStore.getState().players[0].team).toBe("red");
+      expect(useGameStore.getState().players[0]?.team).toBe("red");
     });
 
     it("does not change team if player is ready", () => {
@@ -87,7 +87,7 @@ describe("lobby actions", () => {
       handleSetTeam("Алексей", "red");
       handleSetReady("Алексей", true);
       handleSetTeam("Алексей", "blue");
-      expect(useGameStore.getState().players[0].team).toBe("red");
+      expect(useGameStore.getState().players[0]?.team).toBe("red");
     });
   });
 
@@ -95,7 +95,7 @@ describe("lobby actions", () => {
     it("sets player ready state", () => {
       handleJoin("peer1", "Алексей");
       handleSetReady("Алексей", true);
-      expect(useGameStore.getState().players[0].ready).toBe(true);
+      expect(useGameStore.getState().players[0]?.ready).toBe(true);
     });
   });
 
@@ -103,9 +103,9 @@ describe("lobby actions", () => {
     it("does not change emoji if player is ready", () => {
       handleJoin("peer1", "Алексей");
       handleSetReady("Алексей", true);
-      const emoji = useGameStore.getState().players[0].emoji;
+      const emoji = useGameStore.getState().players[0]?.emoji;
       handleChangeEmoji("Алексей");
-      expect(useGameStore.getState().players[0].emoji).toBe(emoji);
+      expect(useGameStore.getState().players[0]?.emoji).toBe(emoji);
     });
   });
 
@@ -116,7 +116,7 @@ describe("lobby actions", () => {
       kickPlayer("Алексей");
       const state = useGameStore.getState();
       expect(state.players).toHaveLength(1);
-      expect(state.players[0].name).toBe("Маша");
+      expect(state.players[0]?.name).toBe("Маша");
     });
   });
 
@@ -124,7 +124,7 @@ describe("lobby actions", () => {
     it("moves player to another team", () => {
       handleJoin("peer1", "Алексей");
       movePlayer("Алексей", "blue");
-      expect(useGameStore.getState().players[0].team).toBe("blue");
+      expect(useGameStore.getState().players[0]?.team).toBe("blue");
     });
   });
 

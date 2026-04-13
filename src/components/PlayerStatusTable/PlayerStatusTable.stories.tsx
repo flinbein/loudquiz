@@ -57,7 +57,7 @@ export const ChangeEmoji: Story = () => {
   ])
   const toggle = (playerData: PlayerStatusRow) => {
     setPlayers(players => players.map(p => (
-      p === playerData ? {...p, emoji: emojis[(emojis.indexOf(p.emoji) + 1) % emojis.length]} : p
+      p === playerData ? {...p, emoji: emojis[(emojis.indexOf(p.emoji) + 1) % emojis.length] ?? ""} : p
     )))
   }
   return (
@@ -87,7 +87,7 @@ export const ManyPlayers: Story = () => {
   const names = ["Анна", "Борис", "Вера", "Георгий", "Дарья", "Евгений", "Жанна", "Захар", "Ирина", "Кирилл"];
   const emojis = ["👻", "🤖", "🦊", "👽", "🐙", "🎃", "🦄", "🐸", "🦋", "🐯"];
   const players: PlayerStatusRow[] = names.map((name, i) => ({
-    emoji: emojis[i],
+    emoji: emojis[i] ?? "",
     name: name,
     team: i < 5 ? "red" as const : "blue" as const,
     online: i !== 4 && i !== 9,
@@ -106,7 +106,7 @@ export const Interactive: Story = () => {
     const names = ["Анна", "Борис", "Вера", "Георгий", "Дарья", "Евгений", "Жанна", "Захар", "Ирина", "Кирилл"].sort(() => Math.random() - 0.5);
     const emojis = ["👻", "🤖", "🦊", "👽", "🐙", "🎃", "🦄", "🐸", "🦋", "🐯"];
     const players: PlayerStatusRow[] = names.map((name, i) => ({
-      emoji: emojis[i],
+      emoji: emojis[i] ?? "",
       name: name,
       team: (["red", "blue", "none"] as const)[Math.floor(Math.random() * 3)],
       online: Math.random() > 0.2,

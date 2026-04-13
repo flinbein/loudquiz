@@ -18,7 +18,7 @@ export function TeamScore({ teams }: TeamScoreProps) {
           className={cn(
             styles.team,
             styles[team.id],
-            { [styles.leader]: hasLeader && team.score === maxScore },
+            { [styles.leader!]: hasLeader && team.score === maxScore },
           )}
         >
           <span className={styles.score}>{team.score}</span>

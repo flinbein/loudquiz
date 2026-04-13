@@ -18,7 +18,7 @@ export const Default: Story = () => (
 
 export const Hidden: Story = () => {
   const [hidden, setHidden] = useState(true)
-  return <div style={{ width: 400 }}>
+  return <div style={{ width: 400, marginLeft: 400 }}>
     <TaskCard
       topic="Животные"
       player={redCaptain}

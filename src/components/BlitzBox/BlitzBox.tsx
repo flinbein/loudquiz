@@ -9,9 +9,9 @@ export interface BlitzBoxProps {
 }
 
 const textColorClass: Record<TeamId, string> = {
-  red: styles.textRed,
-  blue: styles.textBlue,
-  none: styles.textNone,
+  red: styles.textRed!,
+  blue: styles.textBlue!,
+  none: styles.textNone!,
 };
 
 export function BlitzBox({

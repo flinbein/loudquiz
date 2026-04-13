@@ -25,9 +25,9 @@ export function CircleTimer({ startedAt, durationMs, warningTimeMs = 10000, chil
     let rafId: number;
     function render(progress: number, warning: boolean){
       if (warning) {
-        containerRef.current?.classList?.add(styles.warning);
+        containerRef.current?.classList?.add(styles.warning!);
       } else {
-        containerRef.current?.classList?.remove(styles.warning);
+        containerRef.current?.classList?.remove(styles.warning!);
       }
       circleRef.current?.setAttribute(
         "stroke-dashoffset",

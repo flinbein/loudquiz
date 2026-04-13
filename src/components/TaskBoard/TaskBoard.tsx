@@ -1,7 +1,7 @@
 import type { TeamId, PlayerDisplay } from "@/types/game";
 import { Envelope } from "@/components/Envelope/Envelope";
 import { BlitzBox } from "@/components/BlitzBox/BlitzBox";
-import styles from "./TaskView.module.css";
+import styles from "./TaskBoard.module.css";
 
 export interface TaskViewQuestion {
   open: boolean;
@@ -31,7 +31,7 @@ export interface TaskViewProps {
   onSelectBlitz?: (blitzIndex: number) => void;
 }
 
-export function TaskView({
+export function TaskBoard({
   topics,
   blitzRounds,
   onSelectQuestion,

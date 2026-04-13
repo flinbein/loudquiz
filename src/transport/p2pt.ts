@@ -25,6 +25,7 @@ export type P2PTRole = "host" | "player";
 
 export function createP2PTTransport(role: P2PTRole): Transport {
   let p2pt: P2PT | null = null;
+  let destroyed = false;
   const peers = new Map<string, Peer>();
 
   let messageHandler: ((peerId: string, message: Message) => void) | null = null;
@@ -44,7 +45,7 @@ export function createP2PTTransport(role: P2PTRole): Transport {
     if (!p2pt) return;
 
     p2pt.on("peerconnect", (peer: Peer) => {
-      if (peers.has(peer.id)) return; // deduplicate
+      if (destroyed || peers.has(peer.id)) return;
       peers.set(peer.id, peer);
       console.log(`${tag()} peer connected: ${peer.id}`);
 
@@ -66,7 +67,7 @@ export function createP2PTTransport(role: P2PTRole): Transport {
     });
 
     p2pt.on("peerclose", (peer: Peer) => {
-      if (!peers.has(peer.id)) return;
+      if (destroyed || !peers.has(peer.id)) return;
       peers.delete(peer.id);
       const timer = pendingPeerTimers.get(peer.id);
       if (timer) {
@@ -78,6 +79,7 @@ export function createP2PTTransport(role: P2PTRole): Transport {
     });
 
     p2pt.on("msg", (peer: Peer, msg: unknown) => {
+      if (destroyed) return;
       const text = typeof msg === "string" ? msg : String(msg);
       try {
         const message = JSON.parse(text) as Message;
@@ -109,16 +111,44 @@ export function createP2PTTransport(role: P2PTRole): Transport {
     });
   }
 
+  // Periodically re-announce to discover peers that joined/refreshed after us
+  let reannounceTimer: ReturnType<typeof setInterval> | null = null;
+  let startTimer: ReturnType<typeof setTimeout> | null = null;
+  const REANNOUNCE_INTERVAL = 10_000; // 10s
+
   function initP2PT(roomId: string) {
     const trackers = getTrackers();
     const identifier = `loud-quiz:${roomId}`;
     p2pt = new P2PT(trackers, identifier);
     console.log(`${tag()} created with identifier: ${identifier}`);
     setupListeners();
-    p2pt.start();
+
+    // Defer start() so React strict mode cleanup can fire before any network
+    // activity. Without this, the first (ghost) p2pt instance connects to
+    // trackers, registers a stale peer ID, and pollutes peer discovery.
+    startTimer = setTimeout(() => {
+      startTimer = null;
+      if (destroyed || !p2pt) return;
+      p2pt.start();
+
+      reannounceTimer = setInterval(() => {
+        if (p2pt) {
+          p2pt.requestMorePeers();
+        }
+      }, REANNOUNCE_INTERVAL);
+    }, 0);
   }
 
   function cleanup() {
+    destroyed = true;
+    if (startTimer) {
+      clearTimeout(startTimer);
+      startTimer = null;
+    }
+    if (reannounceTimer) {
+      clearInterval(reannounceTimer);
+      reannounceTimer = null;
+    }
     for (const timer of pendingPeerTimers.values()) {
       clearTimeout(timer);
     }

@@ -297,7 +297,6 @@
 **Цель:** все три транспорта, конструктор вопросов, финальная полировка.
 
 - [ ] `src/transport/p2pt.ts` — WebRTC через p2pt, префикс `p`, reconnection
-- [ ] `src/transport/varhub.ts` — WebSocket через @flinbein/varhub-web-client, префикс `v`, ws-type room, обработка таймаута
 - [ ] `ConstructorPage` — ручной ввод тем/вопросов/блиц, AI-генерация, проверка ответов, экспорт JSON
 - [ ] `RulesPage` — статическая страница с правилами
 - [ ] WakeLock API

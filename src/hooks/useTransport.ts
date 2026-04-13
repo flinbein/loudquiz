@@ -310,24 +310,30 @@ function usePlayerTransport(
       useGameStore.getState().setState(message.state);
     });
 
-    transport.onPeerConnect(async () => {
-      try {
-        const offset = await runSyncHandshake(transport, registerSync, unregisterSync);
-        useClockSyncStore.getState().setOffset(offset);
-        transport.broadcast({
-          type: "player-action",
-          action: { kind: "join", name: playerName },
-        });
-        if (mountedRef.current) {
-          setConnected(true);
-          setReconnecting(false);
-          setError(null);
-        }
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
+    transport.onPeerConnect(() => {
+      // Send join immediately — don't block on clock sync
+      transport.broadcast({
+        type: "player-action",
+        action: { kind: "join", name: playerName },
+      });
+      if (mountedRef.current) {
+        setConnected(true);
+        setReconnecting(false);
+        setError(null);
       }
+
+      // Run clock sync in the background after a short delay
+      // (gives p2pt data channel time to stabilize both directions)
+      setTimeout(() => {
+        if (!mountedRef.current) return;
+        runSyncHandshake(transport, registerSync, unregisterSync)
+          .then((offset) => {
+            useClockSyncStore.getState().setOffset(offset);
+          })
+          .catch((err) => {
+            console.warn("clock sync failed, will retry on resync:", err);
+          });
+      }, 500);
     });
 
     transport.onPeerDisconnect(() => {

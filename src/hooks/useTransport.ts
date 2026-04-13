@@ -8,6 +8,12 @@ import type {
 import { createTransport } from "@/transport/factory";
 import { useGameStore } from "@/store/gameStore";
 import { filterStateForPlayer } from "@/store/stateFilter";
+import {
+  saveGameState,
+  loadGameState,
+  loadRoomId,
+  saveRoomId,
+} from "@/persistence/sessionPersistence";
 import { useClockSyncStore } from "@/store/clockSyncStore";
 import { runSyncHandshake } from "@/transport/clockSync";
 
@@ -84,20 +90,23 @@ function useHostTransport(): UseTransportHostResult {
     }
   }, []);
 
-  // Subscribe to store changes and broadcast
+  // Subscribe to store changes: broadcast + auto-save
   useEffect(() => {
     return useGameStore.subscribe(() => {
       broadcastState();
+      // Auto-save state for host reconnection
+      const { setState: _set, resetGame: _reset, ...state } =
+        useGameStore.getState();
+      saveGameState(state);
     });
   }, [broadcastState]);
 
-  // Create room and set up listeners
+  // Create or rejoin room
   useEffect(() => {
-    const transport = createTransport("b-init");
+    const transport = createTransport("", "host");
     transportRef.current = transport;
 
     transport.onPeerConnect(() => {
-      // Player will identify themselves via join action
       setConnected(true);
     });
 
@@ -115,9 +124,6 @@ function useHostTransport(): UseTransportHostResult {
     });
 
     transport.onMessage((peerId, message: Message) => {
-      // Clock-sync handshake: respond synchronously with our current
-      // performance.now(). Capture BEFORE any other work to minimize the
-      // server-side contribution to the round-trip time the player measures.
       if (message.type === "sync-request") {
         transport.send(peerId, {
           type: "sync-response",
@@ -132,24 +138,57 @@ function useHostTransport(): UseTransportHostResult {
       const { action } = message;
 
       if (action.kind === "join") {
-        // Map peer to player name
+        // Duplicate name handling: if another peer has this name, remove old mapping
+        for (const [existingPeerId, existingName] of peersRef.current) {
+          if (existingName === action.name && existingPeerId !== peerId) {
+            peersRef.current.delete(existingPeerId);
+            break;
+          }
+        }
         peersRef.current.set(peerId, action.name);
       }
 
-      // Emit action for game logic to handle
       hostActionHandler?.(peerId, action);
     });
 
-    transport
-      .createRoom()
-      .then((info) => {
-        setRoomId(info.roomId);
-        setJoinUrl(info.joinUrl);
-        setConnected(true);
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : String(err));
-      });
+    // Check for saved roomId (reconnection)
+    const savedRoomId = loadRoomId();
+    const savedState = loadGameState();
+
+    if (savedRoomId && savedState) {
+      // Reconnection: restore state, mark all players offline, rejoin same room
+      const { setState: _set, resetGame: _reset, ...cleanState } = useGameStore.getState();
+      // Only restore if current state is fresh (lobby phase = just initialized)
+      if (cleanState.phase === "lobby" && cleanState.players.length === 0) {
+        useGameStore.getState().setState({
+          ...savedState,
+          players: savedState.players.map((p) => ({ ...p, online: false })),
+        });
+      }
+      transport
+        .joinRoom(savedRoomId)
+        .then(() => {
+          setRoomId(savedRoomId);
+          setJoinUrl(`${window.location.origin}/play?room=${savedRoomId}`);
+          setConnected(true);
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : String(err));
+        });
+    } else {
+      // Fresh start: create new room
+      transport
+        .createRoom()
+        .then((info) => {
+          setRoomId(info.roomId);
+          setJoinUrl(info.joinUrl);
+          saveRoomId(info.roomId);
+          setConnected(true);
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : String(err));
+        });
+    }
 
     return () => {
       transport.close();
@@ -211,7 +250,7 @@ function usePlayerTransport(
   }, []);
 
   useEffect(() => {
-    const transport = createTransport(roomId);
+    const transport = createTransport(roomId, "player");
     transportRef.current = transport;
 
     // Pending sync-response waiters, keyed by nonce. runSyncHandshake owns the

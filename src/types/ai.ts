@@ -100,3 +100,26 @@ export interface AnswerCheckResult {
   }>;
   comment: string;
 }
+
+// AI errors
+
+export class AINetworkError extends Error {
+  constructor(
+    message: string,
+    public readonly status?: number,
+    public readonly body?: string,
+  ) {
+    super(message);
+    this.name = "AINetworkError";
+  }
+}
+
+export class AIParseError extends Error {
+  constructor(
+    message: string,
+    public readonly lastContent?: string,
+  ) {
+    super(message);
+    this.name = "AIParseError";
+  }
+}

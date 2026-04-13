@@ -5,7 +5,7 @@
 Полный ребилд проекта LoudQuiz на ветке v2. Вся старая кодовая база удалена, есть подробная спецификация (46 файлов в `spec/`). Цель — создать мультиплеерную party-quiz игру, где игроки в наушниках с музыкой угадывают задания, которые капитан объясняет жестами.
 
 Стек: React + TypeScript + Vite, CSS Modules, Zustand, i18next, OpenRouter API.
-Транспорт: Broadcast Channel (dev) → p2pt (WebRTC) → VarHub (WebSocket).
+Транспорт: Broadcast Channel (dev) → p2pt (WebRTC).
 
 ## Правила
 
@@ -246,17 +246,61 @@
 
 ---
 
-## Фаза 8: Финал + Dual Mode + Полный цикл игры [не готово]
+## Фаза 8: AI-клиент + Конструктор вопросов [не готово]
 
-**Цель:** игра проходится от начала до конца в single и dual mode (manual). Финальный экран со статистикой.
+**Цель:** AI-модуль (OpenRouter API) и полнофункциональный конструктор вопросов с ручным и AI-режимами.
+
+### 8.1 AI-клиент
+
+- [x] `src/ai/client.ts` — обёртка OpenRouter API: chat completions, structured output (json_schema), retry до 3 попыток при невалидном JSON, обработка ошибок (сеть, таймаут), модель `google/gemini-2.0-flash-001`
+- [x] `src/ai/topicGeneration.ts` — system/user prompt по спеке, `generateTopics(input: TopicGenerationInput): Promise<TopicGenerationResult>`
+- [x] `src/ai/questionGeneration.ts` — system/user prompt по спеке, `generateQuestions(input: QuestionGenerationInput): Promise<QuestionGenerationResult>`
+- [x] `src/ai/blitzGeneration.ts` — system/user prompt по спеке, `generateBlitzTasks(input: BlitzGenerationInput): Promise<BlitzGenerationResult>`
+- [x] `src/ai/answerCheck.ts` — system/user prompt по спеке, `checkAnswers(input: AnswerCheckInput): Promise<AnswerCheckResult>`
+
+### 8.2 Конструктор — ручной режим
+
+- [ ] `ConstructorPage` — основной layout: список тем (слева), редактор выбранной темы (центр), блиц-задания (внизу), toolbar (экспорт/импорт JSON)
+- [ ] Ручной ввод тем: создание/удаление/переименование
+- [ ] Ручной ввод вопросов: текст + сложность (100–200, кратно 10), добавление/удаление
+- [ ] Ручной ввод блиц-заданий: текст + сложность (200–400, кратно 10), группировка по раундам (3–5 items)
+- [ ] Экспорт JSON (QuestionsFile), импорт JSON с валидацией
+- [ ] i18n ключи `constructor.*` (ru, en)
+
+### 8.3 Конструктор — AI-режим
+
+- [ ] Настройка API key (из localStorage, поле ввода с валидацией)
+- [ ] AI-генерация тем: многострочный ввод предложений, количество тем N, кнопка «Сгенерировать», preview результата с reason, кнопка «Применить»
+- [ ] AI-генерация вопросов: указание кол-ва игроков и вопросов на тему, генерация с acceptedAnswers, «Применить» заполняет формы
+- [ ] AI-генерация блиц-заданий: кол-во раундов и заданий, pastTasks из localStorage, «Применить»
+- [ ] Кнопка «Проверить ответы» у каждого вопроса: попап с полем ответов (предзаполнение из acceptedAnswers), AI проверяет, отображает accepted/group/note/comment
+- [ ] Обработка ошибок: текст ошибки + кнопка «Повторить» для всех AI-операций
+- [ ] Лоадеры на время AI-запросов
+
+**Ключевые спеки:** `spec/tools/constructor.md`, `spec/systems/ai/*.md`
+
+**Проверка:**
+- Unit-тесты AI client: mock fetch, формирование промптов, retry при невалидном JSON, ошибки сети
+- Unit-тесты каждого AI-модуля: корректность prompt, парсинг результата
+- Ручной тест: конструктор — ручное создание тем/вопросов/блиц, экспорт JSON, импорт обратно
+- Ручной тест: конструктор — AI-генерация тем → вопросов → блиц-заданий, проверка ответов
+- `tsc --noEmit` без ошибок, `npm test` проходит, `vite build` успешен
+
+---
+
+## Фаза 9: Финал + Dual Mode + Полный цикл игры [не готово]
+
+**Цель:** игра проходится от начала до конца в single и dual mode. Финальный экран со статистикой. AI-review в раундах.
 
 - [ ] `src/logic/statistics.ts` — лучший игрок, лучший капитан, самый быстрый
 - [ ] `HostFinale` — командные очки, TaskView с очками по заданиям, три номинации с аватарами
-- [ ] `PlayerFinale` — очки, сообщение победы/благодарности, «Играть снова» (AI mode)
+- [ ] `PlayerFinale` — очки, сообщение победы/благодарности, «Играть снова»
 - [ ] Dual mode: чередование команд, равное число раундов/блицов, пропуск нечётного задания
 - [ ] State filtering для dual: противник видит текст вопроса, активная команда (кроме капитана) — нет
+- [ ] AI-review в round-review: лоадер, автозаполнение через `answerCheck`, кнопка «Оспорить» → ручная оценка
+- [ ] `HostTopicsSuggest` / `PlayerTopicsSuggest` — фаза topics-suggest для AI-режима в gameplay
 - [ ] Reconnection: offline-статус, переподключение по имени, ресинк состояния
-- [ ] Полный game loop: lobby → round × N → blitz × N → finale → «Играть снова»
+- [ ] Полный game loop: lobby → (topics-suggest) → round × N → blitz × N → finale → «Играть снова»
 
 **Проверка:**
 - Unit-тесты statistics
@@ -264,54 +308,25 @@
 - E2E: полная игра (3 раунда + 2 блица, single, manual) от лобби до финала
 - E2E: полная игра dual mode — команды чередуются
 - E2E: reconnection — игрок закрывает вкладку, открывает, переподключается
+- E2E: AI-review + dispute flow
 - Ручной тест: финальная статистика корректна
 
 ---
 
-## Фаза 9: AI-интеграция [не готово]
+## Фаза 10: Полировка [не готово]
 
-**Цель:** AI-режим от начала до конца: предложение тем, генерация вопросов, проверка ответов.
+**Цель:** все три транспорта, страница правил, финальная полировка.
 
-- [ ] `src/ai/client.ts` — обёртка OpenRouter API, structured output, retry, обработка ошибок
-- [ ] `src/ai/topicGeneration.ts` — генерация тем из предложений игроков
-- [ ] `src/ai/questionGeneration.ts` — генерация вопросов по темам
-- [ ] `src/ai/blitzGeneration.ts` — генерация блиц-заданий
-- [ ] `src/ai/answerCheck.ts` — проверка ответов AI
-- [ ] `HostTopicsSuggest` — таймер 60с, список предложений, AI-выбор, ручное редактирование, preview TaskView
-- [ ] `PlayerTopicsSuggest` — ввод тем, «Больше нет идей», preview TaskView
-- [ ] AI-review в round-review: лоадер, автозаполнение, кнопка «Оспорить» → ручная оценка
-- [ ] GameSetup: прошлые вопросы из localStorage, валидация API key
-
-**Ключевые спеки:** `spec/systems/ai/*.md`, `spec/ui/host-screens/topics-suggest.md`, `spec/ui/player-screens/topics-suggest.md`
-
-**Проверка:**
-- Unit-тесты AI client: mock fetch, формирование промптов, retry, ошибки
-- E2E: полная AI-игра: лобби → topics suggest → раунды → блиц → финал
-- E2E: dispute flow
-- Ручной тест: прошлые вопросы исключаются при «Играть снова»
-
----
-
-## Фаза 10: Транспорты (p2pt + VarHub) + Конструктор + Полировка [не готово]
-
-**Цель:** все три транспорта, конструктор вопросов, финальная полировка.
-
-- [ ] `src/transport/p2pt.ts` — WebRTC через p2pt, префикс `p`, reconnection
-- [ ] `ConstructorPage` — ручной ввод тем/вопросов/блиц, AI-генерация, проверка ответов, экспорт JSON
 - [ ] `RulesPage` — статическая страница с правилами
 - [ ] WakeLock API
 - [ ] Fullscreen API
+- [ ] ThemeToggle, FullscreenButton
 - [ ] i18n: все ключи переведены на ru и en
 - [ ] Responsive: проверка на min-разрешениях (1366×768 host, 375×600 player)
-- [ ] Выбор транспорта в GameSetup
 
 **Проверка:**
 - Тест p2pt: обмен сообщениями между пирами
-- Тест VarHub: подключение к VarHub-серверу
 - Ручной тест: игра на двух устройствах через p2pt
-- Ручной тест: игра через VarHub
-- E2E: конструктор — ручное создание, экспорт JSON, импорт в GameSetup
-- E2E: конструктор — AI-генерация
 - i18n: все ключи имеют переводы на оба языка
 
 ---
@@ -325,9 +340,9 @@
   │     │     └── Фаза 5 (Setup + Lobby)
   │     │           └── Фаза 6 (Раунды)
   │     │                 └── Фаза 7 (Аудио + Блиц)
-  │     │                       └── Фаза 8 (Финал + Dual + Полный цикл)
-  │     │                             └── Фаза 9 (AI)
-  │     │                                   └── Фаза 10 (Транспорты + Конструктор)
+  │     │                       └── Фаза 8 (AI + Конструктор)
+  │     │                             └── Фаза 9 (Финал + Dual + Полный цикл)
+  │     │                                   └── Фаза 10 (Транспорты + Полировка)
   │     │
   │     └── Фаза 4 (UI-компоненты) ← параллельно с Фазой 3
 ```

@@ -9,6 +9,7 @@ import {
   type SignalMessage,
   type WebRTCPeerManager,
 } from "./webrtcPeer";
+import { generateRoomId } from "@/utils/roomId";
 
 /** Signaling messages sent over BroadcastChannel */
 interface BcSignal {
@@ -18,12 +19,12 @@ interface BcSignal {
   signal?: SignalMessage;
 }
 
-function generateId(): string {
+function generatePeerId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
 export function createBroadcastChannelTransport(): Transport {
-  const peerId = generateId();
+  const peerId = generatePeerId();
   const tag = `[bc-transport:${peerId.slice(0, 4)}]`;
   let channel: BroadcastChannel | null = null;
   let rtc: WebRTCPeerManager | null = null;
@@ -82,9 +83,9 @@ export function createBroadcastChannelTransport(): Transport {
   }
 
   function initChannel(roomId: string) {
-    channel = new BroadcastChannel(`loudquiz-${roomId}`);
+    channel = new BroadcastChannel(`loud-quiz:${roomId}`);
     channel.addEventListener("message", handleBcMessage);
-    console.log(`${tag} signaling channel opened: loudquiz-${roomId}`);
+    console.log(`${tag} signaling channel opened: loud-quiz:${roomId}`);
   }
 
   function initRTC() {
@@ -125,7 +126,7 @@ export function createBroadcastChannelTransport(): Transport {
 
   return {
     async createRoom(): Promise<RoomInfo> {
-      const roomId = `b-${generateId()}`;
+      const roomId = generateRoomId();
       initRTC();
       initChannel(roomId);
       const joinUrl = `${window.location.origin}/play?room=${roomId}`;

@@ -227,10 +227,10 @@ describe("BroadcastChannel + WebRTC transport", () => {
     player?.close();
   });
 
-  it("creates a room with b- prefix", async () => {
+  it("creates a room with numeric 9-digit roomId", async () => {
     host = createBroadcastChannelTransport();
     const info = await host.createRoom();
-    expect(info.roomId).toMatch(/^b-/);
+    expect(info.roomId).toMatch(/^\d{9}$/);
     expect(info.joinUrl).toContain(info.roomId);
   });
 
@@ -335,34 +335,25 @@ describe("BroadcastChannel + WebRTC transport", () => {
 });
 
 describe("Transport factory", () => {
-  it("creates BroadcastChannel transport for b- prefix", async () => {
+  it("creates BroadcastChannel transport when __TRANSPORT__ is broadcast", async () => {
+    localStorage.setItem("__TRANSPORT__", "broadcast");
     const { createTransport } = await import("./factory");
     vi.stubGlobal("BroadcastChannel", MockBroadcastChannel);
     vi.stubGlobal("RTCPeerConnection", MockRTCPeerConnection);
     vi.stubGlobal("RTCSessionDescription", MockRTCSessionDescription);
     vi.stubGlobal("RTCIceCandidate", MockRTCIceCandidate);
 
-    const transport = createTransport("b-test123");
+    const transport = createTransport("123456789");
     expect(transport).toBeDefined();
     expect(transport.createRoom).toBeDefined();
     transport.close();
+    localStorage.removeItem("__TRANSPORT__");
   });
 
-  it("throws for p- prefix (not implemented)", async () => {
+  it("throws for p2pt transport (not yet implemented)", async () => {
+    localStorage.removeItem("__TRANSPORT__");
     const { createTransport } = await import("./factory");
-    expect(() => createTransport("p-test123")).toThrow("not implemented");
-  });
-
-  it("throws for v- prefix (not implemented)", async () => {
-    const { createTransport } = await import("./factory");
-    expect(() => createTransport("v-test123")).toThrow("not implemented");
-  });
-
-  it("throws for unknown prefix", async () => {
-    const { createTransport } = await import("./factory");
-    expect(() => createTransport("x-test123")).toThrow(
-      "Unknown transport prefix",
-    );
+    expect(() => createTransport("123456789")).toThrow("not implemented");
   });
 });
 

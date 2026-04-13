@@ -34,19 +34,19 @@ describe("checkAnswers", () => {
     await checkAnswers("key", INPUT, "ru");
 
     expect(mockChat).toHaveBeenCalledOnce();
-    const opts = mockChat.mock.calls[0][0];
-    expect(opts.messages[0].content).toContain("quiz judge");
-    expect(opts.messages[0].content).toContain("ru");
-    expect(opts.messages[1].content).toContain("Name a planet");
-    expect(opts.messages[1].content).toContain("Alice");
-    expect(opts.messages[1].content).toContain("Mars");
+    const opts = mockChat.mock.calls[0]![0];
+    expect(opts.messages[0]!.content).toContain("quiz judge");
+    expect(opts.messages[0]!.content).toContain("ru");
+    expect(opts.messages[1]!.content).toContain("Name a planet");
+    expect(opts.messages[1]!.content).toContain("Alice");
+    expect(opts.messages[1]!.content).toContain("Mars");
     expect(opts.schema.name).toBe("answer_check");
   });
 
   it("forwards model option", async () => {
     await checkAnswers("key", INPUT, "en", "custom/model");
 
-    expect(mockChat.mock.calls[0][0].model).toBe("custom/model");
+    expect(mockChat.mock.calls[0]![0].model).toBe("custom/model");
   });
 
   it("returns chatCompletionJSON result", async () => {

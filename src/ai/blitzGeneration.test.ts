@@ -30,23 +30,23 @@ describe("generateBlitzTasks", () => {
     await generateBlitzTasks("key", INPUT, "ru");
 
     expect(mockChat).toHaveBeenCalledOnce();
-    const opts = mockChat.mock.calls[0][0];
-    expect(opts.messages[0].content).toContain("4 items");
-    expect(opts.messages[0].content).toContain("2 blitz rounds");
-    expect(opts.messages[0].content).toContain("ru");
-    expect(opts.messages[1].content).toContain("Apple");
+    const opts = mockChat.mock.calls[0]![0];
+    expect(opts.messages[0]!.content).toContain("4 items");
+    expect(opts.messages[0]!.content).toContain("2 blitz rounds");
+    expect(opts.messages[0]!.content).toContain("ru");
+    expect(opts.messages[1]!.content).toContain("Apple");
     expect(opts.schema.name).toBe("blitz_generation");
   });
 
   it("forwards model option", async () => {
     await generateBlitzTasks("key", INPUT, "en", "custom/model");
 
-    expect(mockChat.mock.calls[0][0].model).toBe("custom/model");
+    expect(mockChat.mock.calls[0]![0].model).toBe("custom/model");
   });
 
   it("returns chatCompletionJSON result", async () => {
     const result = await generateBlitzTasks("key", INPUT, "ru");
 
-    expect(result.rounds[0].items[0].text).toBe("Cat");
+    expect(result.rounds[0]!.items[0]!.text).toBe("Cat");
   });
 });

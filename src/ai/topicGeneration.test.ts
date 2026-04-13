@@ -34,23 +34,23 @@ describe("generateTopics", () => {
     await generateTopics("key", INPUT, "ru");
 
     expect(mockChat).toHaveBeenCalledOnce();
-    const opts = mockChat.mock.calls[0][0];
+    const opts = mockChat.mock.calls[0]![0];
     expect(opts.apiKey).toBe("key");
     expect(opts.messages).toHaveLength(2);
-    expect(opts.messages[0].role).toBe("system");
-    expect(opts.messages[0].content).toContain("2 topics");
-    expect(opts.messages[0].content).toContain("ru");
-    expect(opts.messages[1].role).toBe("user");
-    expect(opts.messages[1].content).toContain("Alice");
-    expect(opts.messages[1].content).toContain("Movies");
-    expect(opts.messages[1].content).toContain("History");
+    expect(opts.messages[0]!.role).toBe("system");
+    expect(opts.messages[0]!.content).toContain("2 topics");
+    expect(opts.messages[0]!.content).toContain("ru");
+    expect(opts.messages[1]!.role).toBe("user");
+    expect(opts.messages[1]!.content).toContain("Alice");
+    expect(opts.messages[1]!.content).toContain("Movies");
+    expect(opts.messages[1]!.content).toContain("History");
     expect(opts.schema.name).toBe("topic_generation");
   });
 
   it("forwards model option", async () => {
     await generateTopics("key", INPUT, "en", "custom/model");
 
-    const opts = mockChat.mock.calls[0][0];
+    const opts = mockChat.mock.calls[0]![0];
     expect(opts.model).toBe("custom/model");
   });
 
@@ -58,6 +58,6 @@ describe("generateTopics", () => {
     const result = await generateTopics("key", INPUT, "ru");
 
     expect(result.topics).toHaveLength(2);
-    expect(result.topics[0].name).toBe("Movies");
+    expect(result.topics[0]!.name).toBe("Movies");
   });
 });

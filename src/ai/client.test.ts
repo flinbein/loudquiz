@@ -45,7 +45,7 @@ describe("chatCompletionJSON", () => {
       model: "custom/model",
     });
 
-    const [url, init] = vi.mocked(fetch).mock.calls[0];
+    const [url, init] = vi.mocked(fetch).mock.calls[0]!;
     expect(url).toBe("https://openrouter.ai/api/v1/chat/completions");
     const headers = init!.headers as Record<string, string>;
     expect(headers["Authorization"]).toBe("Bearer test-key");
@@ -67,7 +67,7 @@ describe("chatCompletionJSON", () => {
       schema: SCHEMA,
     });
 
-    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]!.body as string);
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0]![1]!.body as string);
     expect(body.model).toBe("google/gemini-2.0-flash-001");
   });
 

@@ -5,7 +5,8 @@
   "home": {
     "newGame": "New Game",
     "constructor": "Question Editor",
-    "rules": "Rules"
+    "rules": "Rules",
+    "joinGame": "Join Game"
   },
   "constructor": {
     "title": "Question Editor"
@@ -14,7 +15,12 @@
     "title": "Game Rules"
   },
   "play": {
-    "title": "Game"
+    "title": "Game",
+    "roomCode": "Room code",
+    "connectionError": "Connection error",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "reconnecting": "Reconnecting..."
   },
   "setup": {
     "title": "New Game",

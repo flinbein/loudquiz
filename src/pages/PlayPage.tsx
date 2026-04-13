@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { isHost } from "@/persistence/sessionPersistence";
 import { getPlayerName, setPlayerName } from "@/persistence/localPersistence";
+import { parseRoomId, formatRoomId } from "@/utils/roomId";
 import { useTransport, onHostAction } from "@/hooks/useTransport";
 import { useAudio } from "@/hooks/useAudio";
 import { usePhase } from "@/store/selectors";
@@ -36,19 +37,14 @@ import {
 import styles from "./PlayPage.module.css";
 
 export function PlayPage() {
-  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const roomId = searchParams.get("room");
+  const roomIdFromUrl = searchParams.get("room");
 
   if (isHost()) {
     return <HostPlay />;
   }
 
-  if (!roomId) {
-    return <div>{t("play.title")}: no room specified</div>;
-  }
-
-  return <PlayerPlay roomId={roomId} />;
+  return <PlayerPlay roomIdFromUrl={roomIdFromUrl} />;
 }
 
 function HostPlay() {
@@ -154,53 +150,91 @@ function HostPlay() {
   );
 }
 
-function PlayerPlay({ roomId }: { roomId: string }) {
+function PlayerPlay({ roomIdFromUrl }: { roomIdFromUrl: string | null }) {
   const [name, setName] = useState(() => getPlayerName());
-  const [joined, setJoined] = useState(false);
+  const [roomInput, setRoomInput] = useState(() => {
+    if (roomIdFromUrl) return roomIdFromUrl;
+    return sessionStorage.getItem("loud-quiz-player-room") ?? "";
+  });
+  const [joined, setJoined] = useState(() => {
+    const savedRoom = sessionStorage.getItem("loud-quiz-player-room");
+    const savedName = getPlayerName();
+    return !!(savedRoom && savedName && !roomIdFromUrl);
+  });
 
-  if (!joined) {
-    return (
-      <PlayerNameEntry
-        name={name}
-        onNameChange={setName}
-        onJoin={() => {
-          setPlayerName(name);
-          setJoined(true);
-        }}
-      />
-    );
+  const roomId = parseRoomId(roomInput);
+  const canJoin = roomId.length === 9 && name.trim().length > 0;
+
+  if (joined && roomId.length === 9) {
+    return <PlayerPlayConnected roomId={roomId} playerName={name} />;
   }
 
-  return <PlayerPlayConnected roomId={roomId} playerName={name} />;
+  return (
+    <PlayerEntryForm
+      name={name}
+      onNameChange={setName}
+      roomInput={roomInput}
+      onRoomInputChange={setRoomInput}
+      roomLocked={!!roomIdFromUrl}
+      canJoin={canJoin}
+      onJoin={() => {
+        setPlayerName(name);
+        setJoined(true);
+      }}
+    />
+  );
 }
 
-function PlayerNameEntry({
+function PlayerEntryForm({
   name,
   onNameChange,
+  roomInput,
+  onRoomInputChange,
+  roomLocked,
+  canJoin,
   onJoin,
 }: {
   name: string;
   onNameChange: (name: string) => void;
+  roomInput: string;
+  onRoomInputChange: (value: string) => void;
+  roomLocked: boolean;
+  canJoin: boolean;
   onJoin: () => void;
 }) {
   const { t } = useTranslation();
+
+  function handleRoomInput(value: string) {
+    const digits = value.replace(/\D/g, "").slice(0, 9);
+    onRoomInputChange(digits);
+  }
+
   return (
     <div className={styles.nameEntry}>
       <h2 className={styles.nameTitle}>Loud Quiz</h2>
       <div className={styles.nameForm}>
+        <label className={styles.nameLabel}>{t("play.roomCode")}</label>
+        <input
+          className={`${styles.nameInput} ${styles.roomInput}`}
+          value={formatRoomId(parseRoomId(roomInput))}
+          onChange={(e) => handleRoomInput(e.target.value)}
+          disabled={roomLocked}
+          placeholder="000-000-000"
+          inputMode="numeric"
+        />
         <label className={styles.nameLabel}>{t("lobby.enterName")}</label>
         <input
           className={styles.nameInput}
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && name.trim()) onJoin();
+            if (e.key === "Enter" && canJoin) onJoin();
           }}
-          autoFocus
+          autoFocus={!roomLocked}
         />
         <button
           className={styles.joinBtn}
-          disabled={!name.trim()}
+          disabled={!canJoin}
           onClick={onJoin}
         >
           {t("lobby.join")}
@@ -223,6 +257,20 @@ function PlayerPlayConnected({
 
   if (transport.role !== "player") return null;
 
+  if (transport.error === "cancelled") {
+    sessionStorage.removeItem("loud-quiz-player-room");
+    window.location.href = `/play${window.location.search}`;
+    return null;
+  }
+
+  if (transport.error) {
+    return <ConnectionError error={transport.error} onRetry={transport.retry} onCancel={transport.cancel} />;
+  }
+
+  if (transport.reconnecting && !transport.connected) {
+    return <ConnectionReconnecting />;
+  }
+
   return (
     <GameShell role="player" onClockResync={transport.resyncClock}>
       {phase === "lobby" && (
@@ -239,5 +287,44 @@ function PlayerPlayConnected({
         <PlayerBlitz playerName={playerName} sendAction={transport.sendAction} />
       )}
     </GameShell>
+  );
+}
+
+function ConnectionError({
+  error,
+  onRetry,
+  onCancel,
+}: {
+  error: string;
+  onRetry: () => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className={styles.nameEntry}>
+      <div className={styles.errorCard}>
+        <h3>{t("play.connectionError")}</h3>
+        <p className={styles.errorText}>{error}</p>
+        <div className={styles.errorActions}>
+          <button className={styles.joinBtn} onClick={onRetry}>
+            {t("play.retry")}
+          </button>
+          <button className={styles.cancelBtn} onClick={onCancel}>
+            {t("play.cancel")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConnectionReconnecting() {
+  const { t } = useTranslation();
+  return (
+    <div className={styles.nameEntry}>
+      <div className={styles.errorCard}>
+        <p>{t("play.reconnecting")}</p>
+      </div>
+    </div>
   );
 }

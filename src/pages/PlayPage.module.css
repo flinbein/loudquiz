@@ -54,3 +54,44 @@
   opacity: 0.5;
   cursor: default;
 }
+
+.roomInput {
+  font-family: var(--font-display);
+  letter-spacing: 0.15em;
+  text-align: center;
+}
+
+.errorCard {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.errorText {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  word-break: break-word;
+}
+
+.errorActions {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.errorActions > button {
+  flex: 1;
+}
+
+.cancelBtn {
+  padding: var(--spacing-md);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  cursor: pointer;
+}

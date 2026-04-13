@@ -9,6 +9,7 @@ export function HomePage() {
       <h1>{t("app.title")}</h1>
       <nav>
         <Link to="/setup">{t("home.newGame")}</Link>
+        <Link to="/play">{t("home.joinGame")}</Link>
         <Link to="/constructor">{t("home.constructor")}</Link>
         <Link to="/rules">{t("home.rules")}</Link>
       </nav>

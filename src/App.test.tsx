@@ -31,13 +31,14 @@ describe("App", () => {
     expect(screen.getByText("Правила игры")).toBeInTheDocument();
   });
 
-  it("renders play page", () => {
+  it("renders play page with entry form", () => {
     render(
       <MemoryRouter initialEntries={["/play"]}>
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByText(/Игра/)).toBeInTheDocument();
+    expect(screen.getByText("Loud Quiz")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("000-000-000")).toBeInTheDocument();
   });
 
   it("renders setup page", () => {

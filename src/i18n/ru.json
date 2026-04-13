@@ -5,7 +5,8 @@
   "home": {
     "newGame": "Новая игра",
     "constructor": "Редактор вопросов",
-    "rules": "Правила"
+    "rules": "Правила",
+    "joinGame": "Присоединиться"
   },
   "constructor": {
     "title": "Редактор вопросов"
@@ -14,7 +15,12 @@
     "title": "Правила игры"
   },
   "play": {
-    "title": "Игра"
+    "title": "Игра",
+    "roomCode": "Код комнаты",
+    "connectionError": "Ошибка подключения",
+    "retry": "Повторить",
+    "cancel": "Отмена",
+    "reconnecting": "Переподключение..."
   },
   "setup": {
     "title": "Новая игра",

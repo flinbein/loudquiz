@@ -49,6 +49,12 @@ interface UseTransportPlayerResult {
    * the transport is not yet ready.
    */
   resyncClock: () => Promise<number>;
+  /** Retry connection after error */
+  retry: () => void;
+  /** Cancel and return to entry screen */
+  cancel: () => void;
+  /** Whether a reconnection attempt is in progress */
+  reconnecting: boolean;
 }
 
 export type UseTransportResult =
@@ -222,10 +228,11 @@ function usePlayerTransport(
   const transportRef = useRef<Transport | null>(null);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reconnecting, setReconnecting] = useState(false);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const [connectAttempt, setConnectAttempt] = useState(0);
 
-  // Per-connection clock-sync infrastructure. Lives in a ref so resyncClock
-  // (a stable useCallback) can reach the current pendingSync map without
-  // re-binding when roomId/playerName change.
   const syncCtxRef = useRef<{
     pendingSync: Map<number, (msg: SyncResponseMessage) => void>;
     register: (nonce: number, cb: (msg: SyncResponseMessage) => void) => void;
@@ -249,12 +256,37 @@ function usePlayerTransport(
     return offset;
   }, []);
 
+  const retry = useCallback(() => {
+    setError(null);
+    setConnectAttempt((c) => c + 1);
+  }, []);
+
+  const cancel = useCallback(() => {
+    sessionStorage.removeItem("loud-quiz-player-room");
+    setError("cancelled");
+  }, []);
+
+  // Save roomId for reconnection on reload
   useEffect(() => {
+    sessionStorage.setItem("loud-quiz-player-room", roomId);
+  }, [roomId]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    // Clean up previous transport
+    if (transportRef.current) {
+      transportRef.current.close();
+      transportRef.current = null;
+    }
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+
     const transport = createTransport(roomId, "player");
     transportRef.current = transport;
 
-    // Pending sync-response waiters, keyed by nonce. runSyncHandshake owns the
-    // register/unregister lifecycle; we only route messages into this map.
     const pendingSync = new Map<number, (msg: SyncResponseMessage) => void>();
     const registerSync = (nonce: number, cb: (msg: SyncResponseMessage) => void) => {
       pendingSync.set(nonce, cb);
@@ -275,14 +307,10 @@ function usePlayerTransport(
         return;
       }
       if (message.type !== "state-update") return;
-      // Update local store with filtered state from host
       useGameStore.getState().setState(message.state);
     });
 
     transport.onPeerConnect(async () => {
-      // Keep `connected` false until the clock-sync handshake lands.
-      // The existing "Connecting…" screen naturally covers this window, so no
-      // Timer component ever mounts with an unsynced offset.
       try {
         const offset = await runSyncHandshake(transport, registerSync, unregisterSync);
         useClockSyncStore.getState().setOffset(offset);
@@ -290,32 +318,52 @@ function usePlayerTransport(
           type: "player-action",
           action: { kind: "join", name: playerName },
         });
-        setConnected(true);
+        if (mountedRef.current) {
+          setConnected(true);
+          setReconnecting(false);
+          setError(null);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
+        if (mountedRef.current) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
       }
     });
 
     transport.onPeerDisconnect(() => {
+      if (!mountedRef.current) return;
       setConnected(false);
-      // Drop any in-flight sync waiters so they don't leak into the next
-      // connect cycle. The handshake will re-run on reconnect.
       pendingSync.clear();
       useClockSyncStore.getState().reset();
+
+      // Auto-reconnect after 5 seconds
+      setReconnecting(true);
+      reconnectTimerRef.current = setTimeout(() => {
+        if (mountedRef.current) {
+          setConnectAttempt((c) => c + 1);
+        }
+      }, 5000);
     });
 
     transport.joinRoom(roomId).catch((err) => {
-      setError(err instanceof Error ? err.message : String(err));
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
     });
 
     return () => {
+      mountedRef.current = false;
       transport.close();
       transportRef.current = null;
       syncCtxRef.current = null;
       pendingSync.clear();
       useClockSyncStore.getState().reset();
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
     };
-  }, [roomId, playerName]);
+  }, [roomId, playerName, connectAttempt]);
 
-  return { role: "player", connected, error, sendAction, resyncClock };
+  return { role: "player", connected, error, sendAction, resyncClock, retry, cancel, reconnecting };
 }

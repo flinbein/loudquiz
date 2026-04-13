@@ -1,5 +1,6 @@
 import type { Transport } from "./interface";
 import { createBroadcastChannelTransport } from "./broadcastChannel";
+import { createP2PTTransport, type P2PTRole } from "./p2pt";
 
 function useBroadcastTransport(): boolean {
   try {
@@ -9,10 +10,9 @@ function useBroadcastTransport(): boolean {
   }
 }
 
-export function createTransport(_roomId: string): Transport {
+export function createTransport(_roomId: string, role: P2PTRole = "host"): Transport {
   if (useBroadcastTransport()) {
     return createBroadcastChannelTransport();
   }
-  // p2pt transport — will be implemented in Task 4
-  throw new Error("p2pt transport not implemented yet");
+  return createP2PTTransport(role);
 }

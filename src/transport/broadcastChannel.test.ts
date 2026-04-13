@@ -350,10 +350,13 @@ describe("Transport factory", () => {
     localStorage.removeItem("__TRANSPORT__");
   });
 
-  it("throws for p2pt transport (not yet implemented)", async () => {
+  it("creates p2pt transport by default", async () => {
     localStorage.removeItem("__TRANSPORT__");
-    const { createTransport } = await import("./factory");
-    expect(() => createTransport("123456789")).toThrow("not implemented");
+    const { createP2PTTransport } = await import("./p2pt");
+    const transport = createP2PTTransport("host");
+    expect(transport).toBeDefined();
+    expect(transport.createRoom).toBeDefined();
+    transport.close();
   });
 });
 

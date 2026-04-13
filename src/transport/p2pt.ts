@@ -55,6 +55,8 @@ export function createP2PTTransport(role: P2PTRole): Transport {
           if (peer.id !== hostPeerId) {
             console.log(`${tag()} pruning non-host peer: ${peer.id}`);
             peers.delete(peer.id);
+            // p2pt peers are simple-peer instances with destroy() at runtime
+            (peer as unknown as { destroy(): void }).destroy();
           }
         }, 5000);
         pendingPeerTimers.set(peer.id, timer);

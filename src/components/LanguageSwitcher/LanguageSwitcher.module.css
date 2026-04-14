@@ -1,0 +1,16 @@
+.btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: 600;
+  min-width: 36px;
+}
+
+.btn:hover {
+  background: var(--color-border);
+}

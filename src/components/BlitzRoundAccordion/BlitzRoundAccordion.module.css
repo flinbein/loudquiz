@@ -1,0 +1,65 @@
+.accordion {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: var(--spacing-xs);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.headerText { flex: 1; font-size: var(--font-size-sm); }
+.arrow { font-size: 12px; transition: transform 0.2s; }
+.arrowOpen { transform: rotate(90deg); }
+
+.deleteRoundBtn {
+  background: none; border: none; cursor: pointer;
+  color: var(--color-text-secondary); padding: var(--spacing-xs); font-size: 12px;
+}
+.deleteRoundBtn:hover { color: var(--color-error); }
+
+.body { padding: var(--spacing-sm) var(--spacing-md); }
+
+.itemRow {
+  display: flex; align-items: center; gap: var(--spacing-sm); padding: var(--spacing-xs) 0;
+}
+.itemText { flex: 1; }
+.itemDifficulty { font-size: var(--font-size-sm); color: var(--color-text-secondary); min-width: 32px; text-align: right; }
+.itemActions { display: flex; gap: var(--spacing-xs); }
+
+.actionBtn {
+  background: none; border: none; cursor: pointer;
+  color: var(--color-text-secondary); padding: var(--spacing-xs); font-size: 14px;
+}
+.actionBtn:hover { color: var(--color-primary); }
+
+.editRow { display: flex; gap: var(--spacing-sm); padding: var(--spacing-xs) 0; align-items: center; }
+
+.editInput {
+  flex: 1; padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm); background: var(--color-bg); color: var(--color-text);
+}
+
+.difficultySelect {
+  width: 70px; padding: var(--spacing-xs);
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-bg); color: var(--color-text); font-size: var(--font-size-sm);
+}
+
+.addBtn {
+  width: 100%; padding: var(--spacing-xs);
+  border: 1px dashed var(--color-border); border-radius: var(--radius-sm);
+  background: transparent; color: var(--color-text-secondary);
+  cursor: pointer; font-size: var(--font-size-sm); margin-top: var(--spacing-xs);
+}
+.addBtn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+.warning { font-size: var(--font-size-sm); color: var(--color-warning); margin-top: var(--spacing-xs); }

@@ -17,6 +17,10 @@ Tab-based single-column layout. Works on both desktop and mobile.
 | **AI** | API key, topic generation, question generation, blitz generation |
 | **JSON** | Export/import buttons (in tab bar, right-aligned) |
 
+### Tab bar extras (right-aligned)
+
+- **Language switcher**: dropdown or toggle (ru/en) that changes the app-wide i18n locale via `i18next.changeLanguage()`. Placed in the tab bar next to JSON buttons. Persisted to localStorage.
+
 ## Tab: Topics (Manual Mode)
 
 ### Topic chips
@@ -59,6 +63,13 @@ Tab-based single-column layout. Works on both desktop and mobile.
 - Text input at the top of the AI tab.
 - Value persisted to localStorage via `localPersistence.setApiKey()`.
 - Masked display (password-style) with toggle visibility.
+
+### Generation Language
+
+- Dropdown (ru/en) below API key.
+- Controls the `language` parameter passed to all AI generation functions (`generateTopics`, `generateQuestions`, `generateBlitzTasks`, `checkAnswers`).
+- Independent from the app UI language — allows generating questions in English while using the Russian interface, and vice versa.
+- Defaults to the current app locale.
 
 ### Topic Generation
 
@@ -163,6 +174,8 @@ All components are props-only (no direct store access per project conventions).
 - `AnswerCheckModal` — modal for answer checking.
 - `AILoadingState` — spinner + message.
 - `AIErrorState` — error message + retry button.
+- `LanguageSwitcher` — ru/en toggle for app UI language (tab bar).
+- `GenerationLanguageSelect` — ru/en dropdown for AI generation language (AI tab).
 
 ### State management
 
@@ -191,6 +204,8 @@ constructor.templateNames
 
 constructor.ai.apiKey
 constructor.ai.apiKeyPlaceholder
+constructor.ai.generationLanguage
+constructor.ai.generationLanguageHint
 constructor.ai.topicGeneration
 constructor.ai.suggestions
 constructor.ai.suggestionsHint
@@ -211,6 +226,8 @@ constructor.ai.loading.topics
 constructor.ai.loading.questions
 constructor.ai.loading.blitz
 constructor.ai.retry
+
+constructor.language
 
 constructor.answerCheck.title
 constructor.answerCheck.answersLabel

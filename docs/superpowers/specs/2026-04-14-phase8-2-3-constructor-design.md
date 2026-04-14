@@ -66,10 +66,10 @@ Tab-based single-column layout. Works on both desktop and mobile.
 
 ### Generation Language
 
-- Dropdown (ru/en) below API key.
+- Free-text input below API key. User can type any language (e.g. "русский", "English", "Deutsch", "日本語").
 - Controls the `language` parameter passed to all AI generation functions (`generateTopics`, `generateQuestions`, `generateBlitzTasks`, `checkAnswers`).
-- Independent from the app UI language — allows generating questions in English while using the Russian interface, and vice versa.
-- Defaults to the current app locale.
+- Independent from the app UI language — allows generating questions in any language regardless of interface language.
+- Pre-filled with the current i18n locale display name (e.g. "русский" for ru, "English" for en). Resets when app language changes if the field was not manually edited.
 
 ### Topic Generation
 
@@ -175,7 +175,7 @@ All components are props-only (no direct store access per project conventions).
 - `AILoadingState` — spinner + message.
 - `AIErrorState` — error message + retry button.
 - `LanguageSwitcher` — ru/en toggle for app UI language (tab bar).
-- `GenerationLanguageSelect` — ru/en dropdown for AI generation language (AI tab).
+- `GenerationLanguageInput` — free-text input for AI generation language (AI tab).
 
 ### State management
 

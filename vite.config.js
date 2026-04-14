@@ -7,6 +7,7 @@ export default defineConfig({
     resolve: {
         alias: {
             "@": fileURLToPath(new URL("./src", import.meta.url)),
+            events: "events",
         },
     },
     server: {

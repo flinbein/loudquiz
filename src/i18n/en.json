@@ -43,7 +43,7 @@
       "generationLanguageHint": "Language for AI-generated content",
       "topicGeneration": "Topic Generation",
       "suggestions": "Topic suggestions",
-      "suggestionsHint": "One per line, up to 10",
+      "suggestionsHint": "One per line, up to {{max}}",
       "topicCount": "Number of topics",
       "generate": "Generate",
       "result": "Result",

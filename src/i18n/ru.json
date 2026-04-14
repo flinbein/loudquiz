@@ -43,7 +43,7 @@
       "generationLanguageHint": "Язык, на котором AI будет генерировать контент",
       "topicGeneration": "Генерация тем",
       "suggestions": "Предложения тем",
-      "suggestionsHint": "По одному на строку, до 10",
+      "suggestionsHint": "По одному на строку, до {{max}}",
       "topicCount": "Количество тем",
       "generate": "Сгенерировать",
       "result": "Результат",

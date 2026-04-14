@@ -9,7 +9,75 @@
     "joinGame": "Join Game"
   },
   "constructor": {
-    "title": "Question Editor"
+    "title": "Question Editor",
+    "tabs": {
+      "topics": "Topics",
+      "blitz": "Blitz",
+      "ai": "AI"
+    },
+    "addTopic": "+ Topic",
+    "addQuestion": "+ Question",
+    "addWord": "+ Word",
+    "addRound": "+ Round",
+    "questionCount": "Questions ({{count}})",
+    "roundWords": "Round {{n}} — {{count}} words",
+    "difficulty": "Difficulty",
+    "export": "Export",
+    "import": "Import",
+    "importError": "Import error: invalid JSON format",
+    "templateNames": "John,Sarah,Michael,Emma,David,Anna,James,Olivia,Robert,Sophie",
+    "language": "Language",
+    "languageRu": "русский",
+    "languageEn": "English",
+    "topicNamePlaceholder": "Topic name",
+    "questionTextPlaceholder": "Question text",
+    "blitzItemPlaceholder": "Word / phrase",
+    "emptyTopics": "No topics. Add manually or generate with AI.",
+    "emptyQuestions": "No questions in this topic.",
+    "emptyBlitz": "No blitz tasks. Add manually or generate with AI.",
+    "minItemsWarning": "Minimum {{min}} words per round",
+    "ai": {
+      "apiKey": "OpenRouter API Key",
+      "apiKeyPlaceholder": "sk-or-v1-...",
+      "generationLanguage": "Generation language",
+      "generationLanguageHint": "Language for AI-generated content",
+      "topicGeneration": "Topic Generation",
+      "suggestions": "Topic suggestions",
+      "suggestionsHint": "One per line, up to 10",
+      "topicCount": "Number of topics",
+      "generate": "Generate",
+      "result": "Result",
+      "apply": "Apply",
+      "replaceWarning": {
+        "topics": "Will replace all current topics and questions",
+        "questions": "Will replace all current questions",
+        "blitz": "Will replace all current blitz tasks"
+      },
+      "questionGeneration": "Question Generation",
+      "playersCount": "Number of players",
+      "questionsPerTopic": "Questions per topic",
+      "blitzGeneration": "Blitz Generation",
+      "roundsCount": "Number of rounds",
+      "wordsPerRound": "Words per round",
+      "loading": {
+        "topics": "Generating topics...",
+        "questions": "Generating questions...",
+        "blitz": "Generating blitz tasks..."
+      },
+      "retry": "Retry",
+      "noTopics": "Create topics first on the Topics tab",
+      "noApiKey": "Enter API Key"
+    },
+    "answerCheck": {
+      "title": "Check: «{{question}}»",
+      "answersLabel": "Answers to check",
+      "answersHint": "One per line, up to 10",
+      "check": "Check",
+      "close": "Close",
+      "accepted": "correct",
+      "rejected": "incorrect",
+      "group": "group {{n}}"
+    }
   },
   "rules": {
     "title": "Game Rules"

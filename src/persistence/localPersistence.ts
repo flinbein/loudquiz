@@ -7,6 +7,7 @@ const KEYS = {
   usedQuestions: "loud-quiz-used-questions",
   constructorData: "loud-quiz-constructor-data",
   theme: "loud-quiz-theme",
+  language: "loud-quiz-language",
 } as const;
 
 export interface CalibrationSettings {
@@ -124,4 +125,14 @@ export function getTheme(): Theme | null {
 
 export function setTheme(theme: Theme): void {
   localStorage.setItem(KEYS.theme, theme);
+}
+
+// Language
+
+export function getLanguage(): string | null {
+  return localStorage.getItem(KEYS.language);
+}
+
+export function setLanguage(lang: string): void {
+  localStorage.setItem(KEYS.language, lang);
 }

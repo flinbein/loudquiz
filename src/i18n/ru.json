@@ -9,7 +9,75 @@
     "joinGame": "Присоединиться"
   },
   "constructor": {
-    "title": "Редактор вопросов"
+    "title": "Редактор вопросов",
+    "tabs": {
+      "topics": "Темы",
+      "blitz": "Блиц",
+      "ai": "AI"
+    },
+    "addTopic": "+ Тема",
+    "addQuestion": "+ Вопрос",
+    "addWord": "+ Слово",
+    "addRound": "+ Раунд",
+    "questionCount": "Вопросы ({{count}})",
+    "roundWords": "Раунд {{n}} — {{count}} слов",
+    "difficulty": "Сложность",
+    "export": "Экспорт",
+    "import": "Импорт",
+    "importError": "Ошибка импорта: неверный формат JSON",
+    "templateNames": "Иван,Мария,Алексей,Ольга,Дмитрий,Анна,Сергей,Елена,Николай,Татьяна",
+    "language": "Язык",
+    "languageRu": "русский",
+    "languageEn": "English",
+    "topicNamePlaceholder": "Название темы",
+    "questionTextPlaceholder": "Текст вопроса",
+    "blitzItemPlaceholder": "Слово / словосочетание",
+    "emptyTopics": "Нет тем. Добавьте вручную или сгенерируйте через AI.",
+    "emptyQuestions": "Нет вопросов в этой теме.",
+    "emptyBlitz": "Нет блиц-заданий. Добавьте вручную или сгенерируйте через AI.",
+    "minItemsWarning": "Минимум {{min}} слов в раунде",
+    "ai": {
+      "apiKey": "OpenRouter API Key",
+      "apiKeyPlaceholder": "sk-or-v1-...",
+      "generationLanguage": "Язык генерации",
+      "generationLanguageHint": "Язык, на котором AI будет генерировать контент",
+      "topicGeneration": "Генерация тем",
+      "suggestions": "Предложения тем",
+      "suggestionsHint": "По одному на строку, до 10",
+      "topicCount": "Количество тем",
+      "generate": "Сгенерировать",
+      "result": "Результат",
+      "apply": "Применить",
+      "replaceWarning": {
+        "topics": "Заменит все текущие темы и вопросы",
+        "questions": "Заменит все текущие вопросы",
+        "blitz": "Заменит все текущие блиц-задания"
+      },
+      "questionGeneration": "Генерация вопросов",
+      "playersCount": "Количество игроков",
+      "questionsPerTopic": "Вопросов на тему",
+      "blitzGeneration": "Генерация блиц-заданий",
+      "roundsCount": "Количество раундов",
+      "wordsPerRound": "Слов в раунде",
+      "loading": {
+        "topics": "Генерируем темы...",
+        "questions": "Генерируем вопросы...",
+        "blitz": "Генерируем блиц-задания..."
+      },
+      "retry": "Повторить",
+      "noTopics": "Сначала создайте темы на вкладке «Темы»",
+      "noApiKey": "Укажите API Key"
+    },
+    "answerCheck": {
+      "title": "Проверка: «{{question}}»",
+      "answersLabel": "Ответы для проверки",
+      "answersHint": "По одному на строку, до 10",
+      "check": "Проверить",
+      "close": "Закрыть",
+      "accepted": "верно",
+      "rejected": "неверно",
+      "group": "группа {{n}}"
+    }
   },
   "rules": {
     "title": "Правила игры"

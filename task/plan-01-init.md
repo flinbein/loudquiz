@@ -294,21 +294,30 @@
 
 Декомпозирована на под-фазы. Очерёдность: 9.1 → 9.2 → 9.3 → 9.4. Reconnection вынесен в отдельные документы (`task/spec-p2pt-reconnection.md`, `task/plan-p2pt-reconnection.md`).
 
-### 9.1 AI-review + TopicsSuggest [не готово]
+### 9.1 AI-review + TopicsSuggest [готово]
 
 **Цель:** AI-режим в gameplay — игроки предлагают темы, AI-review автозаполняет оценки в round-review с возможностью «Оспорить».
 
-- [ ] `HostTopicsSuggest` / `PlayerTopicsSuggest` — фаза `topics-suggest` для AI-режима: игроки шлют предложения, хост генерирует темы, показывает preview, подтверждает
-- [ ] Вставка фазы `topics-suggest` в game loop между lobby и первым раундом (только в AI-режиме)
-- [ ] AI-review в round-review: лоадер, автозаполнение оценок через `answerCheck`, отображение group/note/comment
-- [ ] Кнопка «Оспорить» у ответа → ручная правка оценки капитаном/хостом
-- [ ] Обработка ошибок AI (таймаут, сеть) — fallback на ручную оценку
+- [x] `HostTopicsSuggest` / `PlayerTopicsSuggest` — фазы `topics-collecting/generating/preview` для AI-режима: игроки шлют предложения, хост генерирует темы, показывает preview, подтверждает
+- [x] Вставка фаз `topics-*` в game loop между lobby и первым раундом (только в AI-режиме)
+- [x] AI-review в round-review: лоадер, автозаполнение оценок через `answerCheck`, отображение group/note/comment (унаследовано из dispute flow)
+- [x] Кнопка «Оспорить» у ответа → ручная правка оценки капитаном/хостом (уже была; теперь сбрасывает aiStatus→idle)
+- [x] Обработка ошибок AI (таймаут, сеть) — fallback на ручную оценку через `AiErrorBanner`
+
+**Выполнено:**
+- Типы: 3 новые фазы (`topics-collecting/generating/preview`) заменили `topics-suggest`; `TopicsSuggestState`; `ReviewResult.aiStatus`
+- Actions: `src/store/actions/topicsSuggest.ts` (13 экспортов), `src/store/actions/aiReview.ts` (5 экспортов)
+- Hook: `src/hooks/useAiOrchestrator.ts` — host-only оркестратор (timer, AI pipeline topics→questions→blitz, AI-review auto)
+- UI: `AiErrorBanner`, `TopicsSidebarBlock`, `TopicsBoardBlock`, `HostTopicsSuggest`, `PlayerTopicsSuggest`
+- State filter: суггестии других игроков скрыты; evaluations скрыты до `aiStatus=done`
+- i18n: `topics.*`, `round.aiReview.*`, `common.cancel` (ru/en)
+- 22/22 unit-тестов проходят (topicsSuggest, aiReview, stateFilter)
 
 **Проверка:**
-- Unit-тесты TopicsSuggest фазы
-- Unit-тесты интеграции answerCheck с round-review state
-- E2E: AI-режим — предложение тем → генерация → раунд → AI-review + dispute flow
-- Ручной тест: AI-review автозаполняет, «Оспорить» даёт ручную правку
+- [x] Unit-тесты TopicsSuggest фазы
+- [x] Unit-тесты интеграции answerCheck с round-review state
+- [ ] E2E: AI-режим — предложение тем → генерация → раунд → AI-review + dispute flow (отложено: playwright-инфраструктура отсутствует в репо)
+- [ ] Ручной тест: AI-review автозаполняет, «Оспорить» даёт ручную правку (ожидает QA)
 
 ### 9.2 Dual Mode [не готово]
 

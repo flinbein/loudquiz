@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useGameStore } from "@/store/gameStore";
 import type { PlayerAction } from "@/types/transport";
 import styles from "./PlayerRound.module.css";
-import { useCurrentRound, usePhase, usePlayers } from "@/store/selectors";
+import { useCurrentRound, usePhase, usePlayers, useSettings } from "@/store/selectors";
 import { TimerInput } from "@/components/TimerInput/TimerInput";
 import { toLocalTime } from "@/store/clockSyncStore";
 import { useState } from "react";
@@ -22,8 +22,21 @@ export function PlayerRoundGame({ playerName, sendAction }: PlayerRoundGameProps
   const topics = useGameStore((s) => s.topics);
   const round = useCurrentRound();
   
+  const settings = useSettings();
   const myPlayer = players.find((p) => p.name === playerName);
   const isCaptain = round?.captainName === playerName;
+
+  if (
+    phase === "round-review" &&
+    settings.mode === "ai" &&
+    round?.reviewResult?.aiStatus === "loading"
+  ) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.phaseInfo}>{t("round.aiReview.loading")}</div>
+      </div>
+    );
+  }
   
   const currentQuestion = (() => {
     if (round?.questionIndex == null) return undefined;

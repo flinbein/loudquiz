@@ -1,0 +1,81 @@
+.container {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6em;
+  font-size: 1.5em;
+  line-height: 1.4;
+}
+
+.avatarSlot {
+  font-size: 1.6em;
+  flex-shrink: 0;
+}
+
+.bubble {
+  position: relative;
+  display: grid;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.12));
+  border-radius: 20px;
+  padding: 0.7em 1em 1.2em;
+  box-shadow: 0 0.15em 0.6em rgba(0, 0, 0, 0.12);
+  max-width: 42ch;
+  min-width: 6em;
+}
+
+/* Tail pointing to the avatar on the left */
+.bubble::before {
+  content: "";
+  position: absolute;
+  top: 0.9em;
+  left: -0.55em;
+  width: 0;
+  height: 0;
+  border-top: 0.45em solid transparent;
+  border-bottom: 0.45em solid transparent;
+  border-right: 0.55em solid var(--color-surface);
+  filter: drop-shadow(-1px 0 0 var(--color-border, rgba(0, 0, 0, 0.12)));
+}
+
+.bubble > .ghost,
+.bubble > .visibleWrap {
+  grid-area: 1 / 1;
+}
+
+.ghost {
+  visibility: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.visibleWrap {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.caret {
+  display: inline-block;
+  width: 0.05em;
+  margin-left: 0.05em;
+  visibility: hidden;
+}
+
+.caret.active {
+  visibility: visible;
+  animation: caretBlink 500ms steps(2) infinite;
+}
+
+@keyframes caretBlink {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.signature {
+  position: absolute;
+  bottom: 0.25em;
+  right: 0.8em;
+  font-size: 0.55em;
+  color: var(--color-text-muted, rgba(0, 0, 0, 0.5));
+  font-style: italic;
+}

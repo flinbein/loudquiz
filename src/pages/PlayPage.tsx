@@ -14,8 +14,16 @@ import { HostRound } from "@/pages/round/HostRound";
 import { PlayerRound } from "@/pages/round/PlayerRound";
 import { HostBlitz } from "@/pages/blitz/HostBlitz";
 import { PlayerBlitz } from "@/pages/blitz/PlayerBlitz";
+import { HostTopicsSuggest } from "@/pages/topics/HostTopicsSuggest";
+import { PlayerTopicsSuggest } from "@/pages/topics/PlayerTopicsSuggest";
 import { GameShell } from "@/pages/GameShell";
+import { useAiOrchestrator } from "@/hooks/useAiOrchestrator";
 import { handleJoin, handleSetTeam, handleSetReady, handleChangeEmoji, startGame } from "@/store/actions/lobby";
+import {
+  submitTopicSuggestion,
+  playerNoIdeas,
+  startFirstRound,
+} from "@/store/actions/topicsSuggest";
 import {
   claimCaptain,
   selectQuestion,
@@ -133,9 +141,24 @@ function HostPlay() {
         case "skip-blitz-answer":
           skipBlitzAnswer(name);
           break;
+        // Topics suggest
+        case "suggest-topic":
+          submitTopicSuggestion(name, action.text);
+          break;
+        case "no-ideas":
+          playerNoIdeas(name);
+          break;
+        case "start-first-round": {
+          const state = useGameStore.getState();
+          const player = state.players.find((p) => p.name === name);
+          if (player && player.team !== "none") startFirstRound(player.team);
+          break;
+        }
       }
     });
   }, []);
+
+  useAiOrchestrator(transport.role === "host");
 
   if (transport.role !== "host") return null;
 
@@ -144,6 +167,7 @@ function HostPlay() {
       {phase === "lobby" && (
         <HostLobby roomId={transport.roomId} joinUrl={transport.joinUrl} />
       )}
+      {phase.startsWith("topics-") && <HostTopicsSuggest />}
       {phase.startsWith("round-") && <HostRound />}
       {phase.startsWith("blitz-") && <HostBlitz />}
     </GameShell>
@@ -279,6 +303,9 @@ function PlayerPlayConnected({
           sendAction={transport.sendAction}
           connected={transport.connected}
         />
+      )}
+      {phase.startsWith("topics-") && (
+        <PlayerTopicsSuggest playerName={playerName} sendAction={transport.sendAction} />
       )}
       {phase.startsWith("round-") && (
         <PlayerRound playerName={playerName} sendAction={transport.sendAction} />

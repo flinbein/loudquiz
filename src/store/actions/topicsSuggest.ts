@@ -2,8 +2,8 @@ import { useGameStore } from "@/store/gameStore";
 import { shouldAutoAdvance } from "@/logic/topicsSuggest";
 import { getOnlinePlayers } from "@/store/selectors";
 import { createNextRoundState } from "@/logic/phaseTransitions";
-import { createTimer, getCaptainTimerDuration } from "@/logic/timer";
-import type { TeamId, TopicsSuggestState } from "@/types/game";
+import { createTimer, getCaptainTimerDuration, getTopicsSuggestTimerDuration } from "@/logic/timer";
+import type { BlitzTask, Question, TeamId, Topic, TopicsSuggestState } from "@/types/game";
 
 function mutateTopicsSuggest(fn: (ts: TopicsSuggestState) => TopicsSuggestState): void {
   const s = useGameStore.getState();
@@ -98,5 +98,130 @@ export function startGeneration(): void {
     topicsSuggest: next,
     timer: null,
     ...extra,
+  });
+}
+
+export function hostStartManualTopics(): void {
+  const s = useGameStore.getState();
+  if (s.phase !== "topics-collecting" || !s.topicsSuggest) return;
+  useGameStore.getState().setState({
+    topicsSuggest: {
+      ...s.topicsSuggest,
+      manualTopics: [],
+      timerEndsAt: null,
+    },
+    timer: null,
+  });
+}
+
+export function hostCancelManualTopics(): void {
+  const s = useGameStore.getState();
+  if (s.phase !== "topics-collecting" || !s.topicsSuggest) return;
+  if (s.topicsSuggest.manualTopics === null) return;
+  const timer = createTimer(getTopicsSuggestTimerDuration());
+  useGameStore.getState().setState({
+    topicsSuggest: {
+      ...s.topicsSuggest,
+      manualTopics: null,
+      timerEndsAt: timer.startedAt + timer.duration,
+    },
+    timer,
+  });
+}
+
+export function hostSubmitManualTopics(topics: string[]): void {
+  const clean = topics.map((t) => t.trim()).filter((t) => t.length > 0);
+  if (clean.length === 0) return;
+  const s = useGameStore.getState();
+  if (s.phase !== "topics-collecting" || !s.topicsSuggest) return;
+  useGameStore.getState().setState({
+    topicsSuggest: {
+      ...s.topicsSuggest,
+      manualTopics: clean,
+      timerEndsAt: null,
+    },
+    timer: null,
+  });
+  startGeneration();
+}
+
+export type AiStepResult =
+  | { topics: string[] }
+  | { topics: Topic[] }
+  | { blitzTasks: BlitzTask[] };
+
+export function onAiStepSuccess(
+  step: "topics" | "questions" | "blitz",
+  result: AiStepResult,
+): void {
+  const s = useGameStore.getState();
+  if (s.phase !== "topics-generating" || !s.topicsSuggest) return;
+  if (s.topicsSuggest.generationStep !== step) return;
+
+  if (step === "topics") {
+    const names = (result as { topics: string[] }).topics;
+    useGameStore.getState().setState({
+      topics: names.map((name) => ({ name, questions: [] as Question[] })),
+      topicsSuggest: {
+        ...s.topicsSuggest,
+        generationStep: "questions",
+        aiError: null,
+      },
+    });
+    return;
+  }
+
+  if (step === "questions") {
+    const payload = (result as { topics: Topic[] }).topics;
+    useGameStore.getState().setState({
+      topics: payload,
+      topicsSuggest: {
+        ...s.topicsSuggest,
+        generationStep: "blitz",
+        aiError: null,
+      },
+    });
+    return;
+  }
+
+  const payload = (result as { blitzTasks: BlitzTask[] }).blitzTasks;
+  useGameStore.getState().setState({
+    blitzTasks: payload,
+    phase: "topics-preview",
+    topicsSuggest: undefined,
+  });
+}
+
+export function onAiStepError(step: "topics" | "questions" | "blitz", message: string): void {
+  const s = useGameStore.getState();
+  if (s.phase !== "topics-generating" || !s.topicsSuggest) return;
+  useGameStore.getState().setState({
+    topicsSuggest: { ...s.topicsSuggest, aiError: { step, message } },
+  });
+}
+
+export function retryAiStep(): void {
+  const s = useGameStore.getState();
+  if (s.phase !== "topics-generating" || !s.topicsSuggest) return;
+  if (!s.topicsSuggest.aiError) return;
+  useGameStore.getState().setState({
+    topicsSuggest: { ...s.topicsSuggest, aiError: null },
+  });
+}
+
+export function fallbackToManualTopics(): void {
+  const s = useGameStore.getState();
+  if (s.phase !== "topics-generating" || !s.topicsSuggest) return;
+  if (s.topicsSuggest.aiError?.step !== "topics") return;
+  useGameStore.getState().setState({
+    phase: "topics-collecting",
+    topicsSuggest: {
+      ...s.topicsSuggest,
+      manualTopics: [],
+      generationStep: null,
+      aiError: null,
+      timerEndsAt: null,
+    },
+    timer: null,
   });
 }

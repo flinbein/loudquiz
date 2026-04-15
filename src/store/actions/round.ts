@@ -209,6 +209,7 @@ export function initReview(): void {
         bonusTime,
         bonusTimeApplied,
         jokerApplied: state.currentRound.jokerActive,
+        aiStatus: "idle",
       },
     },
   });
@@ -295,6 +296,7 @@ export function confirmScore(): void {
         )),
         score,
         bonusTimeApplied: bonus.hasBonus,
+        aiStatus: "idle",
       },
     },
   });
@@ -429,6 +431,8 @@ export function disputeReview(): void {
       ...state.currentRound,
       reviewResult: {
         ...state.currentRound.reviewResult,
+        aiStatus: "idle",
+        aiError: undefined,
         score: 0,
         evaluations,
         bonusTimeApplied

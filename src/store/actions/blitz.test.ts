@@ -275,6 +275,7 @@ describe("confirmBlitzReview", () => {
           bonusTimeMultiplier: 1,
           bonusTimeApplied: false,
           jokerApplied: false,
+          aiStatus: "idle",
         },
       },
     });

@@ -303,6 +303,7 @@ function enterBlitzReview(): void {
     ),
     bonusTimeApplied,
     jokerApplied: false,
+    aiStatus: "idle",
   };
 
   useGameStore.getState().setState({

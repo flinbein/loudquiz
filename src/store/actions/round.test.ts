@@ -201,6 +201,7 @@ describe("evaluateAnswer", () => {
           bonusTime: 0,
           bonusTimeApplied: false,
           jokerApplied: false,
+          aiStatus: "idle",
         },
       },
     });
@@ -229,6 +230,7 @@ describe("mergeAnswerGroups", () => {
           bonusTime: 0,
           bonusTimeApplied: false,
           jokerApplied: false,
+          aiStatus: "idle",
         },
       },
     });
@@ -260,6 +262,7 @@ describe("splitAnswerFromGroup", () => {
           bonusTime: 0,
           bonusTimeApplied: false,
           jokerApplied: false,
+          aiStatus: "idle",
         },
       },
     });
@@ -293,6 +296,7 @@ describe("confirmReview", () => {
           bonusTime: 0,
           bonusTimeApplied: false,
           jokerApplied: false,
+          aiStatus: "idle",
         },
       },
     });
@@ -323,6 +327,7 @@ describe("disputeReview", () => {
           bonusTime: 0,
           bonusTimeApplied: false,
           jokerApplied: false,
+          aiStatus: "idle",
         },
       },
     });

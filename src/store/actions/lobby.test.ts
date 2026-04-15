@@ -188,7 +188,7 @@ describe("lobby actions", () => {
       expect(useGameStore.getState().phase).toBe("round-captain");
     });
 
-    it("startGame transitions to topics-suggest for AI mode", () => {
+    it("startGame transitions to topics-collecting for AI mode", () => {
       useGameStore.setState({
         ...initialState,
         settings: { ...initialState.settings, mode: "ai", teamMode: "single" },
@@ -199,7 +199,16 @@ describe("lobby actions", () => {
       handleSetReady("Player1", true);
       handleSetReady("Player2", true);
       startGame();
-      expect(useGameStore.getState().phase).toBe("topics-suggest");
+      const s = useGameStore.getState();
+      expect(s.phase).toBe("topics-collecting");
+      expect(s.topicsSuggest).toBeDefined();
+      expect(s.topicsSuggest?.suggestions).toEqual({});
+      expect(s.topicsSuggest?.noIdeas).toEqual([]);
+      expect(s.topicsSuggest?.manualTopics).toBeNull();
+      expect(s.topicsSuggest?.timerEndsAt).not.toBeNull();
+      expect(s.topicsSuggest?.generationStep).toBeNull();
+      expect(s.topicsSuggest?.aiError).toBeNull();
+      expect(s.timer).not.toBeNull();
     });
   });
 });

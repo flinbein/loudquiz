@@ -1,8 +1,8 @@
 import { useGameStore } from "@/store/gameStore";
 import { getRandomEmoji } from "@/logic/emojiPool";
 import { createNextRoundState } from "@/logic/phaseTransitions";
-import { createTimer, getCaptainTimerDuration } from "@/logic/timer";
-import { TeamId } from "@/types/game";
+import { createTimer, getCaptainTimerDuration, getTopicsSuggestTimerDuration } from "@/logic/timer";
+import type { GameState, TeamId } from "@/types/game";
 
 export function handleJoin(_peerId: string, name: string): void {
   const state = useGameStore.getState();
@@ -96,18 +96,33 @@ export function canStartGame(): boolean {
 export function startGame(): void {
   if (!canStartGame()) return;
   const state = useGameStore.getState();
-  const nextPhase =
-    state.settings.mode === "ai" ? "topics-suggest" : "round-captain";
+  const nextPhase: GameState["phase"] =
+    state.settings.mode === "ai" ? "topics-collecting" : "round-captain";
 
-  const teamId = state.teams[0]?.id ?? "none";
-  const roundInit = nextPhase === "round-captain"
-    ? {
-        currentRound: createNextRoundState(teamId),
-        timer: createTimer(getCaptainTimerDuration()),
-      }
-    : {};
+  let extra: Partial<GameState> = {};
+  if (nextPhase === "round-captain") {
+    const teamId = state.teams[0]?.id ?? "none";
+    extra = {
+      currentRound: createNextRoundState(teamId),
+      timer: createTimer(getCaptainTimerDuration()),
+    };
+  } else {
+    // topics-collecting
+    const timer = createTimer(getTopicsSuggestTimerDuration());
+    extra = {
+      topicsSuggest: {
+        suggestions: {},
+        noIdeas: [],
+        timerEndsAt: timer.startedAt + timer.duration,
+        manualTopics: null,
+        generationStep: null,
+        aiError: null,
+      },
+      timer,
+    };
+  }
 
-  useGameStore.getState().setState({ phase: nextPhase, ...roundInit });
+  useGameStore.getState().setState({ phase: nextPhase, ...extra });
 }
 
 export function canStartGameAsHost(): boolean {
@@ -141,16 +156,31 @@ export function startGameAsHost(): void {
 
   players = players.map((p) => ({ ...p, ready: true }));
 
-  const nextPhase =
-    state.settings.mode === "ai" ? "topics-suggest" : "round-captain";
+  const nextPhase: GameState["phase"] =
+    state.settings.mode === "ai" ? "topics-collecting" : "round-captain";
 
-  const teamId = state.teams[0]?.id ?? "none";
-  const roundInit = nextPhase === "round-captain"
-    ? {
-        currentRound: createNextRoundState(teamId),
-        timer: createTimer(getCaptainTimerDuration()),
-      }
-    : {};
+  let extra: Partial<GameState> = {};
+  if (nextPhase === "round-captain") {
+    const teamId = state.teams[0]?.id ?? "none";
+    extra = {
+      currentRound: createNextRoundState(teamId),
+      timer: createTimer(getCaptainTimerDuration()),
+    };
+  } else {
+    // topics-collecting
+    const timer = createTimer(getTopicsSuggestTimerDuration());
+    extra = {
+      topicsSuggest: {
+        suggestions: {},
+        noIdeas: [],
+        timerEndsAt: timer.startedAt + timer.duration,
+        manualTopics: null,
+        generationStep: null,
+        aiError: null,
+      },
+      timer,
+    };
+  }
 
-  useGameStore.getState().setState({ players, phase: nextPhase, ...roundInit });
+  useGameStore.getState().setState({ players, phase: nextPhase, ...extra });
 }

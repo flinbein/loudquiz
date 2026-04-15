@@ -42,3 +42,7 @@ export function getBlitzAnswerTimerDuration(respondersCount: number): number {
 export function createTimer(duration: number): TimerState {
   return { startedAt: performance.now(), duration };
 }
+
+export function getTopicsSuggestTimerDuration(): number {
+  return 60 * 1000;
+}

@@ -1,7 +1,10 @@
-import { usePhase, useCurrentRound, useTeams, useCurrentQuestion } from "@/store/selectors";
+import { useTranslation } from "react-i18next";
+import { usePhase, useCurrentRound, useTeams, useCurrentQuestion, useSettings } from "@/store/selectors";
 import { activateJoker } from "@/store/actions/round";
+import { retryAiReview, fallbackReviewToManual } from "@/store/actions/aiReview";
 import { JokerState } from "@/components/JokerState/JokerState";
 import { ScoreFormula } from "@/components/ScoreFormula/ScoreFormula";
+import { AiErrorBanner } from "@/components/AiErrorBanner/AiErrorBanner";
 import styles from "./HostRound.module.css";
 import { StickersContent } from "./HostRound.StickersContent";
 import { TaskCardBlock } from "../blocks/TaskCardBlock";
@@ -42,9 +45,31 @@ function DisplaySelectTask(){
 function DisplayRoundPlay(){
   const round = useCurrentRound();
   const phase = usePhase();
+  const settings = useSettings();
   const review = round?.reviewResult;
   const question = useCurrentQuestion();
-  
+  const { t } = useTranslation();
+
+  if (phase === "round-review" && settings.mode === "ai") {
+    if (review?.aiStatus === "loading") {
+      return <div className={styles.aiCenter}>{t("round.aiReview.loading")}</div>;
+    }
+    if (review?.aiStatus === "error") {
+      return (
+        <div className={styles.aiCenter}>
+          <AiErrorBanner
+            message={`${t("round.aiReview.errorPrefix")}: ${review.aiError ?? ""}`}
+            canFallback
+            onRetry={retryAiReview}
+            onFallback={fallbackReviewToManual}
+            retryLabel={t("topics.errors.retry")}
+            fallbackLabel={t("round.aiReview.fallback")}
+          />
+        </div>
+      );
+    }
+  }
+
   const correctCount = review?.groups.filter((group) => {
     const eval_ = review?.evaluations.find((e) => e.playerName === group[0]);
     return eval_?.correct === true;

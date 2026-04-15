@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { usePhase } from "@/store/selectors";
+import { usePhase, useCurrentRound, useSettings } from "@/store/selectors";
 import { confirmReview, confirmScore, disputeReview, forceTeamCaptain, startRoundTask } from "@/store/actions/round";
 
 import type { RoundPhase } from "@/types/game";
@@ -8,6 +8,8 @@ import styles from "./HostRound.module.css";
 export function SidebarActions(){
   const { t } = useTranslation();
   const phase = usePhase() as RoundPhase;
+  const round = useCurrentRound();
+  const settings = useSettings();
   
   if (phase === "round-captain") return (
     <div className={styles.actions}>
@@ -25,13 +27,19 @@ export function SidebarActions(){
     </div>
   );
   
-  if (phase === "round-review") return (
-    <div className={styles.actions}>
-      <button className={styles.primaryBtn} onClick={() => confirmScore()}>
-        {t("round.next")}
-      </button>
-    </div>
-  );
+  if (phase === "round-review") {
+    const aiStatus = round?.reviewResult?.aiStatus;
+    if (settings.mode === "ai" && (aiStatus === "loading" || aiStatus === "error")) {
+      return null;
+    }
+    return (
+      <div className={styles.actions}>
+        <button className={styles.primaryBtn} onClick={() => confirmScore()}>
+          {t("round.next")}
+        </button>
+      </div>
+    );
+  }
   
   if (phase === "round-result") return (
     <div className={styles.actions}>

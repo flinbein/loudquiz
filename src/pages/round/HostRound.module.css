@@ -60,6 +60,15 @@
   color: var(--color-text);
 }
 
+.aiCenter {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--color-text);
+}
+
 .phaseInfo {
   font-size: var(--font-size-md);
   color: var(--color-text-secondary);

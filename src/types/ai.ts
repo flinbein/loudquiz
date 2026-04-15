@@ -84,6 +84,7 @@ export interface BlitzGenerationResult {
 // Answer check
 
 export interface AnswerCheckInput {
+  captainName: string;
   question: string;
   answers: Array<{
     playerName: string;

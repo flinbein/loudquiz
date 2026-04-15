@@ -97,11 +97,20 @@
 }
 
 .resultRow {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
   justify-content: space-between;
   padding: var(--spacing-xs) 0;
   border-bottom: 1px dotted var(--color-border);
   font-size: var(--font-size-sm);
+}
+
+.resultNote {
+  grid-column: 1 / 2;
+  grid-row: 2;
+  width: 100%;
+  color: var(--color-primary);
 }
 
 .accepted {

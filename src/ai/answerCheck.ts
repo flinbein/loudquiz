@@ -31,9 +31,7 @@ const SCHEMA = {
 };
 
 function formatAnswers(answers: AnswerCheckInput["answers"]): string {
-  return answers
-    .map((a) => `- ${a.playerName}: ${a.answer}`)
-    .join("\n");
+  return JSON.stringify(answers, null, 2);
 }
 
 export async function checkAnswers(
@@ -42,7 +40,10 @@ export async function checkAnswers(
   language: string,
   model?: string,
 ): Promise<AnswerCheckResult> {
-  const system = renderTemplate(systemPrompt, { language });
+  const system = renderTemplate(systemPrompt, {
+    language,
+    captainName: input.captainName,
+  });
 
   const user = renderTemplate(userPrompt, {
     question: input.question,

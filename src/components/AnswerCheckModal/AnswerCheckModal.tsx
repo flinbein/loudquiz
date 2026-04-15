@@ -58,8 +58,7 @@ export function AnswerCheckModal({
     try {
       const lines = answers
         .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean);
+        .map((l) => l.trim());
       const res = await checkAnswers(
         apiKey,
         {
@@ -68,6 +67,7 @@ export function AnswerCheckModal({
             playerName: templateNames[i] ?? `Player${i + 1}`,
             answer,
           })),
+          captainName: templateNames[templateNames.length - 1] ?? "Captain"
         },
         language,
       );
@@ -119,7 +119,7 @@ export function AnswerCheckModal({
               <div key={i} className={styles.resultRow}>
                 <span>
                   <span className={styles.playerName}>{r.playerName}: </span>
-                  {answers.split("\n").filter(Boolean)[i] ?? ""}
+                  {answers.split("\n")[i] ?? ""}
                 </span>
                 <span
                   className={r.accepted ? styles.accepted : styles.rejected}
@@ -130,6 +130,9 @@ export function AnswerCheckModal({
                   {r.group != null &&
                     ` (${t("constructor.answerCheck.group", { n: r.group })})`}
                 </span>
+                <div className={styles.resultNote}>
+                  {r.note}
+                </div>
               </div>
             ))}
             {result.comment && (

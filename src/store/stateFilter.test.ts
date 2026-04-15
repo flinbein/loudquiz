@@ -193,4 +193,123 @@ describe("filterStateForPlayer", () => {
     const filtered = filterStateForPlayer(state, "Alice");
     expect(filtered).toBe(state);
   });
+
+  describe("topics-collecting state filter", () => {
+    function topicsCollectingState(): GameState {
+      return createTestState({
+        phase: "topics-collecting",
+        currentRound: null,
+        topicsSuggest: {
+          suggestions: {
+            Alice: ["a", "b"],
+            Bob: ["x"],
+          },
+          noIdeas: ["Charlie"],
+          timerEndsAt: 123456,
+          manualTopics: null,
+          generationStep: null,
+          aiError: null,
+        },
+      });
+    }
+
+    it("player sees only their own suggestions", () => {
+      const state = topicsCollectingState();
+      const filtered = filterStateForPlayer(state, "Alice");
+      expect(filtered.topicsSuggest?.suggestions).toEqual({ Alice: ["a", "b"] });
+    });
+
+    it("player with no suggestions gets empty array entry", () => {
+      const state = topicsCollectingState();
+      const filtered = filterStateForPlayer(state, "Charlie");
+      expect(filtered.topicsSuggest?.suggestions).toEqual({ Charlie: [] });
+    });
+
+    it("noIdeas, timer, manualTopics pass through unchanged", () => {
+      const state = topicsCollectingState();
+      const filtered = filterStateForPlayer(state, "Alice");
+      expect(filtered.topicsSuggest?.noIdeas).toEqual(["Charlie"]);
+      expect(filtered.topicsSuggest?.timerEndsAt).toBe(123456);
+      expect(filtered.topicsSuggest?.manualTopics).toBeNull();
+    });
+
+    it("topics-generating phase also filters suggestions", () => {
+      const state = createTestState({
+        phase: "topics-generating",
+        currentRound: null,
+        topicsSuggest: {
+          suggestions: { Alice: ["a"], Bob: ["b"] },
+          noIdeas: [],
+          timerEndsAt: null,
+          manualTopics: null,
+          generationStep: "topics",
+          aiError: null,
+        },
+      });
+      const filtered = filterStateForPlayer(state, "Alice");
+      expect(filtered.topicsSuggest?.suggestions).toEqual({ Alice: ["a"] });
+    });
+  });
+
+  describe("round-review AI evaluations hidden until done", () => {
+    function reviewState(aiStatus: "idle" | "loading" | "done" | "error"): GameState {
+      return createTestState({
+        phase: "round-review",
+        settings: {
+          mode: "ai",
+          teamMode: "single",
+          topicCount: 3,
+          questionsPerTopic: 4,
+          blitzRoundsPerTeam: 2,
+          pastQuestions: [],
+        },
+        currentRound: {
+          type: "round",
+          teamId: "red",
+          captainName: "Alice",
+          questionIndex: 0,
+          jokerActive: false,
+          answers: {
+            Bob: { text: "lion", timestamp: 5000 },
+            Charlie: { text: "tiger", timestamp: 8000 },
+          },
+          activeTimerStartedAt: 0,
+          bonusTime: 10000,
+          reviewResult: {
+            evaluations: [
+              { playerName: "Bob", correct: true },
+              { playerName: "Charlie", correct: false },
+            ],
+            groups: [["Bob"], ["Charlie"]],
+            bonusTime: 0,
+            bonusTimeMultiplier: 0,
+            bonusTimeApplied: false,
+            jokerApplied: false,
+            score: 0,
+            aiStatus,
+          },
+        },
+      });
+    }
+
+    it("evaluations hidden while aiStatus=loading", () => {
+      const filtered = filterStateForPlayer(reviewState("loading"), "Bob");
+      expect(filtered.currentRound?.reviewResult?.evaluations).toEqual([]);
+    });
+
+    it("evaluations hidden while aiStatus=idle", () => {
+      const filtered = filterStateForPlayer(reviewState("idle"), "Bob");
+      expect(filtered.currentRound?.reviewResult?.evaluations).toEqual([]);
+    });
+
+    it("evaluations visible once aiStatus=done", () => {
+      const filtered = filterStateForPlayer(reviewState("done"), "Bob");
+      expect(filtered.currentRound?.reviewResult?.evaluations).toHaveLength(2);
+    });
+
+    it("evaluations visible once aiStatus=error (fallback UI needs them)", () => {
+      const filtered = filterStateForPlayer(reviewState("error"), "Bob");
+      expect(filtered.currentRound?.reviewResult?.evaluations).toHaveLength(2);
+    });
+  });
 });

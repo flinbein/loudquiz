@@ -13,6 +13,15 @@ export function filterStateForPlayer(
   state: GameState,
   playerName: string,
 ): GameState {
+  if (
+    state.topicsSuggest &&
+    (state.phase === "topics-collecting" ||
+      state.phase === "topics-generating" ||
+      state.phase === "topics-preview")
+  ) {
+    return filterTopicsSuggest(state, playerName);
+  }
+
   const round = state.currentRound;
   if (!round) return state;
 
@@ -50,7 +59,44 @@ export function filterStateForPlayer(
     filtered = hideOtherAnswers(filtered, playerName);
   }
 
+  // In round-review with AI mode: hide evaluations until aiStatus is done/error
+  if (state.phase === "round-review" && round.reviewResult) {
+    const status = round.reviewResult.aiStatus;
+    if (status === "idle" || status === "loading") {
+      filtered = hideReviewEvaluations(filtered);
+    }
+  }
+
   return filtered;
+}
+
+function filterTopicsSuggest(
+  state: GameState,
+  playerName: string,
+): GameState {
+  if (!state.topicsSuggest) return state;
+  const own = state.topicsSuggest.suggestions[playerName] ?? [];
+  return {
+    ...state,
+    topicsSuggest: {
+      ...state.topicsSuggest,
+      suggestions: { [playerName]: own },
+    },
+  };
+}
+
+function hideReviewEvaluations(state: GameState): GameState {
+  if (!state.currentRound?.reviewResult) return state;
+  return {
+    ...state,
+    currentRound: {
+      ...state.currentRound,
+      reviewResult: {
+        ...state.currentRound.reviewResult,
+        evaluations: [],
+      },
+    },
+  };
 }
 
 function hideQuestionText(state: GameState, questionIndex: number): GameState {

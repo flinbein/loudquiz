@@ -1,0 +1,12 @@
+.container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-content: flex-start;
+}

@@ -32,14 +32,11 @@ return <div>
 - `AiAvatar.module.css`
 - `AiAvatar.stories.tsx`
 
-**Props:**
-```ts
-type AiAvatarProps = {
-  size?: "sm" | "md" | "lg";  // default: "md"
-};
-```
+**Props:** отсутствуют (v1).
 
-**Рендер (v1):** emoji `🤖` в круглой обводке (border + фон). Размер шрифта масштабируется от `size`. Позже тело компонента можно заменить на SVG или анимированную «морду» без изменений в потребителях.
+**Рендер (v1):** emoji `🤖` в круглой обводке (border + фон). Все внутренние размеры заданы в `em` — компонент масштабируется от `font-size` родительского блока (по примеру `PlayerAvatar`, где размер контейнера управляется снаружи). Родитель (`AiCommentBubble`) задаёт `font-size` для слота аватарки.
+
+Позже тело компонента можно заменить на SVG или анимированную «морду» без изменений в потребителях.
 
 ### 2. `AiCommentBubble`
 
@@ -87,26 +84,46 @@ type AiCommentBubbleProps = {
 
 Преимущества перед `position: absolute`: наследуется поведение потока (wrapping, padding, margins соседей), одна типографика автоматически гарантирует совпадение размеров.
 
-### Состояние
-```tsx
-const [visibleCount, setVisibleCount] = useState(0);
-```
-Анимация через `useEffect` + `setInterval` с шагом `charDelayMs` (default `15мс` ≈ 66 символов/сек). Очистка интервала при анмаунте/смене текста.
+### Imperative-обновление через ref (без ре-рендеров)
 
-Видимый слой: `text.slice(0, visibleCount)`.
+Обновление каждые 15мс через `useState` вызывало бы ~66 ре-рендеров/сек. Вместо этого — imperative-подход:
+
+```tsx
+const visibleRef = useRef<HTMLSpanElement>(null);
+const caretRef = useRef<HTMLSpanElement>(null);
+
+useEffect(() => {
+  const visibleEl = visibleRef.current;
+  const caretEl = caretRef.current;
+  if (!visibleEl || !caretEl) return;
+
+  visibleEl.textContent = "";
+  caretEl.classList.add(styles.caretActive);
+
+  let i = 0;
+  const id = setInterval(() => {
+    i++;
+    visibleEl.textContent = text.slice(0, i);
+    if (i >= text.length) {
+      clearInterval(id);
+      caretEl.classList.remove(styles.caretActive);
+    }
+  }, charDelayMs);
+
+  return () => clearInterval(id);
+}, [text, charDelayMs]);
+```
+
+React рендерит компонент один раз на смену `text`; typewriter «дописывает» ноду через `textContent` напрямую. Призрачный слой `ghost` рендерится через JSX полным текстом — обновляется нормально при смене `text`, задавая размер.
 
 ### Каретка
-Мигающая `▌` в конце активной зоны печати. Реализация: CSS `@keyframes` с `opacity 0↔1`, период ~500мс (шагами `steps(2)`). После завершения (`visibleCount === text.length`) каретка скрывается.
+Отдельный `<span ref={caretRef}>▌</span>` рядом с видимым слоем. CSS `@keyframes` с `opacity 0↔1`, период ~500мс (`steps(2)`). Класс `caretActive` включает видимость/анимацию, снимается по завершении печати.
 
 ### Смена текста
-Когда `text` меняется во время анимации:
-1. Fade-out текущего видимого слоя (`opacity → 0`, 200мс).
-2. Сброс `visibleCount = 0`, подстановка нового текста.
-3. Fade-in (`opacity → 1`) + запуск typewriter заново.
 
-Призрачный слой при этом сразу переключается на новый текст (незаметно — он невидим), что гарантирует корректный размер пузыря для новой анимации.
+При смене `text` effect перезапускается: старый интервал останавливается в cleanup, `visibleEl.textContent` обнуляется, стартует новый цикл печати с нуля. Без fade-анимации — простая мгновенная замена.
 
-Реализация: отслеживаем предыдущий `text`, на смену запускаем fade-out через локальный флаг, после завершения transition стартуем новую анимацию.
+Призрачный слой обновляется через JSX на новый текст и сразу задаёт корректный размер пузыря для новой анимации.
 
 ## Стилистика
 

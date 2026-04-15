@@ -1,0 +1,287 @@
+<style>
+  .design-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:800px) { .design-grid { grid-template-columns:1fr; } }
+
+  .screen { background:#1e1e2e; border-radius:10px; padding:14px; color:#e0e0e0; font-family:monospace; font-size:11px; }
+  .screen-title { font-size:9px; color:#6a5acd; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+
+  .tab-bar { display:flex; gap:2px; background:#2a2a4a; border-radius:8px; padding:3px; margin-bottom:10px; }
+  .tab { padding:5px 12px; border-radius:6px; font-size:10px; color:#888; }
+  .tab.active { background:#5a4a8a; color:#fff; }
+
+  .chips { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
+  .chip { background:#3a3a5a; border-radius:14px; padding:3px 10px; font-size:9px; color:#ccc; }
+  .chip.active { background:#5a4a8a; border:1px solid #8a7aba; color:#fff; }
+  .chip.add { background:#4a4a6a; }
+
+  .q-row { background:#2a2a4a; border-radius:4px; padding:5px 8px; margin-bottom:3px; font-size:10px; display:flex; justify-content:space-between; align-items:center; }
+  .q-actions { color:#888; font-size:9px; display:flex; gap:6px; align-items:center; }
+  .q-check { color:#6a5acd; cursor:pointer; }
+
+  .btn { display:inline-block; border-radius:4px; padding:4px 10px; font-size:10px; }
+  .btn-primary { background:#6a5acd; color:#fff; }
+  .btn-secondary { background:#3a3a5a; color:#ccc; }
+  .btn-success { background:#4a8a4a; color:#fff; }
+  .btn-danger { background:#8a4a4a; color:#fff; }
+  .btn-add { background:#4a4a6a; color:#ccc; margin-top:5px; text-align:center; border-radius:4px; padding:4px; font-size:10px; }
+
+  .section-label { font-size:10px; color:#888; margin-bottom:5px; }
+  .input-mock { background:#1a1a2e; border:1px solid #3a3a5a; border-radius:4px; padding:4px 8px; font-size:10px; color:#ccc; }
+  .textarea-mock { background:#1a1a2e; border:1px solid #3a3a5a; border-radius:4px; padding:6px 8px; font-size:10px; color:#ccc; min-height:30px; }
+
+  .ai-section { background:#2a2a4a; border-radius:6px; padding:10px; margin-bottom:8px; }
+  .ai-label { font-size:9px; color:#6a5acd; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; }
+
+  .preview-box { background:#1a1a2e; border:1px solid #3a3a5a; border-radius:4px; padding:8px; margin-top:6px; font-size:10px; }
+  .preview-item { display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px dotted #2a2a4a; }
+
+  .accordion { background:#2a2a4a; border-radius:6px; margin-bottom:4px; overflow:hidden; }
+  .acc-header { padding:6px 10px; font-size:10px; color:#aaa; display:flex; justify-content:space-between; align-items:center; }
+  .acc-header.open { color:#fff; background:#3a3a5a; }
+  .acc-body { padding:6px 10px; }
+
+  .modal-overlay { position:relative; background:rgba(0,0,0,0.5); border-radius:8px; padding:20px 10px; display:flex; justify-content:center; }
+  .modal { background:#2a2a4a; border-radius:8px; padding:14px; width:100%; max-width:350px; }
+  .modal-title { font-size:11px; color:#fff; margin-bottom:8px; }
+
+  .inline-row { display:flex; gap:6px; align-items:center; margin-bottom:6px; }
+  .divider { border-top:1px solid #3a3a5a; margin:8px 0; }
+  .toolbar-row { display:flex; gap:4px; justify-content:flex-end; margin-bottom:6px; }
+
+  .loader { display:inline-block; width:12px; height:12px; border:2px solid #3a3a5a; border-top:2px solid #6a5acd; border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .error-bar { background:#5a2a2a; border:1px solid #8a4a4a; border-radius:4px; padding:6px 10px; font-size:10px; color:#ffaaaa; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+</style>
+
+<h2>Конструктор — полный дизайн</h2>
+<p class="subtitle">4 экрана: Темы, Блиц, AI-таб, попап проверки ответов</p>
+
+<div class="design-grid">
+
+  <!-- TAB: Topics -->
+  <div>
+    <div class="screen">
+      <div class="screen-title">Таб «Темы»</div>
+      <div class="tab-bar">
+        <div class="tab active">📝 Темы</div>
+        <div class="tab">⚡ Блиц</div>
+        <div class="tab">🤖 AI</div>
+        <div style="flex:1"></div>
+        <div class="tab" style="font-size:9px;">⬇⬆ JSON</div>
+      </div>
+
+      <div class="chips">
+        <div class="chip active">История</div>
+        <div class="chip">Музыка <span style="color:#666;font-size:8px;">✕</span></div>
+        <div class="chip">Кино <span style="color:#666;font-size:8px;">✕</span></div>
+        <div class="chip add">+ Тема</div>
+      </div>
+
+      <div style="margin-bottom:6px;">
+        <div class="input-mock" style="width:100%;box-sizing:border-box;">История ✎</div>
+      </div>
+
+      <div class="section-label">Вопросы (2)</div>
+      <div class="q-row">
+        <span>Кто основал Рим?</span>
+        <div class="q-actions">
+          <span>100</span>
+          <span class="q-check" title="Проверить ответы">✓</span>
+          <span>✎</span>
+          <span>✕</span>
+        </div>
+      </div>
+      <div class="q-row">
+        <span>Год падения Берлинской стены?</span>
+        <div class="q-actions">
+          <span>150</span>
+          <span class="q-check">✓</span>
+          <span>✎</span>
+          <span>✕</span>
+        </div>
+      </div>
+      <div class="btn-add">+ Вопрос</div>
+    </div>
+  </div>
+
+  <!-- TAB: Blitz -->
+  <div>
+    <div class="screen">
+      <div class="screen-title">Таб «Блиц»</div>
+      <div class="tab-bar">
+        <div class="tab">📝 Темы</div>
+        <div class="tab active">⚡ Блиц</div>
+        <div class="tab">🤖 AI</div>
+        <div style="flex:1"></div>
+        <div class="tab" style="font-size:9px;">⬇⬆ JSON</div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header open">
+          <span>▾ Раунд 1 — 5 слов</span>
+          <span style="font-size:9px;color:#888;">✕</span>
+        </div>
+        <div class="acc-body">
+          <div class="q-row"><span>Крокодил</span><div class="q-actions"><span>200</span><span>✎</span><span>✕</span></div></div>
+          <div class="q-row"><span>Телевизор</span><div class="q-actions"><span>250</span><span>✎</span><span>✕</span></div></div>
+          <div class="q-row"><span>Философия</span><div class="q-actions"><span>300</span><span>✎</span><span>✕</span></div></div>
+          <div class="q-row"><span>Гравитация</span><div class="q-actions"><span>350</span><span>✎</span><span>✕</span></div></div>
+          <div class="q-row"><span>Бюрократия</span><div class="q-actions"><span>400</span><span>✎</span><span>✕</span></div></div>
+          <div class="btn-add">+ Слово</div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header">
+          <span>▸ Раунд 2 — 4 слова</span>
+          <span style="font-size:9px;color:#888;">✕</span>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header">
+          <span>▸ Раунд 3 — 5 слов</span>
+          <span style="font-size:9px;color:#888;">✕</span>
+        </div>
+      </div>
+
+      <div class="btn-add">+ Раунд</div>
+    </div>
+  </div>
+
+  <!-- TAB: AI -->
+  <div>
+    <div class="screen">
+      <div class="screen-title">Таб «AI»</div>
+      <div class="tab-bar">
+        <div class="tab">📝 Темы</div>
+        <div class="tab">⚡ Блиц</div>
+        <div class="tab active" style="background:#6a5acd;">🤖 AI</div>
+        <div style="flex:1"></div>
+        <div class="tab" style="font-size:9px;">⬇⬆ JSON</div>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <div class="section-label">OpenRouter API Key</div>
+        <div class="input-mock" style="width:100%;box-sizing:border-box;">sk-or-v1-•••••••••</div>
+      </div>
+
+      <div class="ai-section">
+        <div class="ai-label">📋 Генерация тем</div>
+        <div class="section-label">Предложения тем:</div>
+        <div class="textarea-mock">космос, животные, мемы, советское кино</div>
+        <div class="inline-row" style="margin-top:6px;">
+          <span style="font-size:9px;color:#aaa;">Кол-во:</span>
+          <div class="input-mock" style="width:40px;text-align:center;">5</div>
+          <div class="btn btn-primary">Сгенерировать</div>
+        </div>
+
+        <div class="preview-box">
+          <div style="font-size:9px;color:#6a5acd;margin-bottom:4px;">Результат:</div>
+          <div class="preview-item"><span>Космос</span><span style="color:#888;font-size:9px;">широкая, для всех</span></div>
+          <div class="preview-item"><span>Советское кино</span><span style="color:#888;font-size:9px;">ностальгия</span></div>
+          <div class="preview-item"><span>Мемы</span><span style="color:#888;font-size:9px;">современная культура</span></div>
+          <div style="text-align:right;margin-top:6px;">
+            <div class="btn btn-success">✓ Применить</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-section">
+        <div class="ai-label">❓ Генерация вопросов</div>
+        <div class="inline-row">
+          <span style="font-size:9px;color:#aaa;">Игроков:</span>
+          <div class="input-mock" style="width:40px;text-align:center;">6</div>
+          <span style="font-size:9px;color:#aaa;">Вопросов/тему:</span>
+          <div class="input-mock" style="width:40px;text-align:center;">4</div>
+          <div class="btn btn-primary">Сгенерировать</div>
+        </div>
+        <div style="font-size:9px;color:#666;margin-top:2px;">Генерирует вопросы для всех тем из таба «Темы»</div>
+      </div>
+
+      <div class="ai-section">
+        <div class="ai-label">⚡ Генерация блиц-заданий</div>
+        <div class="inline-row">
+          <span style="font-size:9px;color:#aaa;">Раундов:</span>
+          <div class="input-mock" style="width:40px;text-align:center;">3</div>
+          <span style="font-size:9px;color:#aaa;">Слов/раунд:</span>
+          <div class="input-mock" style="width:40px;text-align:center;">5</div>
+          <div class="btn btn-primary">Сгенерировать</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Answer check -->
+  <div>
+    <div class="screen" style="padding:0;">
+      <div class="screen-title" style="padding:14px 14px 0;">Попап «Проверить ответы»</div>
+      <div class="modal-overlay">
+        <div class="modal">
+          <div class="modal-title">Проверка: «Кто основал Рим?»</div>
+
+          <div class="section-label">Ответы для проверки:</div>
+          <div class="textarea-mock" style="margin-bottom:8px;">Ромул и Рем
+Ромул
+Братья-близнецы</div>
+
+          <div style="text-align:right;margin-bottom:8px;">
+            <div class="btn btn-primary">Проверить</div>
+          </div>
+
+          <div class="preview-box">
+            <div class="preview-item">
+              <span>Ромул и Рем</span>
+              <span style="color:#4a8a4a;">✓ верно</span>
+            </div>
+            <div class="preview-item">
+              <span>Ромул</span>
+              <span style="color:#4a8a4a;">✓ верно (группа 1)</span>
+            </div>
+            <div class="preview-item">
+              <span>Братья-близнецы</span>
+              <span style="color:#cc8844;">~ неточно</span>
+            </div>
+            <div class="divider"></div>
+            <div style="font-size:9px;color:#aaa;">Ромул — основатель; «братья-близнецы» — описание, не имя</div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:10px;">
+            <div class="btn btn-secondary">Закрыть</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- States: loading + error -->
+<h3 style="margin-top:24px;">Состояния загрузки и ошибок</h3>
+<div class="design-grid">
+  <div>
+    <div class="screen">
+      <div class="screen-title">Загрузка AI</div>
+      <div class="ai-section">
+        <div class="ai-label">📋 Генерация тем</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:12px 0;">
+          <div class="loader"></div>
+          <span style="font-size:10px;color:#aaa;">Генерируем темы...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="screen">
+      <div class="screen-title">Ошибка AI</div>
+      <div class="ai-section">
+        <div class="ai-label">📋 Генерация тем</div>
+        <div class="error-bar">
+          <span>Ошибка сети: таймаут запроса</span>
+          <div class="btn btn-danger" style="font-size:9px;">Повторить</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

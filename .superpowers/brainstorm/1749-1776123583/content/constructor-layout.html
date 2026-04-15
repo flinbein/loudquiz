@@ -1,0 +1,138 @@
+<h2>Конструктор вопросов — Layout</h2>
+<p class="subtitle">Как организовать основной экран конструктора? Учти: mobile-first, но основное использование — десктоп.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="padding:16px;font-family:monospace;font-size:12px;line-height:1.6;background:#1a1a2e;color:#e0e0e0;border-radius:8px;">
+        <div style="display:flex;gap:2px;height:200px;">
+          <div style="width:30%;background:#2a2a4a;border-radius:4px;padding:8px;">
+            <div style="font-size:10px;color:#888;margin-bottom:6px;">ТЕМЫ</div>
+            <div style="background:#3a3a5a;border-radius:3px;padding:4px 6px;margin-bottom:3px;font-size:9px;">🎵 Музыка</div>
+            <div style="background:#5a4a8a;border-radius:3px;padding:4px 6px;margin-bottom:3px;font-size:9px;border:1px solid #8a7aba;">📚 История</div>
+            <div style="background:#3a3a5a;border-radius:3px;padding:4px 6px;margin-bottom:3px;font-size:9px;">🎬 Кино</div>
+            <div style="margin-top:8px;background:#4a4a6a;border-radius:3px;padding:3px;text-align:center;font-size:9px;">+ Тема</div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="flex:1;background:#2a2a4a;border-radius:4px;padding:8px;">
+              <div style="font-size:10px;color:#888;margin-bottom:6px;">ВОПРОСЫ — История</div>
+              <div style="background:#3a3a5a;border-radius:3px;padding:4px 6px;margin-bottom:3px;font-size:9px;display:flex;justify-content:space-between;">
+                <span>Кто основал Рим?</span><span style="color:#aaa;">100</span>
+              </div>
+              <div style="background:#3a3a5a;border-radius:3px;padding:4px 6px;margin-bottom:3px;font-size:9px;display:flex;justify-content:space-between;">
+                <span>Год падения Берлинской стены?</span><span style="color:#aaa;">150</span>
+              </div>
+              <div style="margin-top:6px;background:#4a4a6a;border-radius:3px;padding:3px;text-align:center;font-size:9px;">+ Вопрос</div>
+            </div>
+            <div style="height:35%;background:#2a2a4a;border-radius:4px;padding:8px;">
+              <div style="font-size:10px;color:#888;margin-bottom:6px;">БЛИЦ-ЗАДАНИЯ</div>
+              <div style="display:flex;gap:3px;">
+                <div style="flex:1;background:#3a3a5a;border-radius:3px;padding:4px;font-size:8px;text-align:center;">Раунд 1<br><span style="color:#aaa;">5 слов</span></div>
+                <div style="flex:1;background:#3a3a5a;border-radius:3px;padding:4px;font-size:8px;text-align:center;">Раунд 2<br><span style="color:#aaa;">4 слова</span></div>
+                <div style="flex:1;background:#4a4a6a;border-radius:3px;padding:4px;font-size:8px;text-align:center;">+</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;margin-top:6px;justify-content:flex-end;">
+          <div style="background:#4a6a4a;border-radius:3px;padding:3px 8px;font-size:9px;">Экспорт</div>
+          <div style="background:#4a4a6a;border-radius:3px;padding:3px 8px;font-size:9px;">Импорт</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Трёхпанельный (sidebar + main + bottom)</h3>
+      <p>Классический desktop layout. Список тем слева, вопросы выбранной темы в центре, блиц внизу. Toolbar с кнопками экспорта/импорта наверху или внизу.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Всё видно одновременно</li><li>Быстрая навигация между темами</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>На мобильных нужен другой layout</li><li>Сложнее адаптировать</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="padding:16px;font-family:monospace;font-size:12px;line-height:1.6;background:#1a1a2e;color:#e0e0e0;border-radius:8px;">
+        <div style="height:200px;display:flex;flex-direction:column;gap:2px;">
+          <div style="display:flex;gap:4px;padding:4px;background:#2a2a4a;border-radius:4px;">
+            <div style="background:#5a4a8a;border-radius:3px;padding:3px 8px;font-size:9px;border:1px solid #8a7aba;">Темы</div>
+            <div style="background:#3a3a5a;border-radius:3px;padding:3px 8px;font-size:9px;">Блиц</div>
+            <div style="background:#3a3a5a;border-radius:3px;padding:3px 8px;font-size:9px;">Настройки</div>
+            <div style="flex:1;"></div>
+            <div style="background:#4a6a4a;border-radius:3px;padding:3px 8px;font-size:9px;">⬇ JSON</div>
+          </div>
+          <div style="flex:1;background:#2a2a4a;border-radius:4px;padding:8px;">
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+              <div style="background:#3a3a5a;border-radius:12px;padding:3px 10px;font-size:9px;">🎵 Музыка ✕</div>
+              <div style="background:#5a4a8a;border-radius:12px;padding:3px 10px;font-size:9px;border:1px solid #8a7aba;">📚 История ✕</div>
+              <div style="background:#3a3a5a;border-radius:12px;padding:3px 10px;font-size:9px;">🎬 Кино ✕</div>
+              <div style="background:#4a4a6a;border-radius:12px;padding:3px 10px;font-size:9px;">+ Тема</div>
+            </div>
+            <div style="font-size:10px;color:#888;margin-bottom:6px;">Вопросы: История</div>
+            <div style="background:#3a3a5a;border-radius:3px;padding:6px;margin-bottom:3px;font-size:9px;display:flex;justify-content:space-between;">
+              <span>Кто основал Рим?</span><span style="color:#aaa;">100 ✎ ✕</span>
+            </div>
+            <div style="background:#3a3a5a;border-radius:3px;padding:6px;margin-bottom:3px;font-size:9px;display:flex;justify-content:space-between;">
+              <span>Год падения Берлинской стены?</span><span style="color:#aaa;">150 ✎ ✕</span>
+            </div>
+            <div style="margin-top:6px;background:#4a4a6a;border-radius:3px;padding:4px;text-align:center;font-size:9px;">+ Вопрос</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Табы (темы / блиц / настройки)</h3>
+      <p>Одноколоночный layout с табами наверху. Таб «Темы» показывает chips тем + вопросы выбранной темы. Таб «Блиц» — блиц-задания. Таб «Настройки» — API key и параметры AI.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Одинаково работает на mobile и desktop</li><li>Простая навигация</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Нельзя видеть темы и блиц одновременно</li><li>Больше переключений</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="padding:16px;font-family:monospace;font-size:12px;line-height:1.6;background:#1a1a2e;color:#e0e0e0;border-radius:8px;">
+        <div style="height:200px;display:flex;flex-direction:column;gap:2px;">
+          <div style="background:#2a2a4a;border-radius:4px;padding:8px;margin-bottom:2px;">
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">ТЕМЫ</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <div style="background:#3a3a5a;border-radius:3px;padding:4px 8px;font-size:9px;">🎵 Музыка <span style="color:#aaa;">(3)</span></div>
+              <div style="background:#3a3a5a;border-radius:3px;padding:4px 8px;font-size:9px;">📚 История <span style="color:#aaa;">(2)</span></div>
+              <div style="background:#3a3a5a;border-radius:3px;padding:4px 8px;font-size:9px;">🎬 Кино <span style="color:#aaa;">(0)</span></div>
+              <div style="background:#4a4a6a;border-radius:3px;padding:4px 8px;font-size:9px;">+</div>
+            </div>
+          </div>
+          <div style="flex:1;background:#2a2a4a;border-radius:4px;padding:8px;">
+            <details open style="margin-bottom:6px;">
+              <summary style="font-size:10px;color:#aaa;cursor:pointer;">📚 История — 2 вопроса</summary>
+              <div style="margin-top:4px;">
+                <div style="background:#3a3a5a;border-radius:3px;padding:4px 6px;margin-bottom:2px;font-size:9px;">Кто основал Рим? — 100</div>
+                <div style="background:#3a3a5a;border-radius:3px;padding:4px 6px;margin-bottom:2px;font-size:9px;">Год падения стены? — 150</div>
+              </div>
+            </details>
+            <details style="margin-bottom:6px;">
+              <summary style="font-size:10px;color:#aaa;cursor:pointer;">🎵 Музыка — 3 вопроса</summary>
+            </details>
+          </div>
+          <div style="background:#2a2a4a;border-radius:4px;padding:8px;">
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">БЛИЦ</div>
+            <details>
+              <summary style="font-size:10px;color:#aaa;cursor:pointer;">Раунд 1 — 5 слов</summary>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Аккордеон (всё на одной странице)</h3>
+      <p>Одна длинная страница. Блок тем наверху (chips), затем collapsible-секции по каждой теме с вопросами, внизу — блиц-задания тоже collapsible. Всё видно в структуре, раскрываешь нужное.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Видна вся структура целиком</li><li>Хорошо на mobile</li><li>Нет скрытых панелей</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>При многих темах — длинный скролл</li><li>Менее «приложение», более «документ»</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

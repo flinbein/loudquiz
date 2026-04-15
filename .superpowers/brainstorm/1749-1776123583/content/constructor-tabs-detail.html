@@ -1,0 +1,168 @@
+<style>
+  .tab-bar { display:flex; gap:2px; background:#2a2a4a; border-radius:8px; padding:3px; margin-bottom:8px; }
+  .tab { padding:6px 14px; border-radius:6px; font-size:11px; color:#aaa; cursor:pointer; }
+  .tab.active { background:#5a4a8a; color:#fff; }
+  .mock-page { background:#1e1e2e; border-radius:8px; padding:12px; color:#e0e0e0; font-family:monospace; font-size:11px; min-height:320px; }
+  .chips { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px; }
+  .chip { background:#3a3a5a; border-radius:14px; padding:4px 10px; font-size:10px; }
+  .chip.active { background:#5a4a8a; border:1px solid #8a7aba; }
+  .chip.add { background:#4a4a6a; }
+  .q-row { background:#2a2a4a; border-radius:4px; padding:6px 8px; margin-bottom:3px; font-size:10px; display:flex; justify-content:space-between; align-items:center; }
+  .q-row .actions { color:#888; font-size:9px; }
+  .btn { display:inline-block; border-radius:4px; padding:4px 10px; font-size:10px; text-align:center; }
+  .btn-primary { background:#6a5acd; color:#fff; }
+  .btn-secondary { background:#3a3a5a; color:#ccc; }
+  .btn-success { background:#4a8a4a; color:#fff; }
+  .btn-add { background:#4a4a6a; color:#ccc; margin-top:6px; text-align:center; border-radius:4px; padding:5px; font-size:10px; }
+  .ai-panel { background:#2a2a4a; border:1px dashed #6a5acd; border-radius:6px; padding:10px; margin-top:10px; }
+  .ai-label { font-size:9px; color:#6a5acd; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; }
+  .input-mock { background:#1a1a2e; border:1px solid #3a3a5a; border-radius:4px; padding:4px 8px; font-size:10px; color:#ccc; width:100%; box-sizing:border-box; }
+  .textarea-mock { background:#1a1a2e; border:1px solid #3a3a5a; border-radius:4px; padding:6px 8px; font-size:10px; color:#ccc; width:100%; min-height:40px; box-sizing:border-box; }
+  .inline-row { display:flex; gap:6px; align-items:center; margin-bottom:6px; }
+  .section-label { font-size:10px; color:#888; margin-bottom:6px; }
+  .toolbar-row { display:flex; gap:4px; justify-content:flex-end; margin-bottom:8px; }
+  .divider { border-top:1px solid #3a3a5a; margin:10px 0; }
+  .preview-box { background:#1a1a2e; border:1px solid #3a3a5a; border-radius:4px; padding:8px; margin-top:6px; font-size:10px; }
+  .preview-item { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px dotted #2a2a4a; }
+  .badge { background:#6a5acd; color:#fff; border-radius:8px; padding:1px 6px; font-size:8px; margin-left:4px; }
+</style>
+
+<h2>Конструктор — таб «Темы и вопросы»</h2>
+<p class="subtitle">Ручной ввод + AI-генерация совмещены в одном табе</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mock-page">
+        <div class="tab-bar">
+          <div class="tab active">📝 Темы</div>
+          <div class="tab">⚡ Блиц</div>
+          <div class="tab">🤖 AI</div>
+          <div style="flex:1"></div>
+          <div class="tab" style="font-size:9px;">⬇ JSON ⬆</div>
+        </div>
+
+        <div class="toolbar-row">
+          <div class="btn btn-primary">🤖 Сгенерировать темы</div>
+        </div>
+
+        <div class="chips">
+          <div class="chip active">📚 История</div>
+          <div class="chip">🎵 Музыка</div>
+          <div class="chip">🎬 Кино</div>
+          <div class="chip add">+ Тема</div>
+        </div>
+
+        <div class="section-label">Вопросы — История</div>
+        <div class="toolbar-row">
+          <div class="btn btn-primary" style="font-size:9px;">🤖 Сгенерировать вопросы</div>
+        </div>
+        <div class="q-row"><span>Кто основал Рим?</span><span class="actions">100 · ✓ ✎ ✕</span></div>
+        <div class="q-row"><span>Год падения стены?</span><span class="actions">150 · ✓ ✎ ✕</span></div>
+        <div class="btn-add">+ Вопрос</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. AI-кнопки inline</h3>
+      <p>AI-действия — кнопки прямо в контексте: «Сгенерировать темы» над chips, «Сгенерировать вопросы» над списком вопросов. Настройки AI (ключ, модель) — отдельный таб. Кнопка «✓» у вопроса — проверка ответов.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mock-page">
+        <div class="tab-bar">
+          <div class="tab active">📝 Темы</div>
+          <div class="tab">⚡ Блиц</div>
+          <div class="tab">⚙️ Настройки</div>
+          <div style="flex:1"></div>
+          <div class="tab" style="font-size:9px;">⬇ JSON ⬆</div>
+        </div>
+
+        <div class="chips">
+          <div class="chip active">📚 История</div>
+          <div class="chip">🎵 Музыка</div>
+          <div class="chip">🎬 Кино</div>
+          <div class="chip add">+ Тема</div>
+        </div>
+
+        <div class="section-label">Вопросы — История</div>
+        <div class="q-row"><span>Кто основал Рим?</span><span class="actions">100 · ✓ ✎ ✕</span></div>
+        <div class="q-row"><span>Год падения стены?</span><span class="actions">150 · ✓ ✎ ✕</span></div>
+        <div class="btn-add">+ Вопрос</div>
+
+        <div class="divider"></div>
+
+        <div class="ai-panel">
+          <div class="ai-label">🤖 AI-ассистент</div>
+          <div class="inline-row">
+            <div class="btn btn-primary" style="flex:1;">Сгенерировать темы</div>
+            <div class="btn btn-primary" style="flex:1;">Сгенерировать вопросы</div>
+          </div>
+          <div style="font-size:9px;color:#888;margin-top:4px;">Предложения тем, кол-во игроков — в диалоге генерации</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. AI-панель внизу</h3>
+      <p>Фиксированная AI-панель внизу каждого таба. Контекстные кнопки — генерация тем на табе «Темы», генерация блиц на табе «Блиц». Параметры вводятся в модальном диалоге при нажатии. Настройки API — в табе «Настройки».</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mock-page">
+        <div class="tab-bar">
+          <div class="tab">📝 Темы</div>
+          <div class="tab">⚡ Блиц</div>
+          <div class="tab active" style="background:#6a5acd;">🤖 AI</div>
+          <div style="flex:1"></div>
+          <div class="tab" style="font-size:9px;">⬇ JSON ⬆</div>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div class="section-label">API Key</div>
+          <div class="input-mock">sk-or-v1-••••••••••••</div>
+        </div>
+
+        <div style="background:#2a2a4a;border-radius:6px;padding:8px;margin-bottom:8px;">
+          <div class="section-label">📋 Генерация тем</div>
+          <div class="inline-row">
+            <span style="font-size:9px;color:#aaa;">Предложения:</span>
+          </div>
+          <div class="textarea-mock">космос, животные, мемы, советское кино</div>
+          <div class="inline-row" style="margin-top:6px;">
+            <span style="font-size:9px;color:#aaa;">Кол-во тем:</span>
+            <div class="input-mock" style="width:40px;text-align:center;">5</div>
+            <div class="btn btn-primary">Сгенерировать</div>
+          </div>
+          <div class="preview-box">
+            <div style="font-size:9px;color:#6a5acd;margin-bottom:4px;">Результат:</div>
+            <div class="preview-item"><span>🔭 Космос</span><span style="color:#888;font-size:9px;">широкая тема для всех</span></div>
+            <div class="preview-item"><span>🎬 Советское кино</span><span style="color:#888;font-size:9px;">ностальгия + юмор</span></div>
+            <div style="text-align:center;margin-top:6px;">
+              <div class="btn btn-success">✓ Применить</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#2a2a4a;border-radius:6px;padding:8px;">
+          <div class="section-label">❓ Генерация вопросов</div>
+          <div class="inline-row">
+            <span style="font-size:9px;color:#aaa;">Игроков:</span>
+            <div class="input-mock" style="width:40px;text-align:center;">6</div>
+            <span style="font-size:9px;color:#aaa;">Вопросов/тему:</span>
+            <div class="input-mock" style="width:40px;text-align:center;">4</div>
+            <div class="btn btn-primary">Сгенерировать</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Отдельный AI-таб</h3>
+      <p>Весь AI-workflow в отдельном табе: ключ, генерация тем (ввод + preview + применить), генерация вопросов, генерация блиц. Результат по «Применить» переносится на соответствующие табы. Чёткое разделение ручного и AI.</p>
+    </div>
+  </div>
+
+</div>

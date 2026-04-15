@@ -12,6 +12,7 @@ const mockChat = vi.mocked(chatCompletionJSON);
 
 const INPUT: AnswerCheckInput = {
   question: "Name a planet",
+  captainName: "Cap",
   answers: [
     { playerName: "Alice", answer: "Mars" },
     { playerName: "Bob", answer: "mars" },

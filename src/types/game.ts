@@ -19,7 +19,9 @@ export type BlitzPhase =
 
 export type GamePhase =
   | "lobby"
-  | "topics-suggest"
+  | "topics-collecting"
+  | "topics-generating"
+  | "topics-preview"
   | RoundPhase
   | BlitzPhase
   | "finale";
@@ -106,6 +108,8 @@ export interface ReviewResult {
   bonusTimeApplied: boolean;
   bonusTime: number;
   jokerApplied: boolean;
+  aiStatus: "idle" | "loading" | "done" | "error";
+  aiError?: string;
 }
 
 export interface RoundState {
@@ -140,6 +144,15 @@ export interface TimerState {
   duration: number;
 }
 
+export interface TopicsSuggestState {
+  suggestions: Record<string, string[]>;
+  noIdeas: string[];
+  timerEndsAt: number | null;
+  manualTopics: string[] | null;
+  generationStep: "topics" | "questions" | "blitz" | "done" | null;
+  aiError: { step: "topics" | "questions" | "blitz"; message: string } | null;
+}
+
 // Full game state
 
 export interface GameState {
@@ -152,4 +165,5 @@ export interface GameState {
   currentRound: RoundState | null;
   history: RoundResult[];
   timer: TimerState | null;
+  topicsSuggest?: TopicsSuggestState;
 }

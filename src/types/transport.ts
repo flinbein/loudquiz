@@ -62,7 +62,9 @@ export type PlayerAction =
   | { kind: "skip-blitz-answer" }
   | { kind: "suggest-topic"; text: string }
   | { kind: "dispute-review" }
-  | { kind: "next-round" };
+  | { kind: "next-round" }
+  | { kind: "no-ideas" }
+  | { kind: "start-first-round" };
 
 export type Message =
   | StateUpdateMessage

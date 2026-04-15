@@ -1,0 +1,17 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.timer {
+  display: flex;
+  justify-content: center;
+}
+
+.loader {
+  font-size: 18px;
+  color: var(--color-text, #222);
+  text-align: center;
+}

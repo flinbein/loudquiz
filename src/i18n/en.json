@@ -163,8 +163,42 @@
     "review": "Round Results",
     "next": "Next",
     "dispute": "Dispute",
-    "nextRound": "Next Round"
+    "nextRound": "Next Round",
+    "aiReview": {
+      "loading": "AI is reviewing answers…",
+      "errorPrefix": "Review error",
+      "fallback": "Review manually"
+    }
   },
+  "topics": {
+    "host": {
+      "enterManually": "Enter manually",
+      "manualPlaceholder": "Topic",
+      "submitManual": "Done"
+    },
+    "player": {
+      "title": "Suggest a topic",
+      "placeholder": "Type a topic",
+      "noIdeas": "No ideas",
+      "preparing": "Preparing game…"
+    },
+    "preview": {
+      "startRound": "Start round"
+    },
+    "generating": {
+      "topics": "Generating topics…",
+      "questions": "Generating questions…",
+      "blitz": "Generating blitz…"
+    },
+    "errors": {
+      "topics": "Failed to generate topics",
+      "questions": "Failed to generate questions",
+      "blitz": "Failed to generate blitz",
+      "retry": "Retry",
+      "fallback": "Switch to manual"
+    }
+  },
+  "common": { "cancel": "Cancel" },
   "blitz": {
     "taskTitle": "Blitz task",
     "iAmCaptain": "I'm the blitz captain!",

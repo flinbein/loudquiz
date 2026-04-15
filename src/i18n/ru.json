@@ -163,8 +163,42 @@
     "review": "Итоги раунда",
     "next": "Далее",
     "dispute": "Оспорить",
-    "nextRound": "Следующий раунд"
+    "nextRound": "Следующий раунд",
+    "aiReview": {
+      "loading": "AI проверяет ответы…",
+      "errorPrefix": "Ошибка проверки",
+      "fallback": "Оценить вручную"
+    }
   },
+  "topics": {
+    "host": {
+      "enterManually": "Ввести вручную",
+      "manualPlaceholder": "Тема",
+      "submitManual": "Готово"
+    },
+    "player": {
+      "title": "Предложи тему",
+      "placeholder": "Введи тему",
+      "noIdeas": "Нет идей",
+      "preparing": "Готовим игру…"
+    },
+    "preview": {
+      "startRound": "Начать раунд"
+    },
+    "generating": {
+      "topics": "Генерируем темы…",
+      "questions": "Генерируем вопросы…",
+      "blitz": "Генерируем блиц…"
+    },
+    "errors": {
+      "topics": "Не удалось сгенерировать темы",
+      "questions": "Не удалось сгенерировать вопросы",
+      "blitz": "Не удалось сгенерировать блиц",
+      "retry": "Повторить",
+      "fallback": "Переключить в ручной режим"
+    }
+  },
+  "common": { "cancel": "Отмена" },
   "blitz": {
     "taskTitle": "Блиц-задание",
     "iAmCaptain": "Я капитан блица!",

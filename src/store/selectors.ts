@@ -136,3 +136,7 @@ export function useSettings() {
 export function useTimer() {
   return useGameStore((s) => s.timer);
 }
+
+export function useTopicsSuggest() {
+  return useGameStore((s) => s.topicsSuggest);
+}

@@ -94,6 +94,8 @@ export function submitAnswer(playerName: string, text: string): void {
   if (state.phase !== "round-active" && state.phase !== "round-answer") return;
   if (!state.currentRound) return;
   if (state.currentRound.answers[playerName]) return;
+  const player = state.players.find((p) => p.name === playerName);
+  if (!player || player.team !== state.currentRound.teamId) return;
 
   const newAnswers = {
     ...state.currentRound.answers,

@@ -361,3 +361,39 @@ describe("disputeReview", () => {
     expect(review.evaluations[0]?.correct).toBeTruthy();
   });
 });
+
+describe("submitAnswer dual-mode guard", () => {
+  it("rejects answer from opponent team player", () => {
+    setupRoundState({
+      phase: "round-active",
+      settings: { mode: "manual", teamMode: "dual", topicCount: 2, questionsPerTopic: 2, blitzRoundsPerTeam: 0, pastQuestions: [] },
+      players: [
+        { name: "Alice", emoji: "😈", team: "red", online: true, ready: true },
+        { name: "Bob", emoji: "👹", team: "red", online: true, ready: true },
+        { name: "Dave", emoji: "🦊", team: "blue", online: true, ready: true },
+        { name: "Eve", emoji: "🐸", team: "blue", online: true, ready: true },
+      ],
+      teams: [{ id: "red", score: 0, jokerUsed: false }, { id: "blue", score: 0, jokerUsed: false }],
+      currentRound: { type: "round", teamId: "red", captainName: "Alice", questionIndex: 0, jokerActive: false, answers: {}, activeTimerStartedAt: 0, bonusTime: 0 },
+    });
+    submitAnswer("Dave", "opponent answer");
+    expect(useGameStore.getState().currentRound!.answers).not.toHaveProperty("Dave");
+  });
+
+  it("accepts answer from active team player", () => {
+    setupRoundState({
+      phase: "round-active",
+      settings: { mode: "manual", teamMode: "dual", topicCount: 2, questionsPerTopic: 2, blitzRoundsPerTeam: 0, pastQuestions: [] },
+      players: [
+        { name: "Alice", emoji: "😈", team: "red", online: true, ready: true },
+        { name: "Bob", emoji: "👹", team: "red", online: true, ready: true },
+        { name: "Dave", emoji: "🦊", team: "blue", online: true, ready: true },
+        { name: "Eve", emoji: "🐸", team: "blue", online: true, ready: true },
+      ],
+      teams: [{ id: "red", score: 0, jokerUsed: false }, { id: "blue", score: 0, jokerUsed: false }],
+      currentRound: { type: "round", teamId: "red", captainName: "Alice", questionIndex: 0, jokerActive: false, answers: {}, activeTimerStartedAt: 0, bonusTime: 0 },
+    });
+    submitAnswer("Bob", "team answer");
+    expect(useGameStore.getState().currentRound!.answers).toHaveProperty("Bob");
+  });
+});

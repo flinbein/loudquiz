@@ -36,9 +36,10 @@ export function selectQuestion(linearIndex: number): void {
   });
 }
 
-export function activateJoker(): void {
+export function activateJoker(playerName?: string): void {
   const state = useGameStore.getState();
   if (state.phase !== "round-pick" || !state.currentRound) return;
+  if (playerName !== undefined && playerName !== state.currentRound.captainName) return;
 
   const team = state.teams.find((t) => t.id === state.currentRound!.teamId);
   if (!team || team.jokerUsed) return;
@@ -53,9 +54,9 @@ export function startRoundTask(): void {
   if (state.phase !== "round-ready" || !state.currentRound) return;
   
   const teamPlayers = state.players.filter((p) => p.team === state.currentRound!.teamId);
-  
-  const respondersCount = teamPlayers.length - 1;
-  const activeTimer = createTimer(getActiveTimerDuration(respondersCount));
+
+  const answerersCount = teamPlayers.length;
+  const activeTimer = createTimer(getActiveTimerDuration(answerersCount));
   
   useGameStore.getState().setState({
     phase: "round-active",
@@ -92,7 +93,6 @@ export function submitAnswer(playerName: string, text: string): void {
   const state = useGameStore.getState();
   if (state.phase !== "round-active" && state.phase !== "round-answer") return;
   if (!state.currentRound) return;
-  if (state.currentRound.captainName === playerName) return;
   if (state.currentRound.answers[playerName]) return;
 
   const newAnswers = {
@@ -107,10 +107,10 @@ export function submitAnswer(playerName: string, text: string): void {
     },
   });
 
-  // Auto-transition to review when all responders have answered
+  // Auto-transition to review when all team members (including captain) have answered
   const teamPlayers = state.players.filter((p) => p.team === state.currentRound!.teamId);
-  const respondersCount = teamPlayers.length - 1;
-  if (Object.keys(newAnswers).length >= respondersCount) {
+  const answerersCount = teamPlayers.length;
+  if (Object.keys(newAnswers).length >= answerersCount) {
     useGameStore.getState().setState({
       phase: "round-review",
       timer: null,
@@ -174,8 +174,8 @@ export function initReview(): void {
   if (!state.currentRound) return;
   const round = state.currentRound;
   const teamPlayers = state.players.filter((p) => p.team === round.teamId);
-  const respondersCount = teamPlayers.length - 1;
-  const activeDuration = getActiveTimerDuration(respondersCount);
+  const answerersCount = teamPlayers.length;
+  const activeDuration = getActiveTimerDuration(answerersCount);
 
   const evaluations: AnswerEvaluation[] = Object.entries(state.currentRound.answers).map(
     ([playerName, answer]) => ({
@@ -245,6 +245,7 @@ export function evaluateAnswer(playerName: string, correct: boolean): void {
   evaluateGroup([playerName], correct);
 }
 
+// go to the round-result
 export function confirmScore(): void {
   const state = useGameStore.getState();
   if (state.phase !== "round-review" || !state.currentRound?.reviewResult) return;
@@ -271,14 +272,14 @@ export function confirmScore(): void {
   }
 
   const teamPlayers = state.players.filter((p) => p.team === round.teamId);
-  const respondersCount = teamPlayers.length - 1;
-  const activeDuration = getActiveTimerDuration(respondersCount);
+  const answerersCount = teamPlayers.length;
+  const activeDuration = getActiveTimerDuration(answerersCount);
 
   const bonus = checkBonusConditions(
     round.answers,
     review.evaluations,
     review.groups,
-    respondersCount,
+    answerersCount,
     activeDuration,
     round.activeTimerStartedAt,
   );
@@ -352,6 +353,7 @@ export function splitAnswerFromGroup(playerName: string): void {
   });
 }
 
+// go to the next round
 export function confirmReview(): void {
   const state = useGameStore.getState();
   if (state.phase !== "round-result" || !state.currentRound?.reviewResult) return;
@@ -418,6 +420,7 @@ export function disputeReview(): void {
   const evaluations = state.currentRound.reviewResult.evaluations.map((e) => ({
     ...e,
     correct: (state.currentRound!.answers[e.playerName]?.text === "" ? false : e.correct) as boolean | null,
+    aiComment: undefined,
   }));
   
   const bonusTimeApplied = state.currentRound.reviewResult.bonusTime > 0
@@ -431,8 +434,9 @@ export function disputeReview(): void {
       ...state.currentRound,
       reviewResult: {
         ...state.currentRound.reviewResult,
-        aiStatus: "idle",
+        aiStatus: "manual",
         aiError: undefined,
+        comment: undefined,
         score: 0,
         evaluations,
         bonusTimeApplied

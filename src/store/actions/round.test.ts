@@ -101,6 +101,30 @@ describe("activateJoker", () => {
     activateJoker();
     expect(useGameStore.getState().currentRound!.jokerActive).toBe(false);
   });
+
+  it("activates when called by captain (playerName matches)", () => {
+    useGameStore.setState({
+      currentRound: { ...useGameStore.getState().currentRound!, captainName: "Alice" },
+    });
+    activateJoker("Alice");
+    expect(useGameStore.getState().currentRound!.jokerActive).toBe(true);
+  });
+
+  it("rejects when called by non-captain player", () => {
+    useGameStore.setState({
+      currentRound: { ...useGameStore.getState().currentRound!, captainName: "Alice" },
+    });
+    activateJoker("Bob");
+    expect(useGameStore.getState().currentRound!.jokerActive).toBe(false);
+  });
+
+  it("activates when called with undefined (host bypass)", () => {
+    useGameStore.setState({
+      currentRound: { ...useGameStore.getState().currentRound!, captainName: "Alice" },
+    });
+    activateJoker();
+    expect(useGameStore.getState().currentRound!.jokerActive).toBe(true);
+  });
 });
 
 describe("setPlayerReady", () => {
@@ -148,9 +172,9 @@ describe("submitAnswer", () => {
     expect(useGameStore.getState().currentRound?.answers?.Bob?.text).toBe("");
   });
 
-  it("rejects captain submitting", () => {
-    submitAnswer("Alice", "answer");
-    expect(useGameStore.getState().currentRound?.answers?.Alice).toBeUndefined();
+  it("accepts captain submitting their own answer", () => {
+    submitAnswer("Alice", "captain answer");
+    expect(useGameStore.getState().currentRound?.answers?.Alice?.text).toBe("captain answer");
   });
 });
 

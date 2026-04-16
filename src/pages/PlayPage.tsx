@@ -108,7 +108,7 @@ function HostPlay() {
           selectQuestion(action.questionIndex);
           break;
         case "activate-joker":
-          activateJoker();
+          activateJoker(name);
           break;
         case "submit-answer":
           submitAnswer(name, action.text);

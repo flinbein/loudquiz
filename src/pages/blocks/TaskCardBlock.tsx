@@ -15,7 +15,6 @@ export function TaskCardBlock({ playerName, alwaysOpen }: TaskCardBlockProps) {
   const round = useCurrentRound();
   const players = usePlayers();
   const captain = players.find((p) => p.name === round?.captainName);
-  const phase = usePhase();
   const settings = useSettings();
 
   const myPlayer = playerName ? players.find((p) => p.name === playerName) : undefined;
@@ -72,7 +71,7 @@ interface InternalProps {
   onToggle: () => void;
 }
 
-function TaskCardBlockRound({ captain, isCaptain, isOpponent, isHost, round, alwaysOpen, toggleOpen, onToggle }: InternalProps) {
+function TaskCardBlockRound({ captain, isCaptain, isOpponent, round, alwaysOpen, toggleOpen, onToggle }: InternalProps) {
   const topics = useGameStore((s) => s.topics);
   const phase = usePhase();
   const currentQuestion = useMemo(() => {
@@ -110,7 +109,7 @@ function TaskCardBlockRound({ captain, isCaptain, isOpponent, isHost, round, alw
   );
 }
 
-function TaskCardBlockBlitz({ round, captain, alwaysOpen, isCaptain, isOpponent, isHost, toggleOpen, onToggle }: InternalProps) {
+function TaskCardBlockBlitz({ round, captain, alwaysOpen, isCaptain, isOpponent, toggleOpen, onToggle }: InternalProps) {
   const phase = usePhase();
   const blitzTasks = useGameStore((s) => s.blitzTasks);
 

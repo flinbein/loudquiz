@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render, fireEvent } from "@testing-library/react";
 import { useGameStore } from "@/store/gameStore";
 import { TaskCardBlock } from "./TaskCardBlock";

@@ -1,7 +1,27 @@
-.layout {
-  min-height: 100vh;
-  max-height: 100vh;
+.mainContainer {
+  position: relative;
+  flex: 1;
   display: flex;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-lg);
+  flex-direction: column;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.mainContainer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: transparent;
+  transition: background 200ms;
+}
+
+.mainContainer[data-stripe="red"]::before {
+  background: var(--color-team-red);
+}
+
+.mainContainer[data-stripe="blue"]::before {
+  background: var(--color-team-blue);
 }

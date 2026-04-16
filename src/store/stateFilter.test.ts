@@ -63,28 +63,23 @@ describe("filterStateForPlayer", () => {
       expect(filtered.topics[0]?.questions[0]?.text).toBe("Name a big cat");
     });
 
-    it("responder does NOT see question text in round-active (single mode)", () => {
+    it("responder sees question text in round-active (no longer scrubbed)", () => {
       const state = createTestState();
       const filtered = filterStateForPlayer(state, "Bob");
-      expect(filtered.topics[0]?.questions[0]?.text).toBe("");
+      expect(filtered.topics[0]?.questions[0]?.text).toBe("Name a big cat");
     });
 
     it("non-targeted questions remain visible", () => {
       const state = createTestState();
       const filtered = filterStateForPlayer(state, "Bob");
-      // questionIndex=0 is hidden, but question at index 1 should remain
       expect(filtered.topics[0]?.questions[1]?.text).toBe("Name a fish");
     });
 
-    it("opponent sees question text in dual mode", () => {
+    it("dual-mode: question text not scrubbed for any player", () => {
       const state = createTestState({
         settings: {
-          mode: "manual",
-          teamMode: "dual",
-          topicCount: 3,
-          questionsPerTopic: 4,
-          blitzRoundsPerTeam: 2,
-          pastQuestions: [],
+          mode: "manual", teamMode: "dual", topicCount: 3,
+          questionsPerTopic: 4, blitzRoundsPerTeam: 2, pastQuestions: [],
         },
         players: [
           { name: "Alice", emoji: "🐱", team: "red", online: true, ready: true },
@@ -96,34 +91,10 @@ describe("filterStateForPlayer", () => {
           { id: "blue", score: 0, jokerUsed: false },
         ],
       });
-
-      const filtered = filterStateForPlayer(state, "Dave");
-      expect(filtered.topics[0]?.questions[0]?.text).toBe("Name a big cat");
-    });
-
-    it("active team responder does NOT see question in dual mode", () => {
-      const state = createTestState({
-        settings: {
-          mode: "manual",
-          teamMode: "dual",
-          topicCount: 3,
-          questionsPerTopic: 4,
-          blitzRoundsPerTeam: 2,
-          pastQuestions: [],
-        },
-        players: [
-          { name: "Alice", emoji: "🐱", team: "red", online: true, ready: true },
-          { name: "Bob", emoji: "🐶", team: "red", online: true, ready: true },
-          { name: "Dave", emoji: "🦊", team: "blue", online: true, ready: true },
-        ],
-        teams: [
-          { id: "red", score: 0, jokerUsed: false },
-          { id: "blue", score: 0, jokerUsed: false },
-        ],
-      });
-
-      const filtered = filterStateForPlayer(state, "Bob");
-      expect(filtered.topics[0]?.questions[0]?.text).toBe("");
+      for (const name of ["Alice", "Bob", "Dave"]) {
+        const filtered = filterStateForPlayer(state, name);
+        expect(filtered.topics[0]?.questions[0]?.text).toBe("Name a big cat");
+      }
     });
   });
 
@@ -166,7 +137,7 @@ describe("filterStateForPlayer", () => {
       expect(filtered.blitzTasks[0]?.items?.[0]?.text).toBe("Cat");
     });
 
-    it("non-captain does NOT see blitz task items", () => {
+    it("non-captain sees blitz task items (no longer scrubbed)", () => {
       const state = createTestState({
         phase: "blitz-pick",
         currentRound: {
@@ -181,7 +152,7 @@ describe("filterStateForPlayer", () => {
         },
       });
       const filtered = filterStateForPlayer(state, "Bob");
-      expect(filtered.blitzTasks?.[0]?.items?.[0]?.text).toBe("");
+      expect(filtered.blitzTasks?.[0]?.items?.[0]?.text).toBe("Cat");
     });
   });
 

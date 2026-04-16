@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GameSettings, QuestionsFile, TeamData } from "@/types/game";
 import { useGameStore, defaultSettings } from "@/store/gameStore";
-import { saveGameState } from "@/persistence/sessionPersistence";
+import { saveGameState, clearGameState, clearRoomId } from "@/persistence/sessionPersistence";
 import {
   getApiKey,
   setApiKey,
   getConstructorData,
 } from "@/persistence/localPersistence";
+import { trimQuestionsFileForDual } from "@/logic/dualModeTrim";
 import styles from "./SetupPage.module.css";
 
 export function SetupPage() {
@@ -88,13 +89,25 @@ export function SetupPage() {
         ? [{ id: "red", score: 0, jokerUsed: false }, { id: "blue", score: 0, jokerUsed: false }]
         : [{ id: "none", score: 0, jokerUsed: false }];
 
+    let finalTopics = questionsFile?.topics ?? [];
+    let finalBlitzTasks = questionsFile?.blitzTasks ?? [];
+    if (mode === "manual" && questionsFile) {
+      const trimmed = trimQuestionsFileForDual(questionsFile, teamMode);
+      finalTopics = trimmed.topics;
+      finalBlitzTasks = trimmed.blitzTasks;
+    }
+
+    clearGameState();
+    clearRoomId();
+    sessionStorage.removeItem("loud-quiz-player-room");
+
     const store = useGameStore.getState();
     store.resetGame();
     store.setState({
       settings,
       teams,
-      topics: questionsFile?.topics ?? [],
-      blitzTasks: questionsFile?.blitzTasks ?? [],
+      topics: finalTopics,
+      blitzTasks: finalBlitzTasks,
     });
 
     saveGameState(useGameStore.getState());

@@ -3,6 +3,7 @@ import { useGameStore } from "@/store/gameStore";
 import { generateTopics } from "@/ai/topicGeneration";
 import { generateQuestions } from "@/ai/questionGeneration";
 import { generateBlitzTasks } from "@/ai/blitzGeneration";
+import { trimQuestionsFileForDual } from "@/logic/dualModeTrim";
 import { checkAnswers } from "@/ai/answerCheck";
 import {
   onAiStepSuccess,
@@ -14,7 +15,7 @@ import {
   onAiReviewSuccess,
   onAiReviewError,
 } from "@/store/actions/aiReview";
-import { confirmReview } from "@/store/actions/round";
+import { confirmScore } from "@/store/actions/round";
 import { getApiKey } from "@/persistence/localPersistence";
 import i18n from "@/i18n";
 import type { GameState, AnswerEvaluation } from "@/types/game";
@@ -152,11 +153,14 @@ export function useAiOrchestrator(isHost: boolean): void {
               },
               language,
             )
-              .then((r) =>
-                onAiStepSuccess("blitz", {
-                  blitzTasks: r.rounds.map((round) => ({ items: round.items })),
-                }),
-              )
+              .then((r) => {
+                let blitzTasks = r.rounds.map((round) => ({ items: round.items }));
+                const trimmed = trimQuestionsFileForDual(
+                  { topics: [], blitzTasks },
+                  useGameStore.getState().settings.teamMode,
+                );
+                onAiStepSuccess("blitz", { blitzTasks: trimmed.blitzTasks });
+              })
               .catch((e) => onAiStepError("blitz", errorMessage(e)));
           }
         }
@@ -188,8 +192,8 @@ export function useAiOrchestrator(isHost: boolean): void {
             const apiKey = getApiKey();
             const language = i18n.language || "ru";
             const answers = Object.entries(round.answers)
-              .filter(([name]) => name !== round.captainName)
               .map(([playerName, a]) => ({ playerName, answer: a.text }));
+            console.log("===== checkAnswers")
             checkAnswers(
               apiKey,
               {
@@ -199,7 +203,7 @@ export function useAiOrchestrator(isHost: boolean): void {
               },
               language,
             )
-              .then((r) => onAiReviewSuccess(buildEvaluationsAndGroups(r.results)))
+              .then((r) => onAiReviewSuccess(buildEvaluationsAndGroups(r.results), r.comment))
               .catch((e) => onAiReviewError(errorMessage(e)));
           }
         }
@@ -214,7 +218,7 @@ export function useAiOrchestrator(isHost: boolean): void {
         state.currentRound?.reviewResult?.aiStatus === "done" &&
         prev.currentRound?.reviewResult?.aiStatus !== "done"
       ) {
-        confirmReview();
+        confirmScore();
       }
     }
 

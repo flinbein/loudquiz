@@ -210,5 +210,41 @@ describe("lobby actions", () => {
       expect(s.topicsSuggest?.aiError).toBeNull();
       expect(s.timer).not.toBeNull();
     });
+
+    it("startGame with startingTeam sets that team as first", () => {
+      handleJoin("peer1", "P1");
+      handleJoin("peer2", "P2");
+      handleJoin("peer3", "P3");
+      handleJoin("peer4", "P4");
+      handleSetTeam("P1", "red");
+      handleSetTeam("P2", "red");
+      handleSetTeam("P3", "blue");
+      handleSetTeam("P4", "blue");
+      handleSetReady("P1", true);
+      handleSetReady("P2", true);
+      handleSetReady("P3", true);
+      handleSetReady("P4", true);
+      startGame("blue");
+      const s = useGameStore.getState();
+      expect(s.currentRound!.teamId).toBe("blue");
+    });
+
+    it("startGame without startingTeam picks a valid team", () => {
+      handleJoin("peer1", "P1");
+      handleJoin("peer2", "P2");
+      handleJoin("peer3", "P3");
+      handleJoin("peer4", "P4");
+      handleSetTeam("P1", "red");
+      handleSetTeam("P2", "red");
+      handleSetTeam("P3", "blue");
+      handleSetTeam("P4", "blue");
+      handleSetReady("P1", true);
+      handleSetReady("P2", true);
+      handleSetReady("P3", true);
+      handleSetReady("P4", true);
+      startGame();
+      const s = useGameStore.getState();
+      expect(["red", "blue"]).toContain(s.currentRound!.teamId);
+    });
   });
 });

@@ -93,15 +93,23 @@ export function canStartGame(): boolean {
   return true;
 }
 
-export function startGame(): void {
+export function startGame(startingTeam?: TeamId): void {
   if (!canStartGame()) return;
   const state = useGameStore.getState();
   const nextPhase: GameState["phase"] =
     state.settings.mode === "ai" ? "topics-collecting" : "round-captain";
 
+  let teamId: TeamId;
+  if (startingTeam && state.teams.some((t) => t.id === startingTeam)) {
+    teamId = startingTeam;
+  } else if (state.teams.length > 0) {
+    teamId = state.teams[Math.floor(Math.random() * state.teams.length)]!.id;
+  } else {
+    teamId = "none";
+  }
+
   let extra: Partial<GameState> = {};
   if (nextPhase === "round-captain") {
-    const teamId = state.teams[0]?.id ?? "none";
     extra = {
       currentRound: createNextRoundState(teamId),
       timer: createTimer(getCaptainTimerDuration()),

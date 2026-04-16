@@ -97,9 +97,12 @@ function HostPlay() {
         case "change-emoji":
           handleChangeEmoji(name);
           break;
-        case "start-game":
-          startGame();
+        case "start-game": {
+          const gs = useGameStore.getState();
+          const pl = gs.players.find((p) => p.name === name);
+          startGame(pl?.team);
           break;
+        }
         // Round actions
         case "claim-captain":
           claimCaptain(name);

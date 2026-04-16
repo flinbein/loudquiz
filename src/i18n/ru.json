@@ -246,5 +246,30 @@
     "playMusic": "Проиграть музыку",
     "pauseMusic": "Остановить музыку",
     "close": "Закрыть"
+  },
+  "phase": {
+    "lobby": "Лобби",
+    "topics-collecting": "Сбор тем",
+    "topics-generating": "Генерация вопросов",
+    "topics-preview": "Темы готовы",
+    "round-captain": "Выбор капитана",
+    "round-pick": "Выбор задания",
+    "round-ready": "Подготовка",
+    "round-active": "Идут ответы",
+    "round-answer": "Дополнительное время",
+    "round-review": "Проверка",
+    "round-result": "Результат раунда",
+    "blitz-captain": "Капитан блица",
+    "blitz-pick": "Выбор слова",
+    "blitz-ready": "Подготовка",
+    "blitz-active": "Цепочка объяснений",
+    "blitz-answer": "Дополнительное время",
+    "blitz-review": "Результат блица",
+    "finale": "Финал"
+  },
+  "teams": {
+    "red": "Красные",
+    "blue": "Синие",
+    "none": "Все"
   }
 }

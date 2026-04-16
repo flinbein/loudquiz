@@ -246,5 +246,30 @@
     "playMusic": "Play music",
     "pauseMusic": "Pause music",
     "close": "Close"
+  },
+  "phase": {
+    "lobby": "Lobby",
+    "topics-collecting": "Collecting topics",
+    "topics-generating": "Generating questions",
+    "topics-preview": "Topics ready",
+    "round-captain": "Pick captain",
+    "round-pick": "Pick question",
+    "round-ready": "Get ready",
+    "round-active": "Answers",
+    "round-answer": "Extra time",
+    "round-review": "Review",
+    "round-result": "Round result",
+    "blitz-captain": "Blitz captain",
+    "blitz-pick": "Pick word",
+    "blitz-ready": "Get ready",
+    "blitz-active": "Chain",
+    "blitz-answer": "Extra time",
+    "blitz-review": "Blitz result",
+    "finale": "Finale"
+  },
+  "teams": {
+    "red": "Red",
+    "blue": "Blue",
+    "none": "All"
   }
 }

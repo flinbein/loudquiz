@@ -1,38 +1,78 @@
-import { usePhase, useCurrentRound, usePlayers } from "@/store/selectors";
-import { useMemo } from "react";
+import { usePhase, useCurrentRound, usePlayers, useSettings } from "@/store/selectors";
+import { useEffect, useMemo, useState } from "react";
 import { TaskCard } from "@/components/TaskCard/TaskCard";
 import { useGameStore } from "@/store/gameStore";
 import { useTranslation } from "react-i18next";
-import styles from "./TaskCardBlock.module.css"
-import { PlayerData, RoundState } from "@/types/game";
-
+import styles from "./TaskCardBlock.module.css";
+import type { RoundState } from "@/types/game";
 
 interface TaskCardBlockProps {
-  playerName?: string
+  playerName?: string;
   alwaysOpen?: boolean;
 }
-export function TaskCardBlock({playerName, alwaysOpen}: TaskCardBlockProps) {
+
+export function TaskCardBlock({ playerName, alwaysOpen }: TaskCardBlockProps) {
   const round = useCurrentRound();
   const players = usePlayers();
   const captain = players.find((p) => p.name === round?.captainName);
+  const phase = usePhase();
+  const settings = useSettings();
+
+  const myPlayer = playerName ? players.find((p) => p.name === playerName) : undefined;
   const isCaptain = round?.captainName === playerName;
-  
-  if (round?.type === "round") return (
-    <TaskCardBlockRound round={round} alwaysOpen={alwaysOpen} captain={captain} isCaptain={isCaptain} />
-  )
-  if (round?.type === "blitz") return (
-    <TaskCardBlockBlitz round={round} alwaysOpen={alwaysOpen} captain={captain} isCaptain={isCaptain} />
-  )
+  const isDual = settings.teamMode === "dual";
+  const isInActiveTeam = myPlayer ? myPlayer.team === round?.teamId : false;
+  const isOpponent = isDual && myPlayer != null && !isInActiveTeam;
+  const isHost = playerName == null;
+
+  const [toggleOpen, setToggleOpen] = useState(false);
+  useEffect(() => {
+    setToggleOpen(false);
+  }, [round?.questionIndex, round?.blitzItemIndex]);
+
+  if (round?.type === "round") {
+    return (
+      <TaskCardBlockRound
+        round={round}
+        alwaysOpen={alwaysOpen}
+        captain={captain}
+        isCaptain={isCaptain}
+        isOpponent={isOpponent}
+        isHost={isHost}
+        toggleOpen={toggleOpen}
+        onToggle={() => setToggleOpen((v) => !v)}
+      />
+    );
+  }
+  if (round?.type === "blitz") {
+    return (
+      <TaskCardBlockBlitz
+        round={round}
+        alwaysOpen={alwaysOpen}
+        captain={captain}
+        isCaptain={isCaptain}
+        isOpponent={isOpponent}
+        isHost={isHost}
+        toggleOpen={toggleOpen}
+        onToggle={() => setToggleOpen((v) => !v)}
+      />
+    );
+  }
   return null;
 }
 
-interface TaskCardBlockRoundProps {
-  captain?: PlayerData;
+interface InternalProps {
+  captain?: ReturnType<typeof usePlayers>[number];
   isCaptain?: boolean;
+  isOpponent: boolean;
+  isHost: boolean;
   alwaysOpen?: boolean;
   round: RoundState;
+  toggleOpen: boolean;
+  onToggle: () => void;
 }
-function TaskCardBlockRound({ captain, isCaptain, round, alwaysOpen }: TaskCardBlockRoundProps){
+
+function TaskCardBlockRound({ captain, isCaptain, isOpponent, isHost, round, alwaysOpen, toggleOpen, onToggle }: InternalProps) {
   const topics = useGameStore((s) => s.topics);
   const phase = usePhase();
   const currentQuestion = useMemo(() => {
@@ -46,16 +86,16 @@ function TaskCardBlockRound({ captain, isCaptain, round, alwaysOpen }: TaskCardB
     }
     return undefined;
   }, [round?.questionIndex, topics]);
-  
-  const taskVisible = alwaysOpen || (
-    phase === "round-active" && isCaptain
-    || phase === "round-answer" && isCaptain
-    || phase === "round-review"
-    || phase === "round-result"
-  );
-  
+
+  const isReview = phase === "round-review" || phase === "round-result";
+  const taskVisible = alwaysOpen || isReview
+    || (isCaptain && (phase === "round-active" || phase === "round-answer"))
+    || (isOpponent && toggleOpen);
+
+  const clickable = isOpponent && !isReview;
+
   if (!currentQuestion) return null;
-  
+
   return (
     <div className={styles.taskCardWrap}>
       <TaskCard
@@ -64,36 +104,31 @@ function TaskCardBlockRound({ captain, isCaptain, round, alwaysOpen }: TaskCardB
         difficulty={currentQuestion.question?.difficulty ?? 0}
         question={currentQuestion.question?.text ?? ""}
         hidden={!taskVisible}
+        onClick={clickable ? onToggle : undefined}
       />
     </div>
-  )
+  );
 }
 
-interface TaskCardBlockBlitzProps {
-  captain?: PlayerData;
-  isCaptain?: boolean;
-  alwaysOpen?: boolean;
-  round: RoundState;
-}
-function TaskCardBlockBlitz({round, captain, alwaysOpen, isCaptain}: TaskCardBlockBlitzProps){
+function TaskCardBlockBlitz({ round, captain, alwaysOpen, isCaptain, isOpponent, isHost, toggleOpen, onToggle }: InternalProps) {
   const phase = usePhase();
   const blitzTasks = useGameStore((s) => s.blitzTasks);
-  
+
   if (round.blitzTaskIndex == null) return null;
-  
-  const taskVisible = alwaysOpen || (
-    phase === "blitz-active" && isCaptain
-    || phase === "blitz-pick" && isCaptain
-    || phase === "blitz-answer" && isCaptain
-    || phase === "blitz-review"
-  );
-  
+
+  const isReview = phase === "blitz-review";
+  const taskVisible = alwaysOpen || isReview
+    || (isCaptain && (phase === "blitz-active" || phase === "blitz-pick" || phase === "blitz-answer"))
+    || (isOpponent && toggleOpen);
+
+  const clickable = isOpponent && !isReview;
+
   const currentTask = blitzTasks[round.blitzTaskIndex ?? 0];
   const currentItem =
     currentTask && round?.blitzItemIndex != null
       ? currentTask.items[round.blitzItemIndex]
       : undefined;
-  
+
   const { t } = useTranslation();
   return (
     <div className={styles.taskCardWrap}>
@@ -103,6 +138,7 @@ function TaskCardBlockBlitz({round, captain, alwaysOpen, isCaptain}: TaskCardBlo
         difficulty={currentItem?.difficulty ?? 0}
         question={currentItem?.text ?? ""}
         hidden={!taskVisible}
+        onClick={clickable ? onToggle : undefined}
       />
     </div>
   );

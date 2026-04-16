@@ -397,3 +397,34 @@ describe("submitAnswer dual-mode guard", () => {
     expect(useGameStore.getState().currentRound!.answers).toHaveProperty("Bob");
   });
 });
+
+describe("initReview dual-mode filter", () => {
+  it("excludes opponent players from evaluations", () => {
+    setupRoundState({
+      phase: "round-review",
+      settings: { mode: "manual", teamMode: "dual", topicCount: 2, questionsPerTopic: 2, blitzRoundsPerTeam: 0, pastQuestions: [] },
+      players: [
+        { name: "Alice", emoji: "😈", team: "red", online: true, ready: true },
+        { name: "Bob", emoji: "👹", team: "red", online: true, ready: true },
+        { name: "Dave", emoji: "🦊", team: "blue", online: true, ready: true },
+      ],
+      teams: [{ id: "red", score: 0, jokerUsed: false }, { id: "blue", score: 0, jokerUsed: false }],
+      currentRound: {
+        type: "round", teamId: "red", captainName: "Alice", questionIndex: 0,
+        jokerActive: false,
+        answers: {
+          Alice: { text: "a1", timestamp: 1000 },
+          Bob: { text: "b1", timestamp: 2000 },
+          Dave: { text: "sneaky", timestamp: 3000 },
+        },
+        activeTimerStartedAt: 0, bonusTime: 0,
+      },
+    });
+    initReview();
+    const review = useGameStore.getState().currentRound!.reviewResult!;
+    const names = review.evaluations.map((e) => e.playerName);
+    expect(names).toContain("Alice");
+    expect(names).toContain("Bob");
+    expect(names).not.toContain("Dave");
+  });
+});

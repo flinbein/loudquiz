@@ -179,14 +179,16 @@ export function initReview(): void {
   const answerersCount = teamPlayers.length;
   const activeDuration = getActiveTimerDuration(answerersCount);
 
-  const evaluations: AnswerEvaluation[] = Object.entries(state.currentRound.answers).map(
-    ([playerName, answer]) => ({
+  const teamPlayerNames = new Set(teamPlayers.map((p) => p.name));
+  const evaluations: AnswerEvaluation[] = Object.entries(state.currentRound.answers)
+    .filter(([playerName]) => teamPlayerNames.has(playerName))
+    .map(([playerName, answer]) => ({
       playerName,
       correct: answer.text === "" ? false : null,
-    }),
-  );
-  
+    }));
+
   const groups = Object.entries(round?.answers ?? {})
+    .filter(([name]) => teamPlayerNames.has(name))
     .map(([name, answer]) => ({name, answer} as const))
     .sort((a, b) => a.answer.timestamp - b.answer.timestamp)
     .map(a => [a.name])

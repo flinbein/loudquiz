@@ -1,5 +1,7 @@
 .toolbar {
   z-index: 10;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .toolbar[data-variant="overlay"] {
@@ -23,6 +25,9 @@
   justify-content: flex-end;
   padding: 8px;
   gap: 8px;
+  pointer-events: none;
+}
+.bar * {
   pointer-events: auto;
 }
 
@@ -33,26 +38,13 @@
   flex: 1;
   min-width: 0;
   transition: opacity 200ms, transform 200ms;
+  pointer-events: inherit;
 }
 
 .playerInfo[data-menu-open] {
   opacity: 0;
   transform: translateX(-100%);
   pointer-events: none;
-}
-
-.avatarBtn {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.avatarBtn:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-  border-radius: 50%;
 }
 
 .playerName {
@@ -108,9 +100,15 @@
 .menuPanel {
   display: flex;
   gap: 8px;
-  padding: 8px;
   justify-content: flex-end;
   pointer-events: auto;
+  transition: all var(--duration-all) ease-in-out;
+}
+
+.menuPanelHidden {
+  transform: translateX(calc(100% + 50px));
+  opacity: 0;
+  pointer-events: none;
 }
 
 .panelBtn {

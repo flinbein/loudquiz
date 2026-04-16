@@ -19,11 +19,14 @@ export function getNextPhaseAfterReview(
   totalQuestions: number,
   history: RoundResult[],
   totalBlitz: number,
+  teamCount: number = 1,
 ): GamePhase {
   const playedCount = getPlayedQuestionIndices(history).length;
-  if (playedCount < totalQuestions) return "round-captain";
+  const effectiveQuestions = totalQuestions - (totalQuestions % teamCount);
+  if (playedCount < effectiveQuestions) return "round-captain";
   const playedBlitz = getPlayedBlitzTaskIds(history).length;
-  if (playedBlitz < totalBlitz) return "blitz-captain";
+  const effectiveBlitz = totalBlitz - (totalBlitz % teamCount);
+  if (playedBlitz < effectiveBlitz) return "blitz-captain";
   return "finale";
 }
 

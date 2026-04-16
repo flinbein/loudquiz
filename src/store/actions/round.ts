@@ -397,7 +397,7 @@ export function goToNextRound(){
   const state = useGameStore.getState();
   const history = state.history;
   const totalQuestions = getTotalQuestionCount(state.topics);
-  const nextPhase = getNextPhaseAfterReview(totalQuestions, history, state.blitzTasks.length);
+  const nextPhase = getNextPhaseAfterReview(totalQuestions, history, state.blitzTasks.length, state.teams.length);
   const team = state.teams.find(team => team.id !== state.currentRound?.teamId) ?? state.teams[0]!;
   let nextRound: RoundState | undefined, nextTimer: TimerState | undefined;
   if (nextPhase === "round-captain") {

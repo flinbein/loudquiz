@@ -1,7 +1,7 @@
 import { type InputHTMLAttributes, useEffect, useRef } from "react";
 import cn from "classnames";
-import styles from "./TimerInput.module.css";
 import { Timer } from "@/components/Timer/Timer";
+import styles from "./TimerInput.module.css";
 
 export interface TimerInputProps extends InputHTMLAttributes<HTMLInputElement> {
   startedAt: number; // performance time
@@ -9,7 +9,7 @@ export interface TimerInputProps extends InputHTMLAttributes<HTMLInputElement> {
   warningTimeMs?: number; // milliseconds
 }
 
-export function TimerInput({ startedAt, durationMs, warningTimeMs =10000, className, ...inputProps }: TimerInputProps) {
+export function TimerInput({ startedAt, durationMs, warningTimeMs = 10000, className, autoComplete = "off", ...inputProps }: TimerInputProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   
@@ -44,7 +44,7 @@ export function TimerInput({ startedAt, durationMs, warningTimeMs =10000, classN
   
   return (
     <div ref={wrapperRef} className={cn(styles.wrapper, className)}>
-      <input className={styles.input} {...inputProps} />
+      <input type="search" inputMode="text" className={styles.input} autoComplete={autoComplete} {...inputProps} />
       <Timer startedAt={startedAt} durationMs={durationMs} warningTimeMs={warningTimeMs} />
       <div ref={barRef} className={styles.progressBar} style={{ width: `100%` }} />
     </div>

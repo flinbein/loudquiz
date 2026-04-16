@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import styles from "./Layout.module.css";
+import styles from "./HostLayout.module.css";
 
-export function Layout({children}: {children: ReactNode}) {
+export function HostLayout({children}: {children: ReactNode}) {
   return (
     <div className={styles.layout}>
       {children}

@@ -41,17 +41,15 @@ export function playerNoIdeas(playerName: string): void {
   checkAutoAdvance();
 }
 
-export function startFirstRound(teamIdOrRandom: TeamId | "random"): void {
+export function startFirstRound(teamIdParam?: TeamId): void {
   const s = useGameStore.getState();
   if (s.phase !== "topics-preview") return;
   let teamId: TeamId;
-  if (teamIdOrRandom === "random") {
-    const teams = s.teams.filter((t) => t.id !== "none");
-    if (teams.length === 0) return;
-    teamId = teams[Math.floor(Math.random() * teams.length)]!.id;
+  if (!teamIdParam) {
+    if (s.teams.length === 0) return;
+    teamId = s.teams[Math.floor(Math.random() * s.teams.length)]!.id;
   } else {
-    teamId = teamIdOrRandom;
-    if (teamId === "none") return;
+    teamId = teamIdParam;
     if (!s.teams.some((t) => t.id === teamId)) return;
   }
   useGameStore.getState().setState({

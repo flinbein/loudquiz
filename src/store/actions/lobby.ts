@@ -1,7 +1,12 @@
 import { useGameStore } from "@/store/gameStore";
 import { getRandomEmoji } from "@/logic/emojiPool";
-import { createNextRoundState } from "@/logic/phaseTransitions";
-import { createTimer, getCaptainTimerDuration, getTopicsSuggestTimerDuration } from "@/logic/timer";
+import { createNextBlitzRoundState, createNextRoundState } from "@/logic/phaseTransitions";
+import {
+  createTimer,
+  getBlitzCaptainTimerDuration,
+  getCaptainTimerDuration,
+  getTopicsSuggestTimerDuration,
+} from "@/logic/timer";
 import type { GameState, TeamId } from "@/types/game";
 
 export function handleJoin(_peerId: string, name: string): void {
@@ -164,15 +169,25 @@ export function startGameAsHost(): void {
 
   players = players.map((p) => ({ ...p, ready: true }));
 
-  const nextPhase: GameState["phase"] =
-    state.settings.mode === "ai" ? "topics-collecting" : "round-captain";
-
+  const nextPhase  = ((): GameState["phase"] => {
+    if (state.settings.mode === "ai") return "topics-collecting";
+    const questionsCount = state.topics.reduce((a, t) => a + t.questions.length, 0);
+    if (state.settings.teamMode === "dual" && questionsCount >= 2) return "round-captain";
+    if (state.settings.teamMode === "single" && questionsCount >= 1) return "round-captain";
+    return "blitz-captain";
+  })();
+  
+  const teamId = state.teams[Math.round(Math.random() * state.teams.length)]?.id ?? "none";
   let extra: Partial<GameState> = {};
   if (nextPhase === "round-captain") {
-    const teamId = state.teams[0]?.id ?? "none";
     extra = {
       currentRound: createNextRoundState(teamId),
       timer: createTimer(getCaptainTimerDuration()),
+    };
+  } else if (nextPhase === "blitz-captain") {
+    extra = {
+      currentRound: createNextBlitzRoundState(teamId, 0),
+      timer: createTimer(getBlitzCaptainTimerDuration()),
     };
   } else {
     // topics-collecting

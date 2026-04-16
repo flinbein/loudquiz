@@ -15,6 +15,7 @@
 }
 
 .input {
+  min-width: 20px;
   flex: 1;
   border: none;
   outline: none;

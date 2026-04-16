@@ -24,9 +24,13 @@ WebTorrent trackers keep peer entries until the WebSocket disconnects. After a p
 
 ### Star topology pruning
 
-p2pt creates a full mesh — every peer connects to every other peer. For host-player architecture, players must prune non-host peers. Players give each peer 5s to prove it's the host by sending a `state-update` message. Non-host peers are destroyed via `peer.destroy()`.
+p2pt creates a full mesh — every peer connects to every other peer. For host-player architecture, players must prune non-host peers. Players give each peer 5s to prove it's the host by sending a `state-update` or `sync-response` message. Non-host peers are destroyed via `destroyAllChannels()`.
 
-**Caveat**: The `Peer` TypeScript type from p2pt doesn't expose `destroy()`, but p2pt peers are `@thaunknown/simple-peer` instances at runtime, which have `destroy()`. Use type assertion: `(peer as unknown as { destroy(): void }).destroy()`.
+**Caveat 1**: The `Peer` TypeScript type from p2pt doesn't expose `destroy()`, but p2pt peers are `@thaunknown/simple-peer` instances at runtime, which have `destroy()`. Use type assertion: `(peer as unknown as { destroy(): void }).destroy()`.
+
+**Caveat 2**: p2pt only emits `peerconnect` once per unique peer ID (uses a `newpeer` flag internally). When pruning, you MUST delete the peer from p2pt's internal `this.peers[id]` map (all channels) — otherwise the peer stays in the map, `requestMorePeers()` keeps adding channels to it, and `peerconnect` never fires again. Use `destroyAllChannels(peerId)`.
+
+**Caveat 3**: Host identification must accept `sync-response` (not just `state-update`). The host may not send `state-update` immediately if `hostActionHandler` hasn't been set yet (React effect timing), but it always responds to `sync-request` via the transport message handler.
 
 ### p2pt.send() wraps messages
 

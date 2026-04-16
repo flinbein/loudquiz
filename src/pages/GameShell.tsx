@@ -5,7 +5,7 @@ import { CalibrationPopupContainer } from "./calibration/CalibrationPopupContain
 import { useCalibrationUiStore } from "@/store/calibrationUiStore";
 import { setTheme as saveTheme } from "@/persistence/localPersistence";
 import type { CalibrationRole } from "@/components/CalibrationPopup/ClockCalibration/ClockCalibrationSection";
-import type { TeamId, PlayerData, PlayerDisplay } from "@/types/game";
+import type { TeamId, PlayerData, PlayerDisplay, GamePhase } from "@/types/game";
 import styles from "./GameShell.module.css";
 
 export interface GameShellProps {
@@ -13,7 +13,7 @@ export interface GameShellProps {
   onClockResync?: () => Promise<number>;
   children: React.ReactNode;
   player?: PlayerDisplay;
-  phaseName?: string;
+  phase?: GamePhase;
   phaseTeam?: TeamId;
   players?: PlayerData[];
   variant?: "inline" | "overlay";
@@ -24,7 +24,7 @@ export function GameShell({
   onClockResync,
   children,
   player,
-  phaseName,
+  phase,
   phaseTeam,
   players,
   variant = "overlay",
@@ -41,6 +41,35 @@ export function GameShell({
         .__calibrationResync;
     };
   }, [onClockResync]);
+  
+  const needWakeLock = !!phase && phase !== "finale";
+  useEffect(function WakeLock() {
+    if (!navigator.wakeLock?.request) return;
+    if (!needWakeLock) return;
+    let released = false;
+    let sentinel: WakeLockSentinel | null = null;
+
+    function acquire() {
+      if (released) return;
+      navigator.wakeLock.request("screen").then(s => {
+        if (released) { void s.release(); return; }
+        sentinel = s;
+      }).catch(() => {});
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") acquire();
+    }
+
+    acquire();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      released = true;
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      if (sentinel) void sentinel.release();
+    };
+  }, [needWakeLock]);
 
   function toggleFullscreen() {
     if (document.fullscreenElement) {
@@ -68,7 +97,7 @@ export function GameShell({
       <Toolbar
         variant={variant}
         player={player}
-        phaseName={phaseName}
+        phaseName={t(`phase.${phase}`)}
         phaseTeam={phaseTeam}
         players={players}
         teamLabels={teamLabels}

@@ -108,7 +108,7 @@ export interface ReviewResult {
   bonusTimeApplied: boolean;
   bonusTime: number;
   jokerApplied: boolean;
-  aiStatus: "idle" | "loading" | "done" | "error";
+  aiStatus: "idle" | "loading" | "done" | "error" | "manual";
   aiError?: string;
 }
 

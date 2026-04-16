@@ -5,6 +5,7 @@ import {
   kickPlayer,
   movePlayer,
   canStartGameAsHost,
+  startGameAsHost,
 } from "@/store/actions/lobby";
 import { TeamGroup } from "@/components/TeamGroup/TeamGroup";
 import {
@@ -13,8 +14,8 @@ import {
 } from "@/components/PlayerStatusTable/PlayerStatusTable";
 import { useCalibrationUiStore } from "@/store/calibrationUiStore";
 import type { TeamId } from "@/types/game";
+import { HostLayout } from "@/pages/blocks/HostLayout";
 import styles from "./HostLobby.module.css";
-import { goToNextRound } from "@/store/actions/round";
 
 export function HostLobby({
   roomId,
@@ -65,7 +66,7 @@ export function HostLobby({
     : null;
 
   return (
-    <div className={styles.layout}>
+    <HostLayout>
       <div className={styles.qrSection}>
         <h2 className={styles.logo}>Loud Quiz</h2>
         <div className={styles.roomId}>
@@ -164,7 +165,7 @@ export function HostLobby({
           <button
             className={styles.startBtn}
             disabled={!canStart}
-            onClick={() => goToNextRound()}
+            onClick={() => startGameAsHost()}
           >
             {t("lobby.start")}
           </button>
@@ -173,7 +174,7 @@ export function HostLobby({
           )}
         </div>
       </div>
-    </div>
+    </HostLayout>
   );
 }
 

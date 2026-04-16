@@ -23,7 +23,7 @@ export function TaskCardBlock({ playerName, alwaysOpen }: TaskCardBlockProps) {
   const isInActiveTeam = myPlayer ? myPlayer.team === round?.teamId : false;
   const isOpponent = isDual && myPlayer != null && !isInActiveTeam;
   const isHost = playerName == null;
-
+ 
   const [toggleOpen, setToggleOpen] = useState(false);
   useEffect(() => {
     setToggleOpen(false);
@@ -112,7 +112,8 @@ function TaskCardBlockRound({ captain, isCaptain, isOpponent, round, alwaysOpen,
 function TaskCardBlockBlitz({ round, captain, alwaysOpen, isCaptain, isOpponent, toggleOpen, onToggle }: InternalProps) {
   const phase = usePhase();
   const blitzTasks = useGameStore((s) => s.blitzTasks);
-
+  const { t } = useTranslation();
+  
   if (round.blitzTaskIndex == null) return null;
 
   const isReview = phase === "blitz-review";
@@ -128,7 +129,7 @@ function TaskCardBlockBlitz({ round, captain, alwaysOpen, isCaptain, isOpponent,
       ? currentTask.items[round.blitzItemIndex]
       : undefined;
 
-  const { t } = useTranslation();
+  if (!currentItem) return null;
   return (
     <div className={styles.taskCardWrap}>
       <TaskCard

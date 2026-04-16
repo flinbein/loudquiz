@@ -1,10 +1,3 @@
-.layout {
-  min-height: 100vh;
-  display: flex;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-lg);
-}
-
 .qrSection {
   flex: 1;
   display: flex;

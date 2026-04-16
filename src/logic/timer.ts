@@ -8,8 +8,8 @@ export function getPickTimerDuration(): number {
   return 60 * 1000;
 }
 
-export function getActiveTimerDuration(respondersCount: number): number {
-  return (55 + 5 * respondersCount) * 1000;
+export function getActiveTimerDuration(answerersCount: number): number {
+  return (55 + 5 * answerersCount) * 1000;
 }
 
 export function getAnswerTimerDuration(): number {

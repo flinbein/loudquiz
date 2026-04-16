@@ -7,10 +7,12 @@
 }
 
 .actions {
+  flex-grow: 1;
   display: flex;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-md);
   flex-direction: column;
+  justify-content: end;
 }
 
 .actionBtn {

@@ -1,5 +1,5 @@
 .taskCardWrap {
     width: 400px;
-    max-width: 500px;
+    max-width: min(500px, 100%);
     margin: 0 auto;
 }

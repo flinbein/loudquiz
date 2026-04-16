@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { TeamId, PlayerData, PlayerDisplay } from "@/types/game";
 import { PlayerAvatar } from "@/components/PlayerAvatar/PlayerAvatar";
 import styles from "./Toolbar.module.css";
+import cn from "classnames";
 
 export interface ToolbarProps {
   variant?: "inline" | "overlay";
@@ -61,15 +62,7 @@ export function Toolbar({
       <div className={styles.bar}>
         {isPlayerMode && (
           <div className={styles.playerInfo} data-menu-open={open === "menu" || undefined}>
-            <button
-              type="button"
-              className={styles.avatarBtn}
-              onClick={() => togglePanel("players")}
-              aria-expanded={open === "players"}
-              aria-label="Player list"
-            >
-              <PlayerAvatar size={32} emoji={player!.emoji} team={player!.team} />
-            </button>
+            <PlayerAvatar size={32} emoji={player!.emoji} team={player!.team} onClick={() => togglePanel("players")} />
             <span className={styles.playerName} data-team={player!.team}>
               {player!.name}
             </span>
@@ -85,19 +78,7 @@ export function Toolbar({
             </span>
           </div>
         )}
-        <button
-          type="button"
-          className={styles.menuBtn}
-          onClick={() => togglePanel("menu")}
-          aria-expanded={open === "menu"}
-          aria-label="Menu"
-        >
-          {"\u2630"}
-        </button>
-      </div>
-
-      {open === "menu" && (
-        <div className={styles.menuPanel}>
+        <div className={cn(styles.menuPanel, {[styles.menuPanelHidden!]: open !== "menu"})}>
           <button type="button" className={styles.panelBtn} onClick={() => { onOpenCalibration(); setOpen(null); }}>
             {"\u{1F50A}"}
           </button>
@@ -108,8 +89,17 @@ export function Toolbar({
             {"\u263E"}
           </button>
         </div>
-      )}
-
+        <button
+          type="button"
+          className={styles.menuBtn}
+          onClick={() => togglePanel("menu")}
+          aria-expanded={open === "menu"}
+          aria-label="Menu"
+        >
+          {"\u2630"}
+        </button>
+      </div>
+      
       {open === "players" && isPlayerMode && players && (
         <PlayersPanel players={players} teamLabels={teamLabels} />
       )}

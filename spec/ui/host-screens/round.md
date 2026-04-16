@@ -37,7 +37,7 @@
 
 ### Элементы экрана
 
-- **Таймер** — `50с + 5с × responders_count`
+- **Таймер** — `55с + 5с × team_size` (капитан тоже отвечает)
   (см. [глоссарий](../../game/glossary.md)).
 - **Таблица заданий** ([TaskView](../components/TaskView.md), уменьшенный вариант).
 - **Карточка задания** ([TaskCard](../components/TaskCard.md)) —

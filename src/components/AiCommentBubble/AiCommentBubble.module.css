@@ -2,8 +2,9 @@
   display: flex;
   align-items: flex-start;
   gap: 0.6em;
-  font-size: 1.5em;
-  line-height: 1.4;
+  font-family: var(--font-display);
+  font-size: 1.2em;
+  line-height: 1.5;
 }
 
 .avatarSlot {
@@ -14,7 +15,7 @@
 .bubble {
   position: relative;
   display: grid;
-  background: var(--color-surface);
+  background: var(--color-bg-secondary);
   color: var(--color-text);
   border: 1px solid var(--color-border, rgba(0, 0, 0, 0.12));
   border-radius: 20px;
@@ -34,7 +35,7 @@
   height: 0;
   border-top: 0.45em solid transparent;
   border-bottom: 0.45em solid transparent;
-  border-right: 0.55em solid var(--color-surface);
+  border-right: 0.55em solid var(--color-bg-secondary);
   filter: drop-shadow(-1px 0 0 var(--color-border, rgba(0, 0, 0, 0.12)));
 }
 
@@ -76,6 +77,6 @@
   bottom: 0.25em;
   right: 0.8em;
   font-size: 0.55em;
-  color: var(--color-text-muted, rgba(0, 0, 0, 0.5));
+  color: var(--color-text-secondary, rgba(0, 0, 0, 0.5));
   font-style: italic;
 }

@@ -51,12 +51,14 @@ export function TaskBoardBlock({hostSelect, playerName, sendAction}: TaskViewBlo
         );
         const roundResult = history.find(v => v.questionIndex === linearIdx);
         const isActive = round?.type === "round" && round?.questionIndex === linearIdx;
+        const captain = players.find(p => p.name === roundResult?.captainName);
         return {
           open: roundResult != null || isActive,
           active: isActive,
-          player: players.find(p => p.name === roundResult?.captainName),
+          player: captain,
           jokerUsed: history.find(v => v.questionIndex === linearIdx)?.jokerUsed ?? false,
           difficulty: q.difficulty,
+          paperColor: captain?.team,
           totalScore: isActive ? undefined : roundResult?.score
         } satisfies TaskViewQuestion;
       }),

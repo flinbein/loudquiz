@@ -39,7 +39,7 @@ describe("generateQuestions", () => {
     const opts = mockChat.mock.calls[0]![0];
     expect(opts.messages[0]!.role).toBe("system");
     expect(opts.messages[0]!.content).toContain("3 questions");
-    expect(opts.messages[0]!.content).toContain("4 unique");
+    expect(opts.messages[0]!.content).toContain("4 entries");
     expect(opts.messages[0]!.content).toContain("ru");
     expect(opts.messages[1]!.role).toBe("user");
     expect(opts.messages[1]!.content).toContain("Movies");

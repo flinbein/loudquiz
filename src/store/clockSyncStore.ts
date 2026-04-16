@@ -52,3 +52,4 @@ export function getHostNow(): number {
 export function toLocalTime(hostTime: number = 0): number {
   return hostTime - useClockSyncStore.getState().offset;
 }
+

@@ -1,30 +1,6 @@
-.layout {
-  min-height: 100vh;
-  max-height: 100vh;
-  display: flex;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-lg);
-}
-
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  align-items: center;
-}
-
-.sidebar {
-  width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  padding-top: var(--spacing-xl);
-}
-
 .taskCardWrap {
   width: 400px;
-  max-width: 500px;
+  max-width: min(500px, 100%);
   margin: 0 auto;
 }
 
@@ -88,4 +64,8 @@
   font-weight: 700;
   color: var(--color-success);
   margin-left: var(--spacing-xs);
+}
+
+.stickerSlot {
+  width: 200px;
 }

@@ -7,7 +7,7 @@ import { getNextBlitzAnswerer } from "@/store/actions/blitz";
 import { CircleTimer } from "@/components/CircleTimer/CircleTimer";
 import { TimerButton } from "@/components/TimerButton/TimerButton";
 import { TimerInput } from "@/components/TimerInput/TimerInput";
-import { toLocalTime } from "@/store/clockSyncStore";
+import { useLocalTimer } from "@/hooks/useLocalTimer";
 import type { BlitzPhase } from "@/types/game";
 import type { PlayerAction } from "@/types/transport";
 import styles from "./PlayerBlitz.module.css";
@@ -37,7 +37,7 @@ export function PlayerBlitz({ playerName, sendAction }: PlayerBlitzProps) {
   const isInChain = order.includes(playerName);
 
   if (!isActiveTeam) {
-    return <OpponentView />;
+    return <OpponentView playerName={playerName} />;
   }
   
   if (phase === "blitz-captain") return (
@@ -57,13 +57,13 @@ export function PlayerBlitz({ playerName, sendAction }: PlayerBlitzProps) {
   return <BlitzGame playerName={playerName} sendAction={sendAction} />
 }
 
-function OpponentView() {
+function OpponentView({playerName}: {playerName: string}) {
   const phase = usePhase() as BlitzPhase;
   const { t } = useTranslation();
   return (
     <div className={styles.container}>
       <div className={styles.phaseInfo}>{t(`blitz.${phase}.opponentHint`)}</div>
-      <TaskCardBlock alwaysOpen />
+      <TaskCardBlock playerName={playerName} />
       <TimerView />
     </div>
   );
@@ -81,7 +81,7 @@ function BlitzCaptainPhase({
   isCaptain,
   isInChain,
 }: PhaseProps & { order: string[]; isCaptain: boolean; isInChain: boolean }) {
-  const timer = useGameStore((s) => s.timer);
+  const timer = useLocalTimer();
   const history = useGameStore((s) => s.history);
   const round = useCurrentRound();
   const players = usePlayers();
@@ -99,7 +99,7 @@ function BlitzCaptainPhase({
     return (
       <div className={styles.container}>
         <TimerButton
-          startedAt={toLocalTime(timer?.startedAt)}
+          startedAt={timer?.startedAt ?? 0}
           durationMs={timer?.duration ?? 0}
           onClick={() => sendAction({ kind: "claim-blitz-captain" })}
           disabled={!eligibleForCaptain}
@@ -224,7 +224,7 @@ function BlitzGame({
   
   return (
     <div className={styles.container}>
-      <TaskCardBlock />
+      <TaskCardBlock playerName={playerName} />
       {phase === "blitz-ready" && (
         <button
           className={styles.readyBtn}
@@ -252,7 +252,7 @@ function BlitzGame({
           </div>
         )
       )}
-      {phase === "round-review" && (
+      {phase === "blitz-review" && (
         <>
           <div className={styles.scoreDisplay}>+{round?.reviewResult?.score ?? 0}</div>
           <button className={styles.nextBtn} onClick={() => sendAction({ kind: "next-round" })}>
@@ -303,13 +303,13 @@ function BlitzHint({playerName}: BlitzHintProps){
 
 
 function LastPlayerAnswerForm({ sendAction }: { sendAction: (action: PlayerAction) => void }) {
-  const timer = useGameStore((s) => s.timer);
+  const timer = useLocalTimer();
   const [text, setText] = useState("");
   const { t } = useTranslation();
   return (
     <div className={styles.answerForm}>
       <TimerInput
-        startedAt={toLocalTime(timer?.startedAt)}
+        startedAt={timer?.startedAt ?? 0}
         durationMs={timer?.duration ?? 0}
         value={text}
         autoFocus
@@ -333,13 +333,13 @@ function LastPlayerAnswerForm({ sendAction }: { sendAction: (action: PlayerActio
 }
 
 function AnswerOrSkipForm({ sendAction }: { sendAction: (action: PlayerAction) => void }) {
-  const timer = useGameStore((s) => s.timer);
+  const timer = useLocalTimer();
   const [text, setText] = useState("");
   const { t } = useTranslation();
   return (
     <div className={styles.answerForm}>
       <TimerInput
-        startedAt={toLocalTime(timer?.startedAt)}
+        startedAt={timer?.startedAt ?? 0}
         durationMs={timer?.duration ?? 0}
         value={text}
         autoFocus
@@ -371,9 +371,9 @@ function AnswerOrSkipForm({ sendAction }: { sendAction: (action: PlayerAction) =
 }
 
 function TimerView() {
-  const timer = useGameStore((s) => s.timer);
+  const timer = useLocalTimer();
   if (!timer) return null;
   return (
-    <CircleTimer startedAt={toLocalTime(timer.startedAt)} durationMs={timer.duration ?? 0} />
+    <CircleTimer startedAt={timer.startedAt} durationMs={timer.duration} />
   );
 }

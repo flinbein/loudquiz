@@ -24,13 +24,13 @@ export function checkBonusConditions(
   answers: Record<string, PlayerAnswer>,
   evaluations: AnswerEvaluation[],
   groups: string[][],
-  respondersCount: number,
+  expectedAnswerCount: number,
   activeDuration: number,
   timerStartedAt: number,
 ): { hasBonus: boolean; bonusTime: number } {
-  // 1. All responders answered
+  // 1. All team members answered (including captain)
   const answeredCount = Object.keys(answers).length;
-  if (answeredCount < respondersCount) {
+  if (answeredCount < expectedAnswerCount) {
     return { hasBonus: false, bonusTime: 0 };
   }
 

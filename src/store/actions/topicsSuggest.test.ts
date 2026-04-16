@@ -123,7 +123,7 @@ describe("startFirstRound", () => {
   });
 
   it('resolves "random" to a valid team id', () => {
-    startFirstRound("random");
+    startFirstRound();
     const s = useGameStore.getState();
     expect(s.phase).toBe("round-captain");
     expect(["red"]).toContain(s.currentRound?.teamId);

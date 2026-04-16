@@ -17,7 +17,7 @@ function formatName(name: string): string {
   const cleaned = name.replace(/[?!*_<>(){}\[\]'"`.,;:^+=]/g, "").trim();
   const words = cleaned.split(/[\s\-_]+/).filter(Boolean);
   if (words.length >= 2) {
-    return (words[0]?.[0] ?? '' + words[1]?.[0] ?? '').toUpperCase();
+    return ((words[0]?.[0] ?? '') + (words[1]?.[0] ?? '')).toUpperCase();
   }
   return cleaned.slice(0, 3).toUpperCase();
 }

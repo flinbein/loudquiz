@@ -87,7 +87,7 @@ describe("checkBonusConditions", () => {
     expect(result.hasBonus).toBe(false);
   });
 
-  it("denies bonus when not all responders answered", () => {
+  it("denies bonus when not all team members answered", () => {
     const answers: Record<string, PlayerAnswer> = {
       Bob: { text: "answer1", timestamp: 20000 },
     };

@@ -67,7 +67,7 @@ export function AnswerCheckModal({
             playerName: templateNames[i] ?? `Player${i + 1}`,
             answer,
           })),
-          captainName: templateNames[templateNames.length - 1] ?? "Captain"
+          captainName: templateNames[0] ?? "Player1"
         },
         language,
       );

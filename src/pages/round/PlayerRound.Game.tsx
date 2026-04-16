@@ -4,10 +4,9 @@ import type { PlayerAction } from "@/types/transport";
 import styles from "./PlayerRound.module.css";
 import { useCurrentRound, usePhase, usePlayers, useSettings } from "@/store/selectors";
 import { TimerInput } from "@/components/TimerInput/TimerInput";
-import { toLocalTime } from "@/store/clockSyncStore";
+import { useLocalTimer } from "@/hooks/useLocalTimer";
 import { useState } from "react";
 import { Sticker } from "@/components/Sticker/Sticker";
-import { CircleTimer } from "@/components/CircleTimer/CircleTimer";
 import { TaskCardBlock } from "@/pages/blocks/TaskCardBlock";
 
 interface PlayerRoundGameProps {
@@ -24,19 +23,7 @@ export function PlayerRoundGame({ playerName, sendAction }: PlayerRoundGameProps
   
   const settings = useSettings();
   const myPlayer = players.find((p) => p.name === playerName);
-  const isCaptain = round?.captainName === playerName;
-
-  if (
-    phase === "round-review" &&
-    settings.mode === "ai" &&
-    round?.reviewResult?.aiStatus === "loading"
-  ) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.phaseInfo}>{t("round.aiReview.loading")}</div>
-      </div>
-    );
-  }
+  const isActiveTeam = myPlayer?.team === round?.teamId;
   
   const currentQuestion = (() => {
     if (round?.questionIndex == null) return undefined;
@@ -55,7 +42,7 @@ export function PlayerRoundGame({ playerName, sendAction }: PlayerRoundGameProps
   return (
     <div className={styles.container}>
       <TaskCardBlock playerName={playerName} />
-      {phase === "round-ready" && (
+      {phase === "round-ready" && isActiveTeam && (
         <button
           className={styles.readyBtn}
           disabled={myPlayer?.ready}
@@ -64,32 +51,27 @@ export function PlayerRoundGame({ playerName, sendAction }: PlayerRoundGameProps
           {myPlayer?.ready ? t("lobby.waiting") : t("round.readyBtn")}
         </button>
       )}
-      {phase === "round-active" && isCaptain && (
-        <>
-          <div className={styles.phaseInfo}>{t("round.activeHint")}</div>
-          <TimerView key={phase} />
-        </>
-      )}
-      {phase === "round-answer" && isCaptain && (
-        <>
-          <div className={styles.phaseInfo}>{t("round.answer")}</div>
-          <TimerView key={phase} />
-        </>
-      )}
-      {(phase === "round-active" || phase === "round-answer" ) && !isCaptain && myAnswerTextState == null && (
+      {(phase === "round-active" || phase === "round-answer" ) && myAnswerTextState == null && isActiveTeam && (
         <AnswerForm sendAction={sendAction} />
       )}
       {Boolean(myAnswerTextState) && currentQuestion && (
         <StickerBlock difficulty={currentQuestion.question?.difficulty ?? 0} playerName={playerName} />
       )}
-      {myAnswerTextState === "" && (
+      {myAnswerTextState === "" && isActiveTeam && (
         <div className={styles.phaseInfo}>{t("round.gaveUp")}</div>
       )}
-      {phase === "round-review" && (
-        <>
-          <div className={styles.phaseInfo}>{t("round.review")}</div>
-        </>
+      {phase === "round-review" && settings.mode === "ai" && round?.reviewResult?.aiStatus === "loading" && (
+        <div className={styles.container}>
+          <div className={styles.phaseInfo}>{t("round.aiReview.loading")}</div>
+        </div>
       )}
+      
+      {phase === "round-review" &&settings.mode === "ai" && round?.reviewResult?.aiStatus === "error" && (
+        <div className={styles.container}>
+          <div className={styles.phaseInfo}>{t("round.aiReview.loading")}</div>
+        </div>
+      )}
+      
       {phase === "round-result" && (
         <div className={styles.answerActions}>
           <div className={styles.scoreDisplay}>+{round?.reviewResult?.score ?? 0}</div>
@@ -105,25 +87,18 @@ export function PlayerRoundGame({ playerName, sendAction }: PlayerRoundGameProps
   );
 }
 
-function TimerView(){
-  const timer = useGameStore((s) => s.timer);
-  return (
-    <CircleTimer startedAt={toLocalTime(timer?.startedAt)} durationMs={timer?.duration ?? 0} />
-  )
-}
-
 interface AnswerFormProps {
   sendAction: (action: PlayerAction) => void;
 }
 function AnswerForm({sendAction}: AnswerFormProps){
-  const timer = useGameStore((s) => s.timer);
+  const timer = useLocalTimer();
   const [answerText, setAnswerText] = useState("");
   const { t } = useTranslation();
-  
+
   return (
     <div className={styles.answerForm}>
       <TimerInput
-        startedAt={toLocalTime(timer?.startedAt)}
+        startedAt={timer?.startedAt ?? 0}
         durationMs={timer?.duration ?? 0}
         value={answerText}
         autoFocus

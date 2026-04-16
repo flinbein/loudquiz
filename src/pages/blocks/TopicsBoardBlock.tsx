@@ -15,6 +15,7 @@ export function TopicsBoardBlock() {
   const ts = useTopicsSuggest();
   const containerRef = useRef<HTMLDivElement>(null);
   const wasAtBottomRef = useRef(true);
+  console.log("===== ts",ts);
 
   const entries: Entry[] = useMemo(() => {
     if (!ts) return [];

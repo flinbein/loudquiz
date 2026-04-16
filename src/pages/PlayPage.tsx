@@ -62,7 +62,7 @@ function HostPlay() {
   const peerMap = useRef(new Map<string, string>());
 
   // Host hears the signal (no music — music is for players only).
-  useAudio({ playerName: "" });
+  useAudio({ playerName: undefined });
 
   useEffect(() => {
     if (transport.role === "host" && transport.roomId) {
@@ -257,7 +257,7 @@ function PlayerEntryForm({
           onKeyDown={(e) => {
             if (e.key === "Enter" && canJoin) onJoin();
           }}
-          autoFocus={!roomLocked}
+          autoFocus
         />
         <button
           className={styles.joinBtn}
@@ -282,7 +282,6 @@ function PlayerPlayConnected({
   const phase = usePhase();
   const players = usePlayers();
   const round = useCurrentRound();
-  const { t } = useTranslation();
   useAudio({ playerName });
 
   if (transport.role !== "player") return null;
@@ -309,8 +308,8 @@ function PlayerPlayConnected({
       role="player"
       onClockResync={transport.resyncClock}
       variant={isInGame ? "inline" : "overlay"}
-      player={myPlayer}
-      phaseName={t(`phase.${phase}`)}
+      player={isInGame ? myPlayer : undefined}
+      phase={phase}
       phaseTeam={round?.teamId ?? "none"}
       players={players}
     >

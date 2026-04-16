@@ -3,9 +3,9 @@ import type { Transport, RoomInfo, Message } from "./interface";
 import { generateRoomId } from "@/utils/roomId";
 
 const DEFAULT_TRACKERS = [
-  "wss://tracker.webtorrent.dev",
   "wss://tracker.openwebtorrent.com",
-  "wss://tracker.btorrent.xyz",
+  // "wss://tracker.webtorrent.dev",
+  // "wss://tracker.btorrent.xyz",
 ];
 
 function getTrackers(): string[] {
@@ -41,32 +41,87 @@ export function createP2PTTransport(role: P2PTRole): Transport {
     return `[p2pt:${p2pt?._peerId?.slice(0, 4) ?? "?"}]`;
   }
 
+  function dumpPeerState(label: string) {
+    const ourPeers = [...peers.keys()].map((id) => id.slice(0, 6));
+    const p2ptPeers = p2pt
+      ? Object.entries(
+          (p2pt as unknown as { peers: Record<string, Record<string, unknown>> }).peers,
+        ).map(([id, channels]) => `${id.slice(0, 6)}(ch:${Object.keys(channels).length})`)
+      : [];
+    console.log(
+      `[p2pt-debug] ${tag()} ${label} | our peers: [${ourPeers}] | p2pt peers: [${p2ptPeers}] | hostPeerId: ${hostPeerId?.slice(0, 6) ?? "none"}`,
+    );
+  }
+
+  function markAsHost(peerId: string) {
+    if (hostPeerId === peerId) return;
+    hostPeerId = peerId;
+    const timer = pendingPeerTimers.get(peerId);
+    if (timer) {
+      clearTimeout(timer);
+      pendingPeerTimers.delete(peerId);
+    }
+    console.log(
+      `[p2pt-debug] ${tag()} identified host: ${peerId.slice(0, 6)}`,
+    );
+  }
+
   function setupListeners() {
     if (!p2pt) return;
 
-    p2pt.on("peerconnect", (peer: Peer) => {
-      if (destroyed || peers.has(peer.id)) return;
-      peers.set(peer.id, peer);
-      console.log(`${tag()} peer connected: ${peer.id}`);
+    // Log raw p2pt 'peer' event (fires before peerconnect, for every new simple-peer instance)
+    (p2pt as unknown as { on(e: string, fn: (peer: Peer) => void): void }).on(
+      "peer",
+      (peer: Peer) => {
+        const sp = peer as unknown as { channelName?: string; connected?: boolean };
+        console.log(
+          `[p2pt-debug] ${tag()} RAW peer event: id=${peer.id.slice(0, 6)} channel=${sp.channelName ?? "?"} connected=${sp.connected ?? "?"}`,
+        );
+      },
+    );
 
-      if (role === "player") {
-        // Give this peer 5s to prove it's the host (by sending state-update)
+    p2pt.on("peerconnect", (peer: Peer) => {
+      const sp = peer as unknown as { channelName?: string };
+      console.log(
+        `[p2pt-debug] ${tag()} peerconnect: id=${peer.id.slice(0, 6)} channel=${sp.channelName ?? "?"} alreadyKnown=${peers.has(peer.id)} hostPeerId=${hostPeerId?.slice(0, 6) ?? "none"}`,
+      );
+      if (destroyed || peers.has(peer.id)) return;
+
+      if (role === "player" && hostPeerId && peer.id !== hostPeerId) {
+        console.log(
+          `[p2pt-debug] ${tag()} skipping non-host peer: ${peer.id.slice(0, 6)}`,
+        );
+        return;
+      }
+
+      peers.set(peer.id, peer);
+
+      if (role === "player" && !hostPeerId) {
+        // Give this peer 5s to prove it's the host (by sending
+        // state-update or sync-response)
         const timer = setTimeout(() => {
           pendingPeerTimers.delete(peer.id);
           if (peer.id !== hostPeerId) {
-            console.log(`${tag()} pruning non-host peer: ${peer.id}`);
+            console.log(
+              `[p2pt-debug] ${tag()} pruning non-host peer: ${peer.id.slice(0, 6)}`,
+            );
             peers.delete(peer.id);
-            // p2pt peers are simple-peer instances with destroy() at runtime
-            (peer as unknown as { destroy(): void }).destroy();
+            dumpPeerState("after prune");
           }
         }, 5000);
         pendingPeerTimers.set(peer.id, timer);
       }
 
+      dumpPeerState("after peerconnect");
       connectHandler?.(peer.id);
     });
 
     p2pt.on("peerclose", (peer: Peer) => {
+      const sp = peer as unknown as { channelName?: string };
+      const isHost = peer.id === hostPeerId;
+      console.log(
+        `[p2pt-debug] ${tag()} peerclose: id=${peer.id.slice(0, 6)} channel=${sp.channelName ?? "?"} inOurMap=${peers.has(peer.id)} isHost=${isHost}`,
+      );
       if (destroyed || !peers.has(peer.id)) return;
       peers.delete(peer.id);
       const timer = pendingPeerTimers.get(peer.id);
@@ -74,7 +129,15 @@ export function createP2PTTransport(role: P2PTRole): Transport {
         clearTimeout(timer);
         pendingPeerTimers.delete(peer.id);
       }
-      console.log(`${tag()} peer disconnected: ${peer.id}`);
+      dumpPeerState("after peerclose");
+
+      if (role === "player" && !isHost) {
+        console.log(
+          `[p2pt-debug] ${tag()} ignoring non-host disconnect: ${peer.id.slice(0, 6)}`,
+        );
+        return;
+      }
+
       disconnectHandler?.(peer.id);
     });
 
@@ -84,58 +147,66 @@ export function createP2PTTransport(role: P2PTRole): Transport {
       try {
         const message = JSON.parse(text) as Message;
 
-        // Player-side: first state-update identifies the host
-        if (role === "player" && message.type === "state-update" && !hostPeerId) {
-          hostPeerId = peer.id;
-          const timer = pendingPeerTimers.get(peer.id);
-          if (timer) {
-            clearTimeout(timer);
-            pendingPeerTimers.delete(peer.id);
-          }
-          console.log(`${tag()} identified host: ${peer.id}`);
+        // Player-side: state-update or sync-response identifies the host
+        if (
+          role === "player" &&
+          !hostPeerId &&
+          (message.type === "state-update" || message.type === "sync-response")
+        ) {
+          markAsHost(peer.id);
         }
 
-        console.log(`${tag()} msg from ${peer.id}: ${message.type}`);
+        if (
+          message.type !== "state-update" &&
+          message.type !== "sync-request" &&
+          message.type !== "sync-response"
+        ) {
+          console.log(`[p2pt-debug] ${tag()} msg from ${peer.id.slice(0, 6)}: ${message.type}`);
+        }
         messageHandler?.(peer.id, message);
       } catch (e) {
-        console.warn(`${tag()} bad message from ${peer.id}:`, e);
+        console.warn(`[p2pt-debug] ${tag()} bad message from ${peer.id.slice(0, 6)}:`, e);
       }
     });
 
     p2pt.on("trackerconnect", (tracker) => {
-      console.log(`${tag()} tracker connected: ${tracker.announceUrl ?? "unknown"}`);
+      console.log(
+        `[p2pt-debug] ${tag()} tracker connected: ${tracker.announceUrl ?? "unknown"}`,
+      );
     });
 
     p2pt.on("trackerwarning", (err: unknown) => {
-      console.warn(`${tag()} tracker warning:`, err);
+      console.warn(`[p2pt-debug] ${tag()} tracker warning:`, err);
     });
   }
 
   // Periodically re-announce to discover peers that joined/refreshed after us
   let reannounceTimer: ReturnType<typeof setInterval> | null = null;
   let startTimer: ReturnType<typeof setTimeout> | null = null;
-  const REANNOUNCE_INTERVAL = 10_000; // 10s
-
+  
   function initP2PT(roomId: string) {
     const trackers = getTrackers();
     const identifier = `loud-quiz:${roomId}`;
     p2pt = new P2PT(trackers, identifier);
-    console.log(`${tag()} created with identifier: ${identifier}`);
+    console.log(`[p2pt-debug] ${tag()} created with identifier: ${identifier}, trackers: ${trackers.length}`);
     setupListeners();
 
     // Defer start() so React strict mode cleanup can fire before any network
     // activity. Without this, the first (ghost) p2pt instance connects to
     // trackers, registers a stale peer ID, and pollutes peer discovery.
+    
     startTimer = setTimeout(() => {
       startTimer = null;
       if (destroyed || !p2pt) return;
-      p2pt.start();
-
-      reannounceTimer = setInterval(() => {
-        if (p2pt) {
-          p2pt.requestMorePeers();
-        }
-      }, REANNOUNCE_INTERVAL);
+      p2pt.start().then(
+        () => console.log(`[p2pt-debug] ${tag()} started`),
+        () => console.log(`[p2pt-debug] ${tag()} failed to start`),
+      ).then(() => {
+        return p2pt?.requestMorePeers()
+      }).then(
+        () => console.log(`[p2pt-debug] ${tag()} requestMorePeers done`),
+        () => console.log(`[p2pt-debug] ${tag()} requestMorePeers failed`),
+      );
     }, 0);
   }
 
@@ -166,20 +237,20 @@ export function createP2PTTransport(role: P2PTRole): Transport {
       const roomId = generateRoomId();
       initP2PT(roomId);
       const joinUrl = `${window.location.origin}/play?room=${roomId}`;
-      console.log(`${tag()} room created: ${roomId}`);
+      console.log(`[p2pt-debug] ${tag()} room created: ${roomId}`);
       return { roomId, joinUrl };
     },
 
     async joinRoom(roomId: string): Promise<void> {
       initP2PT(roomId);
-      console.log(`${tag()} joining room: ${roomId}`);
+      console.log(`[p2pt-debug] ${tag()} joining room: ${roomId}`);
     },
 
     send(targetId: string, message: Message): void {
       const peer = peers.get(targetId);
       if (peer && p2pt) {
         p2pt.send(peer, JSON.stringify(message)).catch((err: unknown) => {
-          console.warn(`${tag()} send failed to ${targetId}:`, err);
+          console.warn(`[p2pt-debug] ${tag()} send failed to ${targetId.slice(0, 6)}:`, err);
         });
       }
     },
@@ -189,7 +260,7 @@ export function createP2PTTransport(role: P2PTRole): Transport {
       const text = JSON.stringify(message);
       for (const peer of peers.values()) {
         p2pt.send(peer, text).catch((err: unknown) => {
-          console.warn(`${tag()} broadcast send failed to ${peer.id}:`, err);
+          console.warn(`[p2pt-debug] ${tag()} broadcast send failed to ${peer.id.slice(0, 6)}:`, err);
         });
       }
     },
@@ -207,7 +278,7 @@ export function createP2PTTransport(role: P2PTRole): Transport {
     },
 
     close(): void {
-      console.log(`${tag()} closing`);
+      console.log(`[p2pt-debug] ${tag()} closing`);
       cleanup();
     },
   };

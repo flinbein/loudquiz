@@ -24,7 +24,8 @@ export function beginAiReview(): void {
 export function onAiReviewSuccess(result: {
   evaluations: AnswerEvaluation[];
   groups: string[][];
-}): void {
+}, comment?: string): void {
+  console.log("===== onAiReviewSuccess", comment);
   const s = useGameStore.getState();
   if (s.phase !== "round-review") return;
   const rr = s.currentRound?.reviewResult;
@@ -35,6 +36,7 @@ export function onAiReviewSuccess(result: {
     aiError: undefined,
     evaluations: result.evaluations,
     groups: result.groups,
+    comment,
   }));
 }
 

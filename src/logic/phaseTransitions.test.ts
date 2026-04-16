@@ -50,6 +50,113 @@ describe("getNextPhaseAfterReview", () => {
     ];
     expect(getNextPhaseAfterReview(1, history, 0)).toBe("finale");
   });
+
+  it("dual: continues after first team plays when even questions remain", () => {
+    const history: RoundResult[] = [
+      { type: "round", teamId: "red", captainName: "A", questionIndex: 0, score: 100, jokerUsed: false },
+    ];
+    expect(getNextPhaseAfterReview(2, history, 6, 2)).toBe("round-captain");
+  });
+
+  it("dual: skips last question when odd total (9 questions, 2 teams → 8 played)", () => {
+    const history: RoundResult[] = Array.from({ length: 8 }, (_, i) => ({
+      type: "round" as const, teamId: i % 2 === 0 ? "red" : "blue", captainName: "P", questionIndex: i, score: 100, jokerUsed: false,
+    }));
+    expect(getNextPhaseAfterReview(9, history, 4, 2)).toBe("blitz-captain");
+  });
+
+  it("dual: continues when enough questions remain for both teams", () => {
+    const history: RoundResult[] = Array.from({ length: 6 }, (_, i) => ({
+      type: "round" as const, teamId: i % 2 === 0 ? "red" : "blue", captainName: "P", questionIndex: i, score: 100, jokerUsed: false,
+    }));
+    expect(getNextPhaseAfterReview(9, history, 4, 2)).toBe("round-captain");
+  });
+
+  it("dual: skips last blitz when odd total", () => {
+    const history: RoundResult[] = [
+      { type: "round", teamId: "red", captainName: "A", questionIndex: 0, score: 100, jokerUsed: false },
+      { type: "blitz", teamId: "red", captainName: "B", blitzTaskIndex: 0, score: 200, jokerUsed: false },
+      { type: "blitz", teamId: "blue", captainName: "C", blitzTaskIndex: 1, score: 200, jokerUsed: false },
+    ];
+    expect(getNextPhaseAfterReview(1, history, 3, 2)).toBe("finale");
+  });
+
+  it("dual 9q/2b: after 8th question → blitz-captain", () => {
+    const history: RoundResult[] = Array.from({ length: 8 }, (_, i) => ({
+      type: "round" as const, teamId: i % 2 === 0 ? "red" : "blue", captainName: "P", questionIndex: i, score: 100, jokerUsed: false,
+    }));
+    expect(getNextPhaseAfterReview(9, history, 2, 2)).toBe("blitz-captain");
+  });
+
+  it("single 9q/2b: after 8th question → round-captain (question 9 still available)", () => {
+    const history: RoundResult[] = Array.from({ length: 8 }, (_, i) => ({
+      type: "round" as const, teamId: "none", captainName: "P", questionIndex: i, score: 100, jokerUsed: false,
+    }));
+    expect(getNextPhaseAfterReview(9, history, 2, 1)).toBe("round-captain");
+  });
+
+  it("dual 9q/0b: after 8th question → finale (odd question skipped, no blitz)", () => {
+    const history: RoundResult[] = Array.from({ length: 8 }, (_, i) => ({
+      type: "round" as const, teamId: i % 2 === 0 ? "red" : "blue", captainName: "P", questionIndex: i, score: 100, jokerUsed: false,
+    }));
+    expect(getNextPhaseAfterReview(9, history, 0, 2)).toBe("finale");
+  });
+
+  it("dual 9q/1b: after 8th question → finale (odd question and odd blitz both skipped)", () => {
+    const history: RoundResult[] = Array.from({ length: 8 }, (_, i) => ({
+      type: "round" as const, teamId: i % 2 === 0 ? "red" : "blue", captainName: "P", questionIndex: i, score: 100, jokerUsed: false,
+    }));
+    expect(getNextPhaseAfterReview(9, history, 1, 2)).toBe("finale");
+  });
+
+  it("single 9q/0b: after 8th question → round-captain (question 9 still available)", () => {
+    const history: RoundResult[] = Array.from({ length: 8 }, (_, i) => ({
+      type: "round" as const, teamId: "none", captainName: "P", questionIndex: i, score: 100, jokerUsed: false,
+    }));
+    expect(getNextPhaseAfterReview(9, history, 0, 1)).toBe("round-captain");
+  });
+
+  it("dual 2q/2b: after 1st question → round-captain (2nd question for other team)", () => {
+    const history: RoundResult[] = [
+      { type: "round", teamId: "red", captainName: "P", questionIndex: 0, score: 100, jokerUsed: false },
+    ];
+    expect(getNextPhaseAfterReview(2, history, 2, 2)).toBe("round-captain");
+  });
+
+  it("single 2q/2b: after 1st question → round-captain (2nd question available)", () => {
+    const history: RoundResult[] = [
+      { type: "round", teamId: "none", captainName: "P", questionIndex: 0, score: 100, jokerUsed: false },
+    ];
+    expect(getNextPhaseAfterReview(2, history, 2, 1)).toBe("round-captain");
+  });
+
+  it("dual 2q/0b: after 1st question → round-captain (2nd question for other team)", () => {
+    const history: RoundResult[] = [
+      { type: "round", teamId: "red", captainName: "P", questionIndex: 0, score: 100, jokerUsed: false },
+    ];
+    expect(getNextPhaseAfterReview(2, history, 0, 2)).toBe("round-captain");
+  });
+
+  it("single 2q/0b: after 1st question → round-captain (2nd question available)", () => {
+    const history: RoundResult[] = [
+      { type: "round", teamId: "none", captainName: "P", questionIndex: 0, score: 100, jokerUsed: false },
+    ];
+    expect(getNextPhaseAfterReview(2, history, 0, 1)).toBe("round-captain");
+  });
+
+  it("dual 0q/5b: after 4th blitz → finale (odd blitz skipped)", () => {
+    const history: RoundResult[] = Array.from({ length: 4 }, (_, i) => ({
+      type: "blitz" as const, teamId: i % 2 === 0 ? "red" : "blue", captainName: "P", blitzTaskIndex: i, score: 200, jokerUsed: false,
+    }));
+    expect(getNextPhaseAfterReview(0, history, 5, 2)).toBe("finale");
+  });
+
+  it("single 0q/5b: after 4th blitz → blitz-captain (5th blitz available)", () => {
+    const history: RoundResult[] = Array.from({ length: 4 }, (_, i) => ({
+      type: "blitz" as const, teamId: "none", captainName: "P", blitzTaskIndex: i, score: 200, jokerUsed: false,
+    }));
+    expect(getNextPhaseAfterReview(0, history, 5, 1)).toBe("blitz-captain");
+  });
 });
 
 describe("getPlayedQuestionIndices", () => {

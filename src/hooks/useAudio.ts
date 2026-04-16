@@ -15,7 +15,7 @@ import type { GamePhase } from "@/types/game";
  */
 export interface UseAudioOptions {
   /** Player name; empty string = host/spectator. Host still gets the signal. */
-  playerName: string;
+  playerName: string | undefined;
 }
 
 const MUSIC_PHASES: ReadonlySet<GamePhase> = new Set<GamePhase>([
@@ -38,6 +38,9 @@ export function useAudio({ playerName }: UseAudioOptions): void {
   const musicVolume = useCalibrationSettingsStore((s) => s.musicVolume);
   const signalVolume = useCalibrationSettingsStore((s) => s.signalVolume);
   const hapticEnabled = useCalibrationSettingsStore((s) => s.hapticEnabled);
+  const sharedHeadphones = useCalibrationSettingsStore(
+    (s) => s.sharedHeadphones,
+  );
 
   // Push live calibration values into the manager.
   useEffect(() => {
@@ -50,14 +53,17 @@ export function useAudio({ playerName }: UseAudioOptions): void {
     audioManager.setHapticEnabled(hapticEnabled);
   }, [hapticEnabled]);
 
-  // Music: only players on the active team hear it.
+  // Music: normally only players on the active team hear it.
+  // When sharedHeadphones is on, everyone hears music (including host).
   const isActiveTeamMember = (() => {
     if (!playerName || !currentRound) return false;
     const me = players.find((p) => p.name === playerName);
     return !!me && me.team === currentRound.teamId;
   })();
 
-  const shouldPlayMusic = MUSIC_PHASES.has(phase) && isActiveTeamMember;
+  const shouldPlayMusic =
+    MUSIC_PHASES.has(phase) &&
+    (sharedHeadphones ? !!currentRound : isActiveTeamMember);
   useEffect(() => {
     if (shouldPlayMusic) {
       audioManager.playMusic();

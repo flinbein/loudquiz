@@ -1,71 +1,91 @@
 import { useTranslation } from "react-i18next";
-import { usePhase, useCurrentRound, useTeams, usePlayers, useTimer as useTimerState, } from "@/store/selectors";
+import {
+  usePhase,
+  useCurrentRound,
+  useTeams,
+  usePlayers,
+  useTimer as useTimerState,
+  useTopicsSuggest,
+  useSettings,
+} from "@/store/selectors";
 import { confirmBlitzReview, startBlitzTask } from "@/store/actions/blitz";
 import { TeamScore } from "@/components/TeamScore/TeamScore";
 import { TeamGroup } from "@/components/TeamGroup/TeamGroup";
 import { PlayerStatusTable, type PlayerRole, type PlayerStatus } from "@/components/PlayerStatusTable/PlayerStatusTable";
 import { CircleTimer } from "@/components/CircleTimer/CircleTimer";
-import { GamePhase, GameState } from "@/types/game";
+import { GamePhase, GameState, TeamId } from "@/types/game";
 import { useMemo } from "react";
 import { confirmReview, confirmScore, disputeReview, forceTeamCaptain, startRoundTask } from "@/store/actions/round";
 import styles from "./SidebarBlock.module.css";
+import { startFirstRound } from "@/store/actions/topicsSuggest";
 
 function getPlayerInfo(
   phase: GamePhase,
   playerName: string,
-  round: NonNullable<GameState["currentRound"]>,
+  round: GameState["currentRound"],
   playerReady: boolean,
+  settings: GameState["settings"],
+  topicsSuggest: GameState["topicsSuggest"]
 ): { role: PlayerRole; status?: PlayerStatus; blitzOrder?: number } {
-  const order = round.playerOrder ?? [];
-  const isCaptain = round.captainName === playerName;
+  const order = round?.playerOrder ?? [];
+  const isCaptain = round?.captainName === playerName;
   const slot = order.indexOf(playerName); // 0 = captain, 1..N = responders
   const blitzOrder = slot > 0 ? slot : undefined;
-  const role: PlayerRole = blitzOrder != null ? "blitz-player" : "player";
-  const answer = round.answers[playerName];
-  const evaluation = round.reviewResult?.evaluations.find(
+  const role: PlayerRole = isCaptain ? "captain" : (slot > 0) ? "blitz-player" : "player";
+  const answer = round?.answers?.[playerName];
+  const evaluation = round?.reviewResult?.evaluations?.find(
     (e) => e.playerName === playerName,
   );
-  
-  if (isCaptain) return { role: "captain" };
 
   switch (phase) {
+    case "topics-collecting":
+    case "topics-generating":
+    case "topics-preview": {
+      const mine = topicsSuggest?.suggestions[playerName]?.length ?? 0;
+      const noIdeas = topicsSuggest?.noIdeas.includes(playerName) ?? false;
+      let status: PlayerStatus = "waiting";
+      if (noIdeas) status = "wrong";
+      else if (mine >= settings.topicCount) status = "right";
+      else if (mine > 0) status = "answered";
+      return { role, status };
+    }
     case "round-captain":
     case "round-pick":
-      return { role: "player", status: "waiting" };
+      return { role, status: "waiting" };
     case "round-ready":
-      return { role: "player", status: playerReady ? undefined : "waiting" };
+      return { role, status: playerReady ? undefined : "waiting" };
     case "round-active":
-      if (!answer) return { role: "player", status: "typing" };
-      return { role: "player", status: answer.text === "" ? "wrong" : "answered" };
+      if (!answer) return { role, status: "typing" };
+      return { role, status: answer.text === "" ? "wrong" : "answered" };
     case "round-answer":
-      if (!answer) return { role: "player", status: "typing" };
-      if (answer.text === "") return { role: "player", status: "wrong" };
-      if (evaluation?.correct === true) return { role: "player", status: "right" };
-      if (evaluation?.correct === false) return { role: "player", status: "wrong" };
-      return { role: "player", status: "answered" };
+      if (!answer) return { role, status: "typing" };
+      if (answer.text === "") return { role, status: "wrong" };
+      if (evaluation?.correct === true) return { role, status: "right" };
+      if (evaluation?.correct === false) return { role, status: "wrong" };
+      return { role, status: "answered" };
     case "round-review":
     case "round-result":
-      if (evaluation?.correct === true) return { role: "player", status: "right" };
-      if (evaluation?.correct === false) return { role: "player", status: "wrong" };
-      return { role: "player" };
+      if (evaluation?.correct === true) return { role, status: "right" };
+      if (evaluation?.correct === false) return { role, status: "wrong" };
+      return { role };
     case "blitz-captain":
-      return { role, status: blitzOrder == null ? "waiting" : undefined, blitzOrder };
+      return { role, status: slot ? "waiting" : undefined, blitzOrder };
     case "blitz-pick":
       return { role, status: "waiting", blitzOrder };
     case "blitz-ready":
       return { role, status: playerReady ? undefined : "waiting", blitzOrder };
     case "blitz-active": {
-      const answer = round.answers[playerName];
+      const answer = round?.answers?.[playerName];
       if (answer) return { role, status: "answered", blitzOrder };
       return { role, status: "typing", blitzOrder };
     }
     case "blitz-answer": {
-      const answer = round.answers[playerName];
+      const answer = round?.answers?.[playerName];
       if (answer) return { role, status: answer.text === "" ? "wrong" : "right", blitzOrder };
       return { role, status: "typing", blitzOrder };
     }
     case "blitz-review": {
-      const evaluation = round.reviewResult?.evaluations.find((e) => e.playerName === playerName);
+      const evaluation = round?.reviewResult?.evaluations.find((e) => e.playerName === playerName);
       if (evaluation?.correct === true) return { role, status: "right", blitzOrder };
       if (evaluation?.correct === false) return { role, status: "wrong", blitzOrder };
       return { role, blitzOrder };
@@ -77,42 +97,64 @@ function getPlayerInfo(
 
 export function SidebarBlock() {
   const teams = useTeams();
-  const players = usePlayers();
   const phase = usePhase();
-  const round = useCurrentRound();
-  const { t } = useTranslation();
-
-  if (!round) return null;
   
   const showBonusTime = phase === "round-review" || phase === "round-result";
-  const activeTeam = teams.find(team => team.id === round.teamId);
-  const teamPlayers = players.filter((p) => p.team === activeTeam?.id);
-
+  
   return (
     <div className={styles.sidebar}>
       <TeamScore teams={teams} />
       <TimerView />
       {showBonusTime && <BonusTimeInfo />}
-      <TeamGroup
-        label={t(`team.${activeTeam?.id}`)}
-        teamColor={activeTeam?.id ?? "none"}
-        playerCount={teamPlayers.length}
-      >
-        <PlayerStatusTable
-          players={teamPlayers.map((p) => ({
-            ...p, ...getPlayerInfo(phase, p.name, round, p.ready)
-          }))}
-        />
-      </TeamGroup>
+      <TeamsBlock/>
       
       <SidebarActions />
     </div>
   );
 }
 
+function TeamsBlock(){
+  const teams = useTeams();
+  const round = useCurrentRound();
+  const activeTeam = teams.find(team => team.id === round?.teamId);
+  if (activeTeam) return <TeamBlock teamId={activeTeam.id} />
+  return teams.map(team => <TeamBlock teamId={team.id} key={team.id} />);
+}
+
+function TeamBlock({teamId}: {teamId?: TeamId}) {
+  const { t } = useTranslation();
+  const players = usePlayers();
+  const phase = usePhase();
+  const round = useCurrentRound();
+  const ts = useTopicsSuggest();
+  const settings = useSettings();
+  const teamPlayers = players.filter((p) => !teamId || (p.team === teamId));
+  return (
+    <TeamGroup
+      label={t(`team.${teamId}`)}
+      teamColor={teamId ?? "none"}
+      playerCount={teamPlayers.length}
+    >
+      <PlayerStatusTable
+        players={teamPlayers.map((p) => ({
+          ...p, ...getPlayerInfo(phase, p.name, round, p.ready, settings, ts)
+        }))}
+      />
+    </TeamGroup>
+  );
+}
+
 function SidebarActions() {
   const { t } = useTranslation();
   const phase = usePhase();
+  
+  if (phase === "topics-preview") return (
+    <div className={styles.actions}>
+      <button className={styles.primaryBtn} onClick={() => startFirstRound()}>
+        {t("topics.preview.startRound")}
+      </button>
+    </div>
+  );
   
   if (phase === "round-captain") return (
     <div className={styles.actions}>

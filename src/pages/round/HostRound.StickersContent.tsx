@@ -24,6 +24,7 @@ export function StickersContent(){
   );
   
   const showAnswers = phase === "round-review" || phase === "round-result";
+  const canEvaluate = phase === "round-review" && review?.aiStatus !== "loading"
   
   const answerStickers = useMemo(() => {
     return Object.entries(round?.answers ?? {})
@@ -64,13 +65,13 @@ export function StickersContent(){
           <div key={group.join("\0")} className={styles.stickerSlot}>
             <StickerStack
               stickers={stickers}
-              draggable={phase === "round-review"}
+              draggable={canEvaluate}
               dragData={(phase === "round-review") ? representativePlayer : undefined}
               onDrop={(phase === "round-review") ? (dragData) => {
                 mergeAnswerGroups(dragData, representativePlayer);
               } : undefined}
-              onClickSticker={(phase === "round-review") ? () => evaluateGroup(group) : undefined}
-              onClickBadge={(phase === "round-review") ? () => {
+              onClickSticker={canEvaluate ? () => evaluateGroup(group) : undefined}
+              onClickBadge={canEvaluate ? () => {
                 // Split last player from group
                 const lastPlayer = group[group.length - 1]!;
                 splitAnswerFromGroup(lastPlayer);

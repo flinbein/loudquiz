@@ -2,9 +2,9 @@ import { useEffect } from "react";
 import { usePhase, useCurrentRound, useTimer as useTimerState, } from "@/store/selectors";
 import { handleTimerExpire } from "@/store/actions/round";
 import type { RoundPhase } from "@/types/game";
-import styles from "./HostRound.module.css";
 import { SidebarBlock } from "@/pages/blocks/SidebarBlock";
 import { MainContent } from "./HostRound.Main";
+import { HostLayout } from "@/pages/blocks/HostLayout";
 
 export function HostRound() {
   const phase = usePhase() as RoundPhase;
@@ -30,9 +30,9 @@ export function HostRound() {
   if (!round) return null;
   
   return (
-    <div className={styles.layout}>
+    <HostLayout>
       <MainContent/>
       <SidebarBlock />
-    </div>
+    </HostLayout>
   );
 }

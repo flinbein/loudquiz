@@ -7,10 +7,13 @@ import {
 } from "@/store/selectors";
 import { handleBlitzTimerExpire } from "@/store/actions/blitz";
 import type { BlitzPhase } from "@/types/game";
-import styles from "./HostBlitz.module.css";
 import { TaskCardBlock } from "../blocks/TaskCardBlock";
 import { SidebarBlock } from "../blocks/SidebarBlock";
 import { TaskBoardBlock } from "@/pages/blocks/TaskBoardBlock";
+import { HostLayout } from "@/pages/blocks/HostLayout";
+import { HostMainContainer } from "@/pages/blocks/HostMainContainer";
+import styles from "./HostBlitz.module.css";
+import { BlitzStickerBlock } from "@/pages/blocks/BlitzStickerBlock";
 
 export function HostBlitz() {
   const phase = usePhase() as BlitzPhase;
@@ -36,10 +39,10 @@ export function HostBlitz() {
   if (!round || round.type !== "blitz") return null;
 
   return (
-    <div className={styles.layout}>
+    <HostLayout>
       <MainContent />
       <SidebarBlock />
-    </div>
+    </HostLayout>
   );
 }
 
@@ -47,17 +50,22 @@ function MainContent() {
   const phase = usePhase() as BlitzPhase;
   
   return (
-    <div className={styles.main}>
+    <HostMainContainer>
       {(phase === "blitz-captain" || phase === "blitz-pick") && (
         <TaskBoardBlock />
       )}
       
       <TaskCardBlock/>
       
+      <div className={styles.stickerSlot}>
+        <BlitzStickerBlock/>
+      </div>
+      
+      
       {phase === "blitz-review" && (
         <BlitzChainDiagram />
       )}
-    </div>
+    </HostMainContainer>
   );
 }
 

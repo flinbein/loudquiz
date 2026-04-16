@@ -333,3 +333,40 @@ describe("handleBlitzTimerExpire", () => {
     expect(s.timer).not.toBeNull();
   });
 });
+
+describe("blitz dual-mode guards", () => {
+  function setupBlitzDual() {
+    useGameStore.setState({
+      phase: "blitz-active",
+      settings: { mode: "manual", teamMode: "dual", topicCount: 0, questionsPerTopic: 0, blitzRoundsPerTeam: 1, pastQuestions: [] },
+      players: [
+        { name: "Alice", emoji: "😈", team: "red", online: true, ready: true },
+        { name: "Bob", emoji: "👹", team: "red", online: true, ready: true },
+        { name: "Dave", emoji: "🦊", team: "blue", online: true, ready: true },
+        { name: "Eve", emoji: "🐸", team: "blue", online: true, ready: true },
+      ],
+      teams: [{ id: "red", score: 0, jokerUsed: false }, { id: "blue", score: 0, jokerUsed: false }],
+      blitzTasks: [{ items: [{ text: "Cat", difficulty: 200 }] }],
+      currentRound: {
+        type: "blitz", teamId: "red", captainName: "Alice", blitzTaskIndex: 0, blitzItemIndex: 0,
+        jokerActive: false, answers: {}, playerOrder: ["Alice", "Bob"],
+        activeTimerStartedAt: 0, bonusTime: 0,
+      },
+      history: [],
+      timer: { startedAt: performance.now(), duration: 60000 },
+    });
+  }
+
+  it("submitBlitzAnswer rejects opponent player", () => {
+    setupBlitzDual();
+    submitBlitzAnswer("Dave", "answer");
+    expect(useGameStore.getState().currentRound!.answers).not.toHaveProperty("Dave");
+  });
+
+  it("skipBlitzAnswer rejects opponent player", () => {
+    setupBlitzDual();
+    useGameStore.setState({ phase: "blitz-answer" });
+    skipBlitzAnswer("Dave");
+    expect(useGameStore.getState().currentRound!.answers).not.toHaveProperty("Dave");
+  });
+});

@@ -167,6 +167,8 @@ export function submitBlitzAnswer(playerName: string, text: string): void {
   const round = state.currentRound;
   if (!round || round.type !== "blitz") return;
   if (state.phase !== "blitz-active" && state.phase !== "blitz-answer") return;
+  const player = state.players.find((p) => p.name === playerName);
+  if (!player || player.team !== round.teamId) return;
   const order = round.playerOrder ?? [];
   if (order.length === 0) return;
 
@@ -204,6 +206,8 @@ export function skipBlitzAnswer(playerName: string): void {
   if (state.phase !== "blitz-answer") return;
   const round = state.currentRound;
   if (!round || round.type !== "blitz") return;
+  const player = state.players.find((p) => p.name === playerName);
+  if (!player || player.team !== round.teamId) return;
   const order = round.playerOrder ?? [];
   const up = getNextBlitzAnswerer(order, round.answers);
   if (!up || up !== playerName) return;

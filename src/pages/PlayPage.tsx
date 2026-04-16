@@ -6,7 +6,7 @@ import { getPlayerName, setPlayerName } from "@/persistence/localPersistence";
 import { parseRoomId, formatRoomId } from "@/utils/roomId";
 import { useTransport, onHostAction } from "@/hooks/useTransport";
 import { useAudio } from "@/hooks/useAudio";
-import { usePhase } from "@/store/selectors";
+import { usePhase, usePlayers, useCurrentRound } from "@/store/selectors";
 import { useGameStore } from "@/store/gameStore";
 import { HostLobby } from "@/pages/lobby/HostLobby";
 import { PlayerLobby } from "@/pages/lobby/PlayerLobby";
@@ -280,6 +280,9 @@ function PlayerPlayConnected({
 }) {
   const transport = useTransport({ role: "player", roomId, playerName });
   const phase = usePhase();
+  const players = usePlayers();
+  const round = useCurrentRound();
+  const { t } = useTranslation();
   useAudio({ playerName });
 
   if (transport.role !== "player") return null;
@@ -298,8 +301,19 @@ function PlayerPlayConnected({
     return <ConnectionReconnecting />;
   }
 
+  const myPlayer = players.find((p) => p.name === playerName);
+  const isInGame = phase.startsWith("round-") || phase.startsWith("blitz-") || phase.startsWith("topics-");
+
   return (
-    <GameShell role="player" onClockResync={transport.resyncClock}>
+    <GameShell
+      role="player"
+      onClockResync={transport.resyncClock}
+      variant={isInGame ? "inline" : "overlay"}
+      player={myPlayer}
+      phaseName={t(`phase.${phase}`)}
+      phaseTeam={round?.teamId ?? "none"}
+      players={players}
+    >
       {phase === "lobby" && (
         <PlayerLobby
           playerName={playerName}

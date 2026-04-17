@@ -31,7 +31,9 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npx vite build --mode ghpages
+        env:
+          VITE_BASE: /loudquiz/
+        run: npx vite build
 
       - name: Copy index.html to 404.html (SPA fallback)
         run: cp dist/index.html dist/404.html

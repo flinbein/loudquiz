@@ -28,6 +28,8 @@
 
 .winners {
   display: flex;
+  height: 200px;
+  margin-bottom: var(--spacing-lg);
   gap: var(--spacing-sm, 8px);
   justify-content: center;
   flex-wrap: wrap;

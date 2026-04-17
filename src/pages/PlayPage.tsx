@@ -14,6 +14,8 @@ import { HostRound } from "@/pages/round/HostRound";
 import { PlayerRound } from "@/pages/round/PlayerRound";
 import { HostBlitz } from "@/pages/blitz/HostBlitz";
 import { PlayerBlitz } from "@/pages/blitz/PlayerBlitz";
+import { HostFinale } from "./finale/HostFinale";
+import { PlayerFinale } from "./finale/PlayerFinale";
 import { HostTopicsSuggest } from "@/pages/topics/HostTopicsSuggest";
 import { PlayerTopicsSuggest } from "@/pages/topics/PlayerTopicsSuggest";
 import { GameShell } from "@/pages/GameShell";
@@ -173,6 +175,7 @@ function HostPlay() {
       {phase.startsWith("topics-") && <HostTopicsSuggest />}
       {phase.startsWith("round-") && <HostRound />}
       {phase.startsWith("blitz-") && <HostBlitz />}
+      {phase === "finale" && <HostFinale />}
     </GameShell>
   );
 }
@@ -329,6 +332,7 @@ function PlayerPlayConnected({
       {phase.startsWith("blitz-") && (
         <PlayerBlitz playerName={playerName} sendAction={transport.sendAction} />
       )}
+      {phase === "finale" && <PlayerFinale />}
     </GameShell>
   );
 }

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import {
   usePhase,
   useCurrentRound,
@@ -9,6 +10,8 @@ import {
   useSettings,
 } from "@/store/selectors";
 import { confirmBlitzReview, startBlitzTask } from "@/store/actions/blitz";
+import { playAgain } from "@/store/actions/lobby";
+import { useGameStore } from "@/store/gameStore";
 import { TeamScore } from "@/components/TeamScore/TeamScore";
 import { TeamGroup } from "@/components/TeamGroup/TeamGroup";
 import { PlayerStatusTable, type PlayerRole, type PlayerStatus } from "@/components/PlayerStatusTable/PlayerStatusTable";
@@ -116,8 +119,7 @@ export function SidebarBlock() {
 function TeamsBlock(){
   const teams = useTeams();
   const round = useCurrentRound();
-  const activeTeam = teams.find(team => team.id === round?.teamId);
-  if (activeTeam) return <TeamBlock teamId={activeTeam.id} />
+  if (round?.teamId) return <TeamBlock teamId={round?.teamId} />
   return teams.map(team => <TeamBlock teamId={team.id} key={team.id} />);
 }
 
@@ -147,6 +149,8 @@ function TeamBlock({teamId}: {teamId?: TeamId}) {
 function SidebarActions() {
   const { t } = useTranslation();
   const phase = usePhase();
+  const settings = useSettings();
+  const navigate = useNavigate();
   
   if (phase === "topics-preview") return (
     <div className={styles.actions}>
@@ -204,6 +208,24 @@ function SidebarActions() {
       <div className={styles.actions}>
         <button className={styles.primaryBtn} onClick={() => confirmBlitzReview()}>
           {t("round.nextRound")}
+        </button>
+      </div>
+    );
+  }
+  if (phase === "finale") {
+    const handleNewGame = () => {
+      useGameStore.getState().resetGame();
+      navigate("/setup");
+    };
+    return (
+      <div className={styles.actions}>
+        {settings.mode === "ai" && (
+          <button className={styles.primaryBtn} onClick={() => playAgain()}>
+            {t("finale.playAgain")}
+          </button>
+        )}
+        <button className={styles.secondaryBtn} onClick={handleNewGame}>
+          {t("finale.newGame")}
         </button>
       </div>
     );

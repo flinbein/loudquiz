@@ -3,7 +3,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "url";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  base: mode === "ghpages" ? "/loudquiz/" : "/",
   plugins: [react()],
   resolve: {
     alias: {
@@ -24,4 +25,4 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["src/test-setup.ts"],
   },
-});
+}));

@@ -5,6 +5,7 @@ const KEYS = {
   playerName: "loud-quiz-player-name",
   calibration: "loud-quiz-calibration",
   usedQuestions: "loud-quiz-used-questions",
+  usedBlitzTasks: "loud-quiz-used-blitz-tasks",
   constructorData: "loud-quiz-constructor-data",
   theme: "loud-quiz-theme",
   language: "loud-quiz-language",
@@ -112,6 +113,32 @@ export function clearUsedQuestionsTopic(topic: string): void {
 
 export function clearUsedQuestions(): void {
   localStorage.removeItem(KEYS.usedQuestions);
+}
+
+// Used blitz tasks (flat list of item texts)
+
+export function getUsedBlitzTasks(): string[] {
+  try {
+    const raw = localStorage.getItem(KEYS.usedBlitzTasks);
+    if (!raw) return [];
+    return JSON.parse(raw) as string[];
+  } catch {
+    return [];
+  }
+}
+
+export function addUsedBlitzTasks(tasks: string[]): void {
+  const existing = getUsedBlitzTasks();
+  const merged = [...new Set([...existing, ...tasks])];
+  localStorage.setItem(KEYS.usedBlitzTasks, JSON.stringify(merged));
+}
+
+export function setUsedBlitzTasks(tasks: string[]): void {
+  localStorage.setItem(KEYS.usedBlitzTasks, JSON.stringify(tasks));
+}
+
+export function clearUsedBlitzTasks(): void {
+  localStorage.removeItem(KEYS.usedBlitzTasks);
 }
 
 // Constructor data (questions created in editor)

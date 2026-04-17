@@ -22,6 +22,12 @@ import {
   clearUsedQuestionsTopic,
   clearUsedQuestions,
 } from "./localPersistence";
+import {
+  getUsedBlitzTasks,
+  addUsedBlitzTasks,
+  setUsedBlitzTasks,
+  clearUsedBlitzTasks,
+} from "./localPersistence";
 import type { GameState } from "@/types/game";
 
 const testState: GameState = {
@@ -175,6 +181,30 @@ describe("localPersistence", () => {
       addUsedQuestion("Music", "Q2");
       clearUsedQuestions();
       expect(getUsedQuestionsByTopic()).toEqual({});
+    });
+  });
+
+  describe("used blitz tasks", () => {
+    it("returns empty array initially", () => {
+      expect(getUsedBlitzTasks()).toEqual([]);
+    });
+
+    it("addUsedBlitzTasks appends and deduplicates", () => {
+      addUsedBlitzTasks(["apple", "banana"]);
+      addUsedBlitzTasks(["banana", "cherry"]);
+      expect(getUsedBlitzTasks()).toEqual(["apple", "banana", "cherry"]);
+    });
+
+    it("setUsedBlitzTasks overwrites", () => {
+      addUsedBlitzTasks(["apple", "banana"]);
+      setUsedBlitzTasks(["cherry", "date"]);
+      expect(getUsedBlitzTasks()).toEqual(["cherry", "date"]);
+    });
+
+    it("clearUsedBlitzTasks removes all", () => {
+      addUsedBlitzTasks(["apple"]);
+      clearUsedBlitzTasks();
+      expect(getUsedBlitzTasks()).toEqual([]);
     });
   });
 });

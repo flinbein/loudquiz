@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { computeNominations } from "./index";
-import type { NominationRule, NominationContext } from "./types";
+import type { NominationRule } from "./types";
 import type { PlayerData, RoundResult, Topic } from "@/types/game";
 
 const players: PlayerData[] = [

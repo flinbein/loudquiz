@@ -285,7 +285,7 @@ describe("playAgain", () => {
         { name: "Bob", emoji: "🐶", team: "red", online: true, ready: true },
       ],
       teams: [{ id: "red", score: 500, jokerUsed: true }],
-      topics: [{ name: "Animals", questions: [{ text: "Q1", difficulty: 100 }] }],
+      topics: [{ name: "Animals", questions: [{ text: "Q1", difficulty: 100, acceptedAnswers: ["a"] }] }],
       blitzTasks: [{ items: [{ text: "apple", difficulty: 200 }] }],
       history: [{ type: "round", teamId: "red", captainName: "Alice", questionIndex: 0, score: 100, jokerUsed: false, playerResults: [], difficulty: 100, topicIndex: 0, bonusTimeApplied: false, bonusTime: 0, bonusTimeMultiplier: 1, groups: [] }],
       currentRound: { type: "round", teamId: "red", captainName: "Alice", jokerActive: false, answers: {}, activeTimerStartedAt: 0, bonusTime: 0 },

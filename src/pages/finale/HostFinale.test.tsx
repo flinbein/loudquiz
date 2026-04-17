@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { HostFinale } from "./HostFinale";
 import { useGameStore } from "@/store/gameStore";
 
@@ -42,7 +43,7 @@ describe("HostFinale", () => {
       timer: null,
     });
 
-    render(<HostFinale />);
+    render(<MemoryRouter><HostFinale /></MemoryRouter>);
     expect(screen.getByText(/200/)).toBeInTheDocument();
   });
 });

@@ -1,7 +1,70 @@
 import type { PlayerData, PlayerDisplay, RoundResult, Topic } from "@/types/game";
 import type { Nomination, NominationCandidate, NominationContext, NominationRule } from "./types";
+import { sniperRule } from "./rules/sniper";
+import { missRule } from "./rules/miss";
+import { flawlessRule } from "./rules/flawless";
+import { eruditeRule } from "./rules/erudite";
+import { quickDrawRule } from "./rules/quickDraw";
+import { philosopherRule } from "./rules/philosopher";
+import { captainsDaughterRule } from "./rules/captainsDaughter";
+import { sinkTheShipRule } from "./rules/sinkTheShip";
+import { captainObviousRule } from "./rules/captainObvious";
+import { captainFailRule } from "./rules/captainFail";
+import { eternalCaptainRule } from "./rules/eternalCaptain";
+import { ambitiousRule } from "./rules/ambitious";
+import { cautiousRule } from "./rules/cautious";
+import { goldMineRule } from "./rules/goldMine";
+import { riskyPlayerRule } from "./rules/riskyPlayer";
+import { unluckyGamblerRule } from "./rules/unluckyGambler";
+import { jackpotRule } from "./rules/jackpot";
+import { iDontPlayRule } from "./rules/iDontPlay";
+import { longestAnswerRule } from "./rules/longestAnswer";
+import { typewriterRule } from "./rules/typewriter";
+import { brevityRule } from "./rules/brevity";
+import { narrowSpecialistRule } from "./rules/narrowSpecialist";
+import { blitzMasterRule } from "./rules/blitzMaster";
+import { sayMyNameRule } from "./rules/sayMyName";
+import { artistRule } from "./rules/artist";
+import { mentalConnectionRule } from "./rules/mentalConnection";
+import { stuckRecordRule } from "./rules/stuckRecord";
+import { interviewerRule } from "./rules/interviewer";
+import { robotRule } from "./rules/robot";
+import { spyRule } from "./rules/spy";
 
 export { type Nomination, type NominationRule, type NominationContext } from "./types";
+
+export const NOMINATION_RULES: NominationRule[] = [
+  sniperRule,
+  missRule,
+  flawlessRule,
+  eruditeRule,
+  quickDrawRule,
+  philosopherRule,
+  captainsDaughterRule,
+  sinkTheShipRule,
+  captainObviousRule,
+  captainFailRule,
+  eternalCaptainRule,
+  ambitiousRule,
+  cautiousRule,
+  goldMineRule,
+  riskyPlayerRule,
+  unluckyGamblerRule,
+  jackpotRule,
+  iDontPlayRule,
+  longestAnswerRule,
+  typewriterRule,
+  brevityRule,
+  narrowSpecialistRule,
+  blitzMasterRule,
+  sayMyNameRule,
+  artistRule,
+  mentalConnectionRule,
+  stuckRecordRule,
+  interviewerRule,
+  robotRule,
+  spyRule,
+];
 
 export function computeNominations(
   history: RoundResult[],
@@ -43,6 +106,14 @@ export function computeNominations(
   }
 
   return results;
+}
+
+export function getAllNominations(
+  history: RoundResult[],
+  players: PlayerData[],
+  topics: Topic[],
+): Nomination[] {
+  return computeNominations(history, players, topics, NOMINATION_RULES);
 }
 
 function resolveWinners(

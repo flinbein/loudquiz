@@ -1,0 +1,115 @@
+/* src/pages/rules/illustrations/illustrations.module.css */
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-height: 280px;
+  overflow: hidden;
+}
+
+.avatarsRow {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-end;
+}
+
+.captainLabel {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin-top: var(--spacing-xs);
+}
+
+.envelopesRow {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-end;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.envelopeWrap {
+  width: 90px;
+  height: 110px;
+}
+
+.scoringColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.stickersRow {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.stickerWrap {
+  width: 120px;
+  height: 140px;
+}
+
+.blitzChain {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.chainArrow {
+  font-size: var(--font-size-xl);
+  color: var(--color-text-secondary);
+}
+
+.chainAnswer {
+  font-family: var(--font-handwriting);
+  font-size: var(--font-size-lg);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+}
+
+.modesGrid {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.modeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+  min-width: 100px;
+}
+
+.modeIcon {
+  font-size: var(--font-size-2xl);
+}
+
+.modeLabel {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.aiReviewColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  align-items: stretch;
+  width: 100%;
+  max-width: 320px;
+}

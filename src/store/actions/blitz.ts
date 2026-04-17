@@ -11,6 +11,8 @@ import {
   calculateBlitzScore,
   calculateBonusMultiplier,
 } from "@/logic/scoring";
+import { addUsedBlitzTasks } from "@/persistence/localPersistence";
+import { getPlayedBlitzTaskIds } from "@/logic/phaseTransitions";
 import type {
   AnswerEvaluation,
   BlitzPhase,
@@ -99,6 +101,13 @@ export function selectBlitzItem(itemIndex: number): void {
   const task = state.blitzTasks[round.blitzTaskIndex];
   if (!task) return;
   if (itemIndex < 0 || itemIndex >= task.items.length) return;
+
+  // Persist all unplayed blitz task items for AI deduplication
+  const playedIds = new Set(getPlayedBlitzTaskIds(state.history));
+  const allItems = state.blitzTasks
+    .filter((_, i) => !playedIds.has(i))
+    .flatMap((t) => t.items.map((item) => item.text));
+  addUsedBlitzTasks(allItems);
 
   useGameStore.getState().setState({
     phase: "blitz-ready",

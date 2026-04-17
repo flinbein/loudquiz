@@ -16,7 +16,7 @@ import {
   onAiReviewError,
 } from "@/store/actions/aiReview";
 import { confirmScore } from "@/store/actions/round";
-import { getApiKey } from "@/persistence/localPersistence";
+import { getApiKey, getUsedQuestionsByTopic, getUsedBlitzTasks } from "@/persistence/localPersistence";
 import i18n from "@/i18n";
 import type { GameState, AnswerEvaluation } from "@/types/game";
 
@@ -133,7 +133,8 @@ export function useAiOrchestrator(isHost: boolean): void {
                 topics: state.topics.map((t) => t.name),
                 questionsPerTopic: state.settings.questionsPerTopic,
                 playersPerTeam: getPlayersPerTeam(state),
-                pastQuestions: state.settings.pastQuestions,
+                pastQuestions: state.topics
+                  .flatMap((t) => getUsedQuestionsByTopic()[t.name] ?? []),
               },
               language,
             )
@@ -149,7 +150,7 @@ export function useAiOrchestrator(isHost: boolean): void {
               {
                 rounds: state.settings.blitzRoundsPerTeam * realTeamCount,
                 tasksPerRound: getPlayersPerTeam(state),
-                pastTasks: [],
+                pastTasks: getUsedBlitzTasks(),
               },
               language,
             )

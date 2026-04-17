@@ -9,6 +9,8 @@ export function RulesSidebar() {
   const [activeId, setActiveId] = useState(rulesSections[0]!.id);
 
   useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {

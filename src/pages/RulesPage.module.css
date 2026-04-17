@@ -1,0 +1,148 @@
+/* src/pages/RulesPage.module.css */
+
+/* ── Page layout ── */
+.page {
+  display: flex;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  gap: var(--spacing-xl);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  position: sticky;
+  top: var(--spacing-lg);
+  align-self: flex-start;
+  max-height: calc(100vh - var(--spacing-lg) * 2);
+  overflow-y: auto;
+}
+
+.sidebarList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.sidebarLink {
+  display: block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  transition: color 0.2s, background 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.sidebarLink:hover {
+  color: var(--color-text);
+  background: var(--color-bg-secondary);
+}
+
+.sidebarLinkActive {
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ── Section ── */
+.section {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-xl);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--spacing-xl);
+  align-items: center;
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+/* Zigzag directions — camelCase for CSS Modules */
+.textLeft {
+  flex-direction: row;
+}
+
+.textRight {
+  flex-direction: row-reverse;
+}
+
+.sectionText {
+  flex: 1;
+  min-width: 0;
+}
+
+.sectionImage {
+  flex: 0 0 300px;
+  max-width: 300px;
+  max-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.sectionBody p {
+  margin: 0 0 var(--spacing-sm) 0;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.sectionLink {
+  display: inline-block;
+  margin-top: var(--spacing-md);
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.sectionLink:hover {
+  color: var(--color-primary-light);
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .page {
+    padding: var(--spacing-md);
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .section {
+    flex-direction: column !important;
+    gap: var(--spacing-md);
+  }
+
+  .sectionImage {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+  }
+}

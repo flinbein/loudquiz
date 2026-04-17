@@ -292,6 +292,37 @@ describe("confirmBlitzReview", () => {
     expect(s.currentRound?.type).toBe("blitz");
   });
 
+  it("populates extended RoundResult fields from review data", () => {
+    useGameStore.setState({
+      currentRound: {
+        ...useGameStore.getState().currentRound!,
+        blitzItemIndex: 0,
+        answers: { Carol: { text: "Коза", timestamp: 500 } },
+        activeTimerStartedAt: 0,
+        reviewResult: {
+          evaluations: [{ playerName: "Carol", correct: true }],
+          groups: [["Carol"]],
+          score: 400,
+          bonusTime: 1000,
+          bonusTimeMultiplier: 1.5,
+          bonusTimeApplied: true,
+          jokerApplied: false,
+          aiStatus: "idle",
+        },
+      },
+    });
+    confirmBlitzReview();
+    const result = useGameStore.getState().history[0]!;
+    expect(result.playerResults).toBeDefined();
+    expect(result.playerResults.length).toBeGreaterThan(0);
+    expect(result.difficulty).toBeGreaterThan(0);
+    expect(result.topicIndex).toBe(-1);
+    expect(result.groups).toBeDefined();
+    expect(result.bonusTimeApplied).toBe(true);
+    expect(result.bonusTime).toBe(1000);
+    expect(result.bonusTimeMultiplier).toBe(1.5);
+  });
+
   it("transitions to finale when no blitz tasks remain", () => {
     useGameStore.setState({
       history: [

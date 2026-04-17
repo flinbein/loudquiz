@@ -14,6 +14,7 @@ import {
 import type {
   AnswerEvaluation,
   BlitzPhase,
+  PlayerRoundResult,
   ReviewResult,
   RoundResult,
 } from "@/types/game";
@@ -323,20 +324,35 @@ export function confirmBlitzReview(): void {
   const round = state.currentRound;
   if (!round || round.type !== "blitz" || !round.reviewResult) return;
 
+  const review = round.reviewResult;
+  const task = round.blitzTaskIndex != null ? state.blitzTasks[round.blitzTaskIndex] : undefined;
+  const item = task && round.blitzItemIndex != null ? task.items[round.blitzItemIndex] : undefined;
+
+  const playerResults: PlayerRoundResult[] = review.evaluations.map((ev) => {
+    const answer = round.answers[ev.playerName];
+    return {
+      playerName: ev.playerName,
+      answerText: answer?.text ?? "",
+      correct: ev.correct,
+      answerTime: answer ? answer.timestamp - round.activeTimerStartedAt : Infinity,
+      groupIndex: review.groups.findIndex((g) => g.includes(ev.playerName)),
+    };
+  });
+
   const result: RoundResult = {
     type: "blitz",
     teamId: round.teamId,
     captainName: round.captainName,
     blitzTaskIndex: round.blitzTaskIndex,
-    score: round.reviewResult.score,
+    score: review.score,
     jokerUsed: false,
-    playerResults: [],
-    difficulty: 100,
+    playerResults,
+    difficulty: item?.difficulty ?? 0,
     topicIndex: -1,
-    bonusTimeApplied: false,
-    bonusTime: 0,
-    bonusTimeMultiplier: 1,
-    groups: [],
+    bonusTimeApplied: review.bonusTimeApplied,
+    bonusTime: review.bonusTime,
+    bonusTimeMultiplier: review.bonusTimeMultiplier,
+    groups: review.groups,
   };
 
   const teams = state.teams.map((teamData) =>

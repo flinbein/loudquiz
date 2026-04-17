@@ -157,6 +157,33 @@ export function canStartGameAsHost(): boolean {
   return true;
 }
 
+export function playAgain(): void {
+  const state = useGameStore.getState();
+  if (state.phase !== "finale") return;
+  if (state.settings.mode !== "ai") return;
+
+  const timer = createTimer(getTopicsSuggestTimerDuration());
+
+  useGameStore.getState().setState({
+    phase: "topics-collecting",
+    players: state.players.map((p) => ({ ...p, ready: false })),
+    teams: state.teams.map((t) => ({ ...t, score: 0, jokerUsed: false })),
+    topics: [],
+    blitzTasks: [],
+    history: [],
+    currentRound: null,
+    topicsSuggest: {
+      suggestions: {},
+      noIdeas: [],
+      timerEndsAt: timer.startedAt + timer.duration,
+      manualTopics: null,
+      generationStep: null,
+      aiError: null,
+    },
+    timer,
+  });
+}
+
 export function startGameAsHost(): void {
   if (!canStartGameAsHost()) return;
   const state = useGameStore.getState();

@@ -9,6 +9,7 @@ import {
   movePlayer,
   startGame,
   canStartGame,
+  playAgain,
 } from "./lobby";
 
 function resetStore() {
@@ -246,5 +247,82 @@ describe("lobby actions", () => {
       const s = useGameStore.getState();
       expect(["red", "blue"]).toContain(s.currentRound!.teamId);
     });
+  });
+});
+
+describe("playAgain", () => {
+  it("does nothing if phase is not finale", () => {
+    useGameStore.getState().setState({
+      phase: "lobby",
+      settings: { ...useGameStore.getState().settings, mode: "ai" },
+    });
+    playAgain();
+    expect(useGameStore.getState().phase).toBe("lobby");
+  });
+
+  it("does nothing if mode is not ai", () => {
+    useGameStore.getState().setState({
+      phase: "finale",
+      settings: { ...useGameStore.getState().settings, mode: "manual" },
+    });
+    playAgain();
+    expect(useGameStore.getState().phase).toBe("finale");
+  });
+
+  it("resets game state but keeps players, settings, and teams", () => {
+    useGameStore.getState().setState({
+      phase: "finale",
+      settings: {
+        mode: "ai",
+        teamMode: "single",
+        topicCount: 3,
+        questionsPerTopic: 4,
+        blitzRoundsPerTeam: 2,
+        pastQuestions: [],
+      },
+      players: [
+        { name: "Alice", emoji: "🐱", team: "red", online: true, ready: true },
+        { name: "Bob", emoji: "🐶", team: "red", online: true, ready: true },
+      ],
+      teams: [{ id: "red", score: 500, jokerUsed: true }],
+      topics: [{ name: "Animals", questions: [{ text: "Q1", difficulty: 100 }] }],
+      blitzTasks: [{ items: [{ text: "apple", difficulty: 200 }] }],
+      history: [{ type: "round", teamId: "red", captainName: "Alice", questionIndex: 0, score: 100, jokerUsed: false, playerResults: [], difficulty: 100, topicIndex: 0, bonusTimeApplied: false, bonusTime: 0, bonusTimeMultiplier: 1, groups: [] }],
+      currentRound: { type: "round", teamId: "red", captainName: "Alice", jokerActive: false, answers: {}, activeTimerStartedAt: 0, bonusTime: 0 },
+    });
+
+    playAgain();
+
+    const state = useGameStore.getState();
+    expect(state.phase).toBe("topics-collecting");
+
+    // Players preserved with ready reset
+    expect(state.players).toHaveLength(2);
+    expect(state.players[0]!.name).toBe("Alice");
+    expect(state.players[0]!.ready).toBe(false);
+    expect(state.players[0]!.team).toBe("red");
+
+    // Teams preserved with score/joker reset
+    expect(state.teams).toHaveLength(1);
+    expect(state.teams[0]!.id).toBe("red");
+    expect(state.teams[0]!.score).toBe(0);
+    expect(state.teams[0]!.jokerUsed).toBe(false);
+
+    // Settings preserved
+    expect(state.settings.mode).toBe("ai");
+    expect(state.settings.topicCount).toBe(3);
+
+    // Game state reset
+    expect(state.history).toEqual([]);
+    expect(state.topics).toEqual([]);
+    expect(state.blitzTasks).toEqual([]);
+    expect(state.currentRound).toBeNull();
+
+    // Topics suggest initialized
+    expect(state.topicsSuggest).toBeDefined();
+    expect(state.topicsSuggest!.suggestions).toEqual({});
+
+    // Timer set
+    expect(state.timer).not.toBeNull();
   });
 });

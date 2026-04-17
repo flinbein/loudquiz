@@ -64,7 +64,8 @@ export type PlayerAction =
   | { kind: "dispute-review" }
   | { kind: "next-round" }
   | { kind: "no-ideas" }
-  | { kind: "start-first-round" };
+  | { kind: "start-first-round" }
+  | { kind: "play-again" };
 
 export type Message =
   | StateUpdateMessage

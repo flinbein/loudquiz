@@ -29,16 +29,22 @@ export function RulesSidebar() {
   }, []);
 
   return (
-    <nav className={styles.sidebar}>
+    <nav className={styles.sidebar} aria-label="Rules sections">
       <ul className={styles.sidebarList}>
         {rulesSections.map((section) => (
           <li key={section.id}>
             <a
               href={`#${section.id}`}
               className={`${styles.sidebarLink} ${activeId === section.id ? styles.sidebarLinkActive : ""}`}
+              aria-current={activeId === section.id ? "true" : undefined}
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById(section.id)?.scrollIntoView({ behavior: "smooth" });
+                const el = document.getElementById(section.id);
+                if (!el) return;
+                setActiveId(section.id);
+                const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+                window.history.replaceState(null, "", `#${section.id}`);
               }}
             >
               {t(section.titleKey)}

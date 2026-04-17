@@ -9,7 +9,9 @@ import { ModesIllustration } from "./illustrations/ModesIllustration";
 import { AiReviewIllustration } from "./illustrations/AiReviewIllustration";
 import styles from "../RulesPage.module.css";
 
-const illustrationMap: Record<string, React.FC> = {
+type IllustrationKey = NonNullable<RulesSectionData["illustration"]>;
+
+const illustrationMap: Record<IllustrationKey, React.FC> = {
   avatars: AvatarsIllustration,
   envelopes: EnvelopesIllustration,
   scoring: ScoringIllustration,

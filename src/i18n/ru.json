@@ -276,6 +276,8 @@
     "victory": "Победа команды {{team}}!",
     "draw": "Ничья!",
     "gameOver": "Игра окончена!",
+    "playAgain": "Играть снова тем же составом",
+    "newGame": "Новая игра",
     "nomination": {
       "sniper": { "title": "Снайпер", "description": "Самый высокий % правильных ответов" },
       "miss": { "title": "Мимо кассы", "description": "Самый низкий % правильных ответов" },
@@ -300,7 +302,7 @@
       "brevity": { "title": "Краткость — сестра таланта", "description": "Наименьшая суммарная длина верных ответов" },
       "narrowSpecialist": { "title": "Узкий специалист", "description": "Верные ответы только в одной категории" },
       "blitzMaster": { "title": "Блиц-мастер", "description": "Больше всего очков в блиц-раундах" },
-      "sayMyName": { "title": "Say my name", "description": "Написал имя другого игрока в ответе" },
+      "sayMyName": { "title": "Say My Name", "description": "Написал имя другого игрока в ответе" },
       "artist": { "title": "Художник", "description": "Чаще всех использовал эмодзи в ответах" },
       "mentalConnection": { "title": "Ментальная связь", "description": "Чаще всех давал верный ответ-дубль" },
       "stuckRecord": { "title": "Заело пластинку", "description": "Давал одинаковые ответы на разные вопросы" },

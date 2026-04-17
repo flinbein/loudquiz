@@ -276,6 +276,8 @@
     "victory": "{{team}} wins!",
     "draw": "It's a draw!",
     "gameOver": "Game over!",
+    "playAgain": "Play again same roster",
+    "newGame": "New game",
     "nomination": {
       "sniper": { "title": "Sniper", "description": "Highest correct answer rate" },
       "miss": { "title": "Off Target", "description": "Lowest correct answer rate" },

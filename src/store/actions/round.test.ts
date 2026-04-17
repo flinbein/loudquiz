@@ -57,7 +57,7 @@ describe("claimCaptain", () => {
 
   it("rejects consecutive captain", () => {
     setupRoundState({
-      history: [{ type: "round", teamId: "red", captainName: "Alice", score: 100, jokerUsed: false, questionIndex: 0 }],
+      history: [{ type: "round", teamId: "red", captainName: "Alice", score: 100, jokerUsed: false, questionIndex: 0, playerResults: [], difficulty: 100, topicIndex: 0, bonusTimeApplied: false, bonusTime: 0, bonusTimeMultiplier: 1, groups: [] }],
     });
     claimCaptain("Alice");
     expect(useGameStore.getState().currentRound!.captainName).toBe("");
@@ -79,7 +79,7 @@ describe("selectQuestion", () => {
 
   it("rejects already played question", () => {
     useGameStore.setState({
-      history: [{ type: "round", teamId: "red", captainName: "Bob", questionIndex: 0, score: 100, jokerUsed: false }],
+      history: [{ type: "round", teamId: "red", captainName: "Bob", questionIndex: 0, score: 100, jokerUsed: false, playerResults: [], difficulty: 100, topicIndex: 0, bonusTimeApplied: false, bonusTime: 0, bonusTimeMultiplier: 1, groups: [] }],
     });
     selectQuestion(0);
     expect(useGameStore.getState().currentRound!.questionIndex).toBeUndefined();
@@ -305,6 +305,7 @@ describe("confirmReview", () => {
         captainName: "Alice",
         questionIndex: 0,
         jokerActive: false,
+        activeTimerStartedAt: 1000,
         answers: {
           Bob: { text: "answer1", timestamp: 5000 },
           Carol: { text: "answer2", timestamp: 6000 },
@@ -333,6 +334,15 @@ describe("confirmReview", () => {
     // 3 unplayed questions remain, so next phase is round-captain
     expect(s.phase).toBe("round-captain");
     expect(s.currentRound!.captainName).toBe("");
+
+    const result = s.history[0]!;
+    expect(result.playerResults).toHaveLength(2);
+    expect(result.playerResults[0]).toMatchObject({ playerName: "Bob", answerText: "answer1", correct: true, groupIndex: 0 });
+    expect(result.playerResults[1]).toMatchObject({ playerName: "Carol", answerText: "answer2", correct: true, groupIndex: 0 });
+    expect(result.difficulty).toBe(100);
+    expect(result.topicIndex).toBe(0);
+    expect(result.groups).toEqual([["Bob", "Carol"]]);
+    expect(result.bonusTimeApplied).toBe(false);
   });
 });
 

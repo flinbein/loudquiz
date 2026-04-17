@@ -9,7 +9,7 @@ const players: PlayerData[] = [
 ];
 
 function makeResult(captainName: string): RoundResult {
-  return { type: "round", teamId: "red", captainName, score: 0, jokerUsed: false };
+  return { type: "round", teamId: "red", captainName, score: 0, jokerUsed: false, playerResults: [], difficulty: 100, topicIndex: 0, bonusTimeApplied: false, bonusTime: 0, bonusTimeMultiplier: 1, groups: [] };
 }
 
 describe("canBeCaptain", () => {

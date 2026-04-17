@@ -330,6 +330,13 @@ export function confirmBlitzReview(): void {
     blitzTaskIndex: round.blitzTaskIndex,
     score: round.reviewResult.score,
     jokerUsed: false,
+    playerResults: [],
+    difficulty: 100,
+    topicIndex: -1,
+    bonusTimeApplied: false,
+    bonusTime: 0,
+    bonusTimeMultiplier: 1,
+    groups: [],
   };
 
   const teams = state.teams.map((teamData) =>

@@ -77,7 +77,7 @@ describe("claimBlitzCaptain", () => {
 
   it("rejects consecutive captain", () => {
     setupBlitzState({
-      history: [{ type: "blitz", teamId: "red", captainName: "Alice", blitzTaskIndex: 10, score: 100, jokerUsed: false }],
+      history: [{ type: "blitz", teamId: "red", captainName: "Alice", blitzTaskIndex: 10, score: 100, jokerUsed: false, playerResults: [], difficulty: 100, topicIndex: -1, bonusTimeApplied: false, bonusTime: 0, bonusTimeMultiplier: 1, groups: [] }],
     });
     claimBlitzCaptain("Alice");
     expect(useGameStore.getState().currentRound!.captainName).toBe("");
@@ -295,7 +295,7 @@ describe("confirmBlitzReview", () => {
   it("transitions to finale when no blitz tasks remain", () => {
     useGameStore.setState({
       history: [
-        { type: "blitz", teamId: "red", captainName: "Bob", blitzTaskIndex: 1, score: 200, jokerUsed: false },
+        { type: "blitz", teamId: "red", captainName: "Bob", blitzTaskIndex: 1, score: 200, jokerUsed: false, playerResults: [], difficulty: 100, topicIndex: -1, bonusTimeApplied: false, bonusTime: 0, bonusTimeMultiplier: 1, groups: [] },
       ],
     });
     confirmBlitzReview();

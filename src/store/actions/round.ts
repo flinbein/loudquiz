@@ -1,9 +1,9 @@
 import { useGameStore } from "@/store/gameStore";
 import { canBeCaptain, getRandomCaptain } from "@/logic/captain";
-import { getPlayedQuestionIndices, getNextPhaseAfterReview, createNextRoundState, createNextBlitzRoundState, getTotalQuestionCount } from "@/logic/phaseTransitions";
+import { getPlayedQuestionIndices, getNextPhaseAfterReview, createNextRoundState, createNextBlitzRoundState, getTotalQuestionCount, getTopicIndexForQuestion, getDifficultyForQuestion } from "@/logic/phaseTransitions";
 import { createTimer, getPickTimerDuration, getCaptainTimerDuration, getActiveTimerDuration, getAnswerTimerDuration, getBlitzCaptainTimerDuration } from "@/logic/timer";
 import { calculateRoundScore, calculateBonusMultiplier, checkBonusConditions } from "@/logic/scoring";
-import type { AnswerEvaluation, RoundPhase, RoundState, TimerState } from "@/types/game";
+import type { AnswerEvaluation, PlayerRoundResult, RoundPhase, RoundState, TimerState } from "@/types/game";
 
 export function claimCaptain(playerName: string): void {
   const state = useGameStore.getState();
@@ -366,6 +366,22 @@ export function confirmReview(): void {
   const round = state.currentRound;
   const score = review.score;
 
+  const playerResults: PlayerRoundResult[] = review.evaluations.map((ev) => {
+    const answer = round.answers[ev.playerName];
+    const groupIndex = review.groups.findIndex((g) => g.includes(ev.playerName));
+    return {
+      playerName: ev.playerName,
+      answerText: answer?.text ?? "",
+      correct: ev.correct,
+      answerTime: answer ? answer.timestamp - round.activeTimerStartedAt : Infinity,
+      groupIndex,
+    };
+  });
+
+  const questionIndex = round.questionIndex ?? 0;
+  const difficulty = getDifficultyForQuestion(questionIndex, state.topics);
+  const topicIndex = getTopicIndexForQuestion(questionIndex, state.topics);
+
   const result = {
     type: "round" as const,
     teamId: round.teamId,
@@ -373,6 +389,13 @@ export function confirmReview(): void {
     questionIndex: round.questionIndex,
     score,
     jokerUsed: round.jokerActive,
+    playerResults,
+    difficulty,
+    topicIndex,
+    bonusTimeApplied: review.bonusTimeApplied,
+    bonusTime: review.bonusTime,
+    bonusTimeMultiplier: review.bonusTimeMultiplier,
+    groups: review.groups,
   };
 
   const teams = state.teams.map((t) => {
@@ -385,7 +408,7 @@ export function confirmReview(): void {
   });
 
   const history = [...state.history, result];
-  
+
   useGameStore.getState().setState({
     history,
     teams

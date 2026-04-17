@@ -10,29 +10,26 @@ export function ScoringIllustration() {
         <div className={styles.stickersRow}>
           <div className={styles.stickerWrap}>
             <Sticker
-              answerText="Гагарин"
-              stampText="✓"
+              answerText="Gagarin"
+              stampText="+150"
               stampColor="green"
-              player={{ emoji: "🎧", name: "Alice", team: "red" }}
-              hideAvatar
+              player={{ emoji: "🧜‍♀️", name: "Alice", team: "red" }}
             />
           </div>
           <div className={styles.stickerWrap}>
             <Sticker
-              answerText="Титов"
-              stampText="✓"
+              answerText="Armstrong"
+              stampText="+150"
               stampColor="green"
-              player={{ emoji: "🎵", name: "Bob", team: "red" }}
-              hideAvatar
+              player={{ emoji: "🥷", name: "Bob", team: "red" }}
             />
           </div>
           <div className={styles.stickerWrap}>
             <Sticker
-              answerText="Космонавт"
+              answerText="Music"
               stampText="✗"
               stampColor="red"
-              player={{ emoji: "🎶", name: "Carol", team: "red" }}
-              hideAvatar
+              player={{ emoji: "👻", name: "Carol", team: "red" }}
             />
           </div>
         </div>

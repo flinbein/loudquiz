@@ -1,18 +1,21 @@
 // src/pages/rules/illustrations/AvatarsIllustration.tsx
-import { PlayerAvatar } from "@/components/PlayerAvatar/PlayerAvatar";
 import styles from "./illustrations.module.css";
+import { TeamGroup } from "@/components/TeamGroup/TeamGroup";
+import { type PlayerStatusRow, PlayerStatusTable } from "@/components/PlayerStatusTable/PlayerStatusTable";
+
+const redPlayers: PlayerStatusRow[] = [
+  { emoji: "🧜‍♀️", name: "Alice", team: "none", online: true, status: "right", role: "captain" },
+  { emoji: "🥷", name: "Bob", team: "none", online: true, status: "right", role: "player" },
+  { emoji: "👻", name: "Carol", team: "none", online: true, status: "typing", role: "player" },
+];
 
 export function AvatarsIllustration() {
   return (
     <div className={styles.container}>
-      <div className={styles.avatarsRow}>
-        <div>
-          <PlayerAvatar emoji="🎯" name="Captain" team="red" size="64px" />
-          <div className={styles.captainLabel}>♚</div>
-        </div>
-        <PlayerAvatar emoji="🎧" name="Alice" team="red" size="52px" />
-        <PlayerAvatar emoji="🎵" name="Bob" team="red" size="52px" />
-        <PlayerAvatar emoji="🎶" name="Carol" team="red" size="52px" />
+      <div style={{width:'100%'}}>
+        <TeamGroup label={"Team"} teamColor="none" playerCount={3}>
+          <PlayerStatusTable players={redPlayers} />
+        </TeamGroup>
       </div>
     </div>
   );

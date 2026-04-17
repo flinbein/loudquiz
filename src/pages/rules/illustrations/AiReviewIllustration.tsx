@@ -9,14 +9,19 @@ export function AiReviewIllustration() {
       <div className={styles.aiReviewColumn}>
         <div className={styles.stickerWrap}>
           <Sticker
-            answerText="Марс"
-            stampText="✓"
+            answerText="Mars"
+            stampText="+100"
             stampColor="green"
-            player={{ emoji: "🎧", name: "Alice", team: "red" }}
-            hideAvatar
+            player={{ emoji: "🧜‍♀️", name: "Alice", team: "red" }}
+          />
+          <Sticker
+            answerText="Snickers"
+            stampText="×"
+            stampColor="red"
+            player={{ emoji: "🥷", name: "Bob", team: "red" }}
           />
         </div>
-        <AiCommentBubble text="Марс — четвёртая планета, принято!" charDelayMs={0} />
+        <AiCommentBubble text="You were asked to name planets, not chocolate bars. One answer accepted." charDelayMs={0} />
       </div>
     </div>
   );

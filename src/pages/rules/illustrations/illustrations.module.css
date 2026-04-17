@@ -43,14 +43,15 @@
 
 .stickersRow {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-lg);
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .stickerWrap {
-  width: 120px;
-  height: 140px;
+  display: flex;
+  justify-content: space-evenly;
+  gap: var(--spacing-lg);
 }
 
 .blitzChain {

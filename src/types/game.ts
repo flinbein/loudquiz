@@ -127,6 +127,14 @@ export interface RoundState {
   reviewResult?: ReviewResult;
 }
 
+export interface PlayerRoundResult {
+  playerName: string;
+  answerText: string;       // "" if player did not answer
+  correct: boolean | null;  // true/false/null (not evaluated)
+  answerTime: number;       // ms from timer start (Infinity if no answer)
+  groupIndex: number;       // index in groups[] (-1 if not in a group)
+}
+
 export interface RoundResult {
   type: "round" | "blitz";
   teamId: TeamId;
@@ -135,6 +143,14 @@ export interface RoundResult {
   blitzTaskIndex?: number;
   score: number;
   jokerUsed: boolean;
+  // new fields for nominations
+  playerResults: PlayerRoundResult[];
+  difficulty: number;
+  topicIndex: number;          // -1 for blitz
+  bonusTimeApplied: boolean;
+  bonusTime: number;
+  bonusTimeMultiplier: number;
+  groups: string[][];
 }
 
 // Timer

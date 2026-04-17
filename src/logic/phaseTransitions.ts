@@ -74,3 +74,29 @@ export function createNextBlitzRoundState(
     bonusTime: 0,
   };
 }
+
+export function getTopicIndexForQuestion(
+  questionIndex: number,
+  topics: Topic[],
+): number {
+  let remaining = questionIndex;
+  for (let i = 0; i < topics.length; i++) {
+    if (remaining < topics[i]!.questions.length) return i;
+    remaining -= topics[i]!.questions.length;
+  }
+  return -1;
+}
+
+export function getDifficultyForQuestion(
+  questionIndex: number,
+  topics: Topic[],
+): number {
+  let remaining = questionIndex;
+  for (const topic of topics) {
+    if (remaining < topic.questions.length) {
+      return topic.questions[remaining]?.difficulty ?? 0;
+    }
+    remaining -= topic.questions.length;
+  }
+  return 0;
+}

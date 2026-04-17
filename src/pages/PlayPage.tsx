@@ -335,7 +335,7 @@ function PlayerPlayConnected({
       {phase.startsWith("blitz-") && (
         <PlayerBlitz playerName={playerName} sendAction={transport.sendAction} />
       )}
-      {phase === "finale" && <PlayerFinale />}
+      {phase === "finale" && <PlayerFinale sendAction={transport.sendAction} />}
     </GameShell>
   );
 }

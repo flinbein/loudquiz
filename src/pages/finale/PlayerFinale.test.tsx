@@ -20,7 +20,8 @@ describe("PlayerFinale", () => {
       timer: null,
     });
 
-    render(<PlayerFinale />);
+    const mockSendAction = vi.fn();
+    render(<PlayerFinale sendAction={mockSendAction} />);
     expect(screen.getByText("finale.gameOver")).toBeInTheDocument();
   });
 });

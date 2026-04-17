@@ -100,11 +100,12 @@ function TaskCardBlockRound({ captain, isCaptain, isOpponent, round, alwaysOpen,
       <TaskCard
         topic={currentQuestion.topic.name}
         player={captain}
-        difficulty={currentQuestion.question?.difficulty ?? 0}
-        question={currentQuestion.question?.text ?? ""}
+        bottomText={currentQuestion.question?.difficulty ?? 0}
         hidden={!taskVisible}
         onClick={clickable ? onToggle : undefined}
-      />
+      >
+        {currentQuestion.question?.text}
+      </TaskCard>
     </div>
   );
 }
@@ -135,11 +136,13 @@ function TaskCardBlockBlitz({ round, captain, alwaysOpen, isCaptain, isOpponent,
       <TaskCard
         topic={t("blitz.taskTitle")}
         player={captain}
-        difficulty={currentItem?.difficulty ?? 0}
-        question={currentItem?.text ?? ""}
+        bottomText={currentItem?.difficulty ?? 0}
+        
         hidden={!taskVisible}
         onClick={clickable ? onToggle : undefined}
-      />
+      >
+        {currentItem?.text}
+      </TaskCard>
     </div>
   );
 }

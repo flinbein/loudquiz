@@ -11,6 +11,7 @@ import { TimerInput } from "@/components/TimerInput/TimerInput";
 import { TaskBoardBlock } from "@/pages/blocks/TaskBoardBlock";
 import type { PlayerAction } from "@/types/transport";
 import styles from "./PlayerTopicsSuggest.module.css";
+import { Sticker } from "@/components/Sticker/Sticker";
 
 interface Props {
   playerName: string;
@@ -58,9 +59,7 @@ export function PlayerTopicsSuggest({ playerName, sendAction }: Props) {
         )}
         <div className={styles.stickers}>
           {myTopics.map((text, i) => (
-            <div key={i} className={styles.sticker}>
-              {text}
-            </div>
+            <Sticker key={i} answerText={text} player={me} hideAvatar />
           ))}
         </div>
         <button disabled={blocked} onClick={() => sendAction({ kind: "no-ideas" })}>

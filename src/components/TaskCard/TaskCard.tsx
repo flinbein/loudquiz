@@ -1,14 +1,15 @@
+import type { ReactNode } from "react";
 import type { TeamId, PlayerDisplay } from "@/types/game";
 import { PlayerAvatar } from "@/components/PlayerAvatar/PlayerAvatar";
 import styles from "./TaskCard.module.css";
 
 export interface TaskCardProps {
-  topic?: string;
   player?: PlayerDisplay;
-  difficulty: number;
-  question: string;
+  topic?: ReactNode;
+  bottomText: ReactNode;
   hidden?: boolean;
   onClick?: () => void;
+  children?: ReactNode;
 }
 
 const nameColorClass: Record<TeamId, string> = {
@@ -20,8 +21,8 @@ const nameColorClass: Record<TeamId, string> = {
 export function TaskCard({
   topic,
   player,
-  difficulty,
-  question,
+  bottomText,
+  children,
   hidden = false,
   onClick,
 }: TaskCardProps) {
@@ -44,10 +45,10 @@ export function TaskCard({
             </div>
           )}
           <div className={styles.question}>
-            {question}
+            {children}
           </div>
         </div>
-        <div className={styles.footer}>{difficulty}</div>
+        <div className={styles.footer}>{bottomText}</div>
       </div>
 
       <div className={`${styles.card} ${styles.back}`}>
@@ -62,7 +63,7 @@ export function TaskCard({
             </div>
           )}
         </div>
-        <div className={styles.footer}>{difficulty}</div>
+        <div className={styles.footer}>{bottomText}</div>
       </div>
     </div>
   );

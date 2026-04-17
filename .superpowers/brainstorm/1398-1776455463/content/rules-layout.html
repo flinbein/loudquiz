@@ -1,0 +1,219 @@
+<h2>Лейаут страницы правил</h2>
+<p class="subtitle">Зигзаг-лейаут с чередованием текст/картинка. Какой вариант ближе?</p>
+
+<div class="cards">
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="padding:20px;font-family:monospace;font-size:13px;line-height:1.6;background:#1a1a2e;color:#aaa;border-radius:8px;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:24px;color:#fff;font-weight:bold;">🎯 Loud Quiz</div>
+          <div style="color:#888;font-size:11px;">hero-баннер с названием</div>
+        </div>
+
+        <div style="display:flex;gap:16px;margin-bottom:20px;">
+          <div style="flex:1;background:#252545;padding:12px;border-radius:6px;">
+            <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Что такое Loud Quiz?</div>
+            <div style="font-size:11px;">Командная викторина для вечеринок...</div>
+            <div style="font-size:11px;">Игроки надевают наушники...</div>
+          </div>
+          <div style="width:140px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;">
+            🧑‍🤝‍🧑 Аватары<br>в наушниках
+          </div>
+        </div>
+
+        <div style="display:flex;gap:16px;margin-bottom:20px;">
+          <div style="width:140px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;">
+            📋 TaskView<br>с конвертами
+          </div>
+          <div style="flex:1;background:#252545;padding:12px;border-radius:6px;">
+            <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Обычный раунд</div>
+            <div style="font-size:11px;">1. Кто-то становится капитаном...</div>
+            <div style="font-size:11px;">2. Капитан выбирает вопрос...</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:16px;margin-bottom:20px;">
+          <div style="flex:1;background:#252545;padding:12px;border-radius:6px;">
+            <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Подсчёт очков</div>
+            <div style="font-size:11px;">Все верные + уникальные = макс очки...</div>
+          </div>
+          <div style="width:140px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;">
+            🃏 Стикеры<br>+ джокер
+          </div>
+        </div>
+
+        <div style="display:flex;gap:16px;margin-bottom:20px;">
+          <div style="width:140px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;">
+            🔗 Цепочка<br>аватаров
+          </div>
+          <div style="flex:1;background:#252545;padding:12px;border-radius:6px;">
+            <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Блиц-раунд</div>
+            <div style="font-size:11px;">Капитан → Игрок 1 → Игрок 2 → Ответ</div>
+          </div>
+        </div>
+
+        <div style="background:#252545;padding:12px;border-radius:6px;margin-bottom:12px;">
+          <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Режимы игры</div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;background:#333;padding:8px;border-radius:4px;font-size:10px;text-align:center;">1 команда</div>
+            <div style="flex:1;background:#333;padding:8px;border-radius:4px;font-size:10px;text-align:center;">2 команды</div>
+            <div style="flex:1;background:#333;padding:8px;border-radius:4px;font-size:10px;text-align:center;">AI</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:16px;margin-bottom:20px;">
+          <div style="flex:1;background:#252545;padding:12px;border-radius:6px;">
+            <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Игра с AI</div>
+            <div style="font-size:11px;">AI генерирует вопросы, проверяет ответы...</div>
+          </div>
+          <div style="width:140px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;">
+            🤖 Стикеры<br>+ AI bubble
+          </div>
+        </div>
+
+        <div style="background:#252545;padding:12px;border-radius:6px;">
+          <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Редактор вопросов</div>
+          <div style="font-size:11px;">Текст без картинок, ссылка на /constructor</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A: Одна колонка, зигзаг</h3>
+      <p>Полная ширина страницы. Текст и картинка чередуются слева/справа. Секции полноширинные. Чистый, вертикальный скролл.</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="padding:20px;font-family:monospace;font-size:13px;line-height:1.6;background:#1a1a2e;color:#aaa;border-radius:8px;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:24px;color:#fff;font-weight:bold;">🎯 Loud Quiz</div>
+          <div style="color:#888;font-size:11px;">hero-баннер</div>
+        </div>
+
+        <div style="display:flex;gap:16px;">
+          <!-- Sidebar TOC -->
+          <div style="width:120px;flex-shrink:0;">
+            <div style="background:#252545;padding:10px;border-radius:6px;position:sticky;top:0;">
+              <div style="color:#fff;font-size:11px;font-weight:bold;margin-bottom:6px;">Содержание</div>
+              <div style="font-size:10px;color:#888;margin-bottom:3px;">→ Что такое</div>
+              <div style="font-size:10px;color:#888;margin-bottom:3px;">→ Раунд</div>
+              <div style="font-size:10px;color:#888;margin-bottom:3px;">→ Очки</div>
+              <div style="font-size:10px;color:#888;margin-bottom:3px;">→ Блиц</div>
+              <div style="font-size:10px;color:#888;margin-bottom:3px;">→ Режимы</div>
+              <div style="font-size:10px;color:#888;margin-bottom:3px;">→ AI</div>
+              <div style="font-size:10px;color:#888;">→ Редактор</div>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div style="flex:1;">
+            <div style="display:flex;gap:12px;margin-bottom:16px;">
+              <div style="flex:1;background:#252545;padding:10px;border-radius:6px;">
+                <div style="color:#fff;font-weight:bold;font-size:12px;">Что такое Loud Quiz?</div>
+                <div style="font-size:10px;">Командная викторина...</div>
+              </div>
+              <div style="width:100px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;font-size:10px;">🧑‍🤝‍🧑</div>
+            </div>
+            <div style="display:flex;gap:12px;margin-bottom:16px;">
+              <div style="width:100px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;font-size:10px;">📋</div>
+              <div style="flex:1;background:#252545;padding:10px;border-radius:6px;">
+                <div style="color:#fff;font-weight:bold;font-size:12px;">Обычный раунд</div>
+                <div style="font-size:10px;">Шаги...</div>
+              </div>
+            </div>
+            <div style="font-size:10px;color:#555;text-align:center;">... остальные секции ...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B: Зигзаг + боковое оглавление</h3>
+      <p>Sticky-sidebar с навигацией по секциям слева. Контент справа — тот же зигзаг. Удобно для длинной страницы, но сложнее на мобильных.</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="padding:20px;font-family:monospace;font-size:13px;line-height:1.6;background:#1a1a2e;color:#aaa;border-radius:8px;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:24px;color:#fff;font-weight:bold;">🎯 Loud Quiz</div>
+          <div style="color:#888;font-size:11px;">hero-баннер</div>
+        </div>
+
+        <div style="display:flex;gap:16px;margin-bottom:20px;">
+          <div style="flex:1;background:#252545;padding:12px;border-radius:6px;">
+            <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Что такое Loud Quiz?</div>
+            <div style="font-size:11px;">Командная викторина для вечеринок...</div>
+          </div>
+          <div style="width:140px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;">
+            🧑‍🤝‍🧑 Аватары
+          </div>
+        </div>
+
+        <div style="display:flex;gap:16px;margin-bottom:20px;">
+          <div style="width:140px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;">
+            📋 TaskView
+          </div>
+          <div style="flex:1;background:#252545;padding:12px;border-radius:6px;">
+            <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Обычный раунд</div>
+            <div style="font-size:11px;">Шаги раунда...</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <div style="background:#252545;padding:12px;border-radius:6px;margin-bottom:8px;">
+            <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Подсчёт очков</div>
+            <div style="font-size:11px;">Формулы начисления баллов...</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;background:#333;padding:16px;border-radius:6px;text-align:center;color:#666;font-size:10px;">🎫 Стикер 1</div>
+            <div style="flex:1;background:#333;padding:16px;border-radius:6px;text-align:center;color:#666;font-size:10px;">🃏 Джокер</div>
+            <div style="flex:1;background:#333;padding:16px;border-radius:6px;text-align:center;color:#666;font-size:10px;">🎫 Стикер 2</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:16px;margin-bottom:20px;">
+          <div style="flex:1;background:#252545;padding:12px;border-radius:6px;">
+            <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Блиц-раунд</div>
+            <div style="font-size:11px;">Цепочка объяснений...</div>
+          </div>
+          <div style="width:140px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;">
+            🔗 Цепочка
+          </div>
+        </div>
+
+        <div style="background:#252545;padding:12px;border-radius:6px;margin-bottom:12px;">
+          <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Режимы игры</div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;background:#333;padding:8px;border-radius:4px;font-size:10px;text-align:center;">1 команда</div>
+            <div style="flex:1;background:#333;padding:8px;border-radius:4px;font-size:10px;text-align:center;">2 команды</div>
+            <div style="flex:1;background:#333;padding:8px;border-radius:4px;font-size:10px;text-align:center;">AI</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:16px;margin-bottom:20px;">
+          <div style="width:140px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;">
+            🤖 AI bubble
+          </div>
+          <div style="flex:1;background:#252545;padding:12px;border-radius:6px;">
+            <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Игра с AI</div>
+            <div style="font-size:11px;">Генерация, проверка, оспаривание...</div>
+          </div>
+        </div>
+
+        <div style="background:#252545;padding:12px;border-radius:6px;">
+          <div style="color:#fff;font-weight:bold;margin-bottom:4px;">Редактор вопросов</div>
+          <div style="font-size:11px;">Только текст, ссылка →</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C: Смешанный (как в твоём примере)</h3>
+      <p>Зигзаг для большинства секций, но «Очки» и «Режимы» — полноширинный текст сверху + ряд карточек/иконок снизу. Точно по твоему макету из чата.</p>
+    </div>
+  </div>
+</div>

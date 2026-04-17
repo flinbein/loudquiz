@@ -10,9 +10,8 @@ export const Default: Story = () => (
     <TaskCard
       topic="Животные"
       player={redCaptain}
-      difficulty={200}
-      question="Какое животное является самым быстрым на суше?"
-    />
+      bottomText={200}
+    >Какое животное является самым быстрым на суше? </TaskCard>
   </div>
 );
 
@@ -22,23 +21,26 @@ export const Hidden: Story = () => {
     <TaskCard
       topic="Животные"
       player={redCaptain}
-      difficulty={200}
-      question="Какое животное является самым быстрым на суше?"
+      bottomText={200}
       hidden={hidden}
       onClick={() => setHidden(v => !v)}
-    />
+    >Какое животное является самым быстрым на суше? </TaskCard>
   </div>
 };
 
 export const NoTopic: Story = () => (
   <div style={{ width: 400 }}>
-    <TaskCard player={blueCaptain} difficulty={300} question="Назовите столицу Бразилии" />
+    <TaskCard player={blueCaptain} bottomText={300}>
+      Назовите столицу Бразилии
+    </TaskCard>
   </div>
 );
 
 export const NoPlayer: Story = () => (
   <div style={{ width: 400 }}>
-    <TaskCard topic="География" difficulty={100} question="Какая страна самая большая по площади?" />
+    <TaskCard topic="География" bottomText={100}>
+      Какая страна самая большая по площади?
+    </TaskCard>
   </div>
 );
 
@@ -47,9 +49,12 @@ export const LongText: Story = () => (
     <TaskCard
       topic="Наука"
       player={redCaptain}
-      difficulty={400}
-      question="Объясните принцип работы ядерного реактора на тяжёлой воде и его отличия от реактора на лёгкой воде с точки зрения эффективности использования топлива"
-    />
+      bottomText={400}
+    >
+      Объясните принцип работы ядерного реактора на тяжёлой воде
+      и его отличия от реактора на лёгкой воде
+      с точки зрения эффективности использования топлива
+    </TaskCard>
   </div>
 );
 
@@ -59,14 +64,24 @@ export const TeamColors: Story = () => {
   const [hidden3, setHidden3] = useState(false)
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <div style={{ width: 400 }}>
-      <TaskCard hidden={hidden1} topic="Тема" player={redCaptain} difficulty={100} question="Красная команда" onClick={() => setHidden1(v => !v)}/>
+      <TaskCard hidden={hidden1} topic="Тема" player={redCaptain} bottomText={100} onClick={() => setHidden1(v => !v)}>
+        Красная команда
+      </TaskCard>
     </div>
     <div style={{ width: 400 }}>
-      <TaskCard hidden={hidden2} topic="Тема" player={blueCaptain} difficulty={200} question="Синяя команда" onClick={() => setHidden2(v => !v)}/>
+      <TaskCard hidden={hidden2} topic="Тема" player={blueCaptain} bottomText={200} onClick={() => setHidden2(v => !v)}>
+        Синяя команда
+      </TaskCard>
     </div>
     <div style={{ width: 400 }}>
-      <TaskCard hidden={hidden3} topic="Тема" player={{ emoji: "🦊", name: "Лиса", team: "none" }} difficulty={300} onClick={() => setHidden3(v => !v)}
-                question="Без команды" />
+      <TaskCard
+        hidden={hidden3}
+        topic="Тема"
+        player={{ emoji: "🦊", name: "Лиса", team: "none" }}
+        bottomText={300} onClick={() => setHidden3(v => !v)}
+      >
+        Без команды
+      </TaskCard>
     </div>
   </div>
 };
@@ -75,7 +90,9 @@ export const Difficulties: Story = () => (
   <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
     {[100, 200, 300, 400].map((d) => (
       <div key={d} style={{ width: 280 }}>
-        <TaskCard topic="Тема" player={redCaptain} difficulty={d} question={`Вопрос за ${d} очков`} />
+        <TaskCard topic="Тема" player={redCaptain} bottomText={d} >
+          Вопрос за {d} очков
+        </TaskCard>
       </div>
     ))}
   </div>

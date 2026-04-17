@@ -271,5 +271,42 @@
     "red": "Красные",
     "blue": "Синие",
     "none": "Все"
+  },
+  "finale": {
+    "victory": "Победа команды {{team}}!",
+    "draw": "Ничья!",
+    "gameOver": "Игра окончена!",
+    "nomination": {
+      "sniper": { "title": "Снайпер", "description": "Самый высокий % правильных ответов" },
+      "miss": { "title": "Мимо кассы", "description": "Самый низкий % правильных ответов" },
+      "flawless": { "title": "Безупречный", "description": "100% правильных ответов" },
+      "erudite": { "title": "Эрудит", "description": "Правильные ответы в наибольшем числе тем" },
+      "quickDraw": { "title": "Самая быстрая рука", "description": "Самое быстрое среднее время ответа" },
+      "philosopher": { "title": "Философ", "description": "Самое медленное среднее время ответа" },
+      "captainsDaughter": { "title": "Капитанская дочка", "description": "Чаще всех отвечал первым" },
+      "sinkTheShip": { "title": "На дно!", "description": "Единственный неправильный ответ в раунде" },
+      "captainObvious": { "title": "Капитан очевидность", "description": "Капитан с наибольшим суммарным счётом" },
+      "captainFail": { "title": "Капитан неудача", "description": "Капитан с наименьшим суммарным счётом" },
+      "eternalCaptain": { "title": "Вечный капитан", "description": "Был капитаном больше всех раз" },
+      "ambitious": { "title": "Выше амбиций", "description": "Выбирал самые сложные вопросы" },
+      "cautious": { "title": "Осторожный", "description": "Выбирал самые лёгкие вопросы" },
+      "goldMine": { "title": "Золотая жила", "description": "Больше всего очков в роли капитана" },
+      "riskyPlayer": { "title": "Рисковый игрок", "description": "Успешно использовал джокер" },
+      "unluckyGambler": { "title": "Азартный неудачник", "description": "Использовал джокер, но раунд провалился" },
+      "jackpot": { "title": "Джекпот", "description": "Максимальный счёт за один раунд" },
+      "iDontPlay": { "title": "Я не играю", "description": "Чаще всех сдавался" },
+      "longestAnswer": { "title": "Самый длинный ответ", "description": "Наибольшая средняя длина ответа" },
+      "typewriter": { "title": "Печатная машина", "description": "Наибольшая суммарная длина ответов" },
+      "brevity": { "title": "Краткость — сестра таланта", "description": "Наименьшая суммарная длина верных ответов" },
+      "narrowSpecialist": { "title": "Узкий специалист", "description": "Верные ответы только в одной категории" },
+      "blitzMaster": { "title": "Блиц-мастер", "description": "Больше всего очков в блиц-раундах" },
+      "sayMyName": { "title": "Say my name", "description": "Написал имя другого игрока в ответе" },
+      "artist": { "title": "Художник", "description": "Чаще всех использовал эмодзи в ответах" },
+      "mentalConnection": { "title": "Ментальная связь", "description": "Чаще всех давал верный ответ-дубль" },
+      "stuckRecord": { "title": "Заело пластинку", "description": "Давал одинаковые ответы на разные вопросы" },
+      "interviewer": { "title": "Интервьюер", "description": "Использовал «?» в ответах" },
+      "robot": { "title": "Робот", "description": "Дал ответ в двоичной системе" },
+      "spy": { "title": "Шпион", "description": "Дал ответ без букв и цифр" }
+    }
   }
 }

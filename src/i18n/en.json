@@ -271,5 +271,42 @@
     "red": "Red",
     "blue": "Blue",
     "none": "All"
+  },
+  "finale": {
+    "victory": "{{team}} wins!",
+    "draw": "It's a draw!",
+    "gameOver": "Game over!",
+    "nomination": {
+      "sniper": { "title": "Sniper", "description": "Highest correct answer rate" },
+      "miss": { "title": "Off Target", "description": "Lowest correct answer rate" },
+      "flawless": { "title": "Flawless", "description": "100% correct answers" },
+      "erudite": { "title": "Erudite", "description": "Correct answers in the most topics" },
+      "quickDraw": { "title": "Quick Draw", "description": "Fastest average answer time" },
+      "philosopher": { "title": "Philosopher", "description": "Slowest average answer time" },
+      "captainsDaughter": { "title": "Captain's Daughter", "description": "Answered first most often" },
+      "sinkTheShip": { "title": "Sink the Ship!", "description": "Only wrong answer in the round" },
+      "captainObvious": { "title": "Captain Obvious", "description": "Captain with highest total score" },
+      "captainFail": { "title": "Captain Fail", "description": "Captain with lowest total score" },
+      "eternalCaptain": { "title": "Eternal Captain", "description": "Was captain the most times" },
+      "ambitious": { "title": "Ambitious", "description": "Picked the hardest questions" },
+      "cautious": { "title": "Cautious", "description": "Picked the easiest questions" },
+      "goldMine": { "title": "Gold Mine", "description": "Most points scored as captain" },
+      "riskyPlayer": { "title": "Risky Player", "description": "Used joker successfully" },
+      "unluckyGambler": { "title": "Unlucky Gambler", "description": "Used joker but the round failed" },
+      "jackpot": { "title": "Jackpot", "description": "Highest score in a single round" },
+      "iDontPlay": { "title": "I Don't Play", "description": "Gave up the most answers" },
+      "longestAnswer": { "title": "Longest Answer", "description": "Highest average answer length" },
+      "typewriter": { "title": "Typewriter", "description": "Highest total answer length" },
+      "brevity": { "title": "Brevity Is Wit", "description": "Shortest total correct answer length" },
+      "narrowSpecialist": { "title": "Narrow Specialist", "description": "Correct only in one topic" },
+      "blitzMaster": { "title": "Blitz Master", "description": "Most points in blitz rounds" },
+      "sayMyName": { "title": "Say My Name", "description": "Wrote another player's name" },
+      "artist": { "title": "Artist", "description": "Used the most emoji in answers" },
+      "mentalConnection": { "title": "Mental Connection", "description": "Most duplicate correct answers" },
+      "stuckRecord": { "title": "Stuck Record", "description": "Same answer on multiple questions" },
+      "interviewer": { "title": "Interviewer", "description": "Used «?» in answers" },
+      "robot": { "title": "Robot", "description": "Answered in binary" },
+      "spy": { "title": "Spy", "description": "Answered without letters or digits" }
+    }
   }
 }

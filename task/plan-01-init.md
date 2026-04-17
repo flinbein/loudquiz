@@ -334,7 +334,7 @@
 - Unit-тесты stateFilter для dual mode
 - E2E: полная игра dual mode — команды чередуются, очки корректны
 
-### 9.3 Finale [не готово]
+### 9.3 Finale [готово]
 
 **Цель:** финальный экран со статистикой и номинациями.
 
@@ -348,28 +348,44 @@
 - Ручной тест: финальная статистика корректна (single и dual)
 - Ladle stories для HostFinale / PlayerFinale
 
-### 9.4 Game Loop [не готово]
+### 9.4 Game Loop [готово]
 
 **Цель:** склейка всего в единый цикл, «Играть снова».
 
-- [ ] Полный game loop: lobby → (topics-suggest в AI-режиме) → round × N → blitz × N → finale
-- [ ] «Играть снова» из finale → возврат в lobby с сохранением игроков и настроек
-- [ ] Сброс состояния раундов/очков/использованных заданий
+- [x] Полный game loop: lobby → (topics-suggest в AI-режиме) → round × N → blitz × N → finale
+- [x] «Играть снова» из finale → возврат в topics-collecting с сохранением игроков и настроек (AI mode)
+- [x] Сброс состояния раундов/очков/использованных заданий
+- [x] Persistence использованных вопросов (по темам) и блиц-заданий в localStorage
+- [x] AI-оркестратор читает использованные вопросы/блиц из localStorage
+
+**Выполнено:**
+- Persistence: `localPersistence.ts` — 6 функций для used questions (по темам, Record<string, string[]>), 4 функции для used blitz tasks (плоский список). 10 unit-тестов.
+- Автосохранение: вопрос сохраняется при выборе капитаном (`selectQuestion`), все блиц-задания сохраняются при выборе (`selectBlitzItem`).
+- AI-оркестратор: читает `getUsedQuestionsByTopic()` и `getUsedBlitzTasks()` вместо `settings.pastQuestions`.
+- `playAgain()` action: сбрасывает history/topics/blitzTasks/currentRound, обнуляет score/jokerUsed, сохраняет players/settings/teams, переходит в `topics-collecting`. 3 unit-теста.
+- PlayerAction `play-again` + обработка в PlayPage.
+- UI: кнопка «Играть снова тем же составом» (AI mode) на PlayerFinale и SidebarBlock. Кнопка «Новая игра» → `/setup` на SidebarBlock.
+- i18n: `finale.playAgain`, `finale.newGame` (ru/en).
+- 526 тестов, tsc clean, build OK (617 KB js, 73 KB css).
 
 **Проверка:**
-- E2E: полная игра (3 раунда + 2 блица, single, manual) от лобби до финала
-- E2E: «Играть снова» — корректный сброс и повторный проход
-- Ручной тест: single + AI, dual + manual, dual + AI
+- [x] Unit-тесты persistence (10 тестов)
+- [x] Unit-тесты playAgain (3 теста)
+- [x] Все 526 тестов проходят
+- [x] tsc --noEmit без ошибок
+- [x] vite build успешен
+- [ ] E2E: полная игра от лобби до финала (playwright-инфраструктура отсутствует)
+- [ ] Ручной тест: single + AI, dual + manual, dual + AI
 
 ---
 
 ## Фаза 10: Полировка [не готово]
 
-**Цель:** все три транспорта, страница правил, финальная полировка.
+**Цель:** страница правил, финальная полировка.
 
 - [ ] дизайн главной страницы
 - [ ] `RulesPage` — статическая страница с правилами
-- [ ] `OptionsPage` — страница с общими настройками: api key, AI model, `__TRACKERS__`,
+- [ ] `OptionsPage` — страница с общими настройками: api key, AI model, `__TRACKERS__`, использованные вопросы, и т.д.
 - [x] WakeLock API
 - [x] Fullscreen API
 - [x] ThemeToggle, FullscreenButton

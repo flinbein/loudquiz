@@ -93,11 +93,9 @@
 .sectionImage {
   flex: 0 0 300px;
   max-width: 300px;
-  max-height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 }
 
 .sectionTitle {
@@ -144,5 +142,6 @@
     flex: none;
     max-width: 100%;
     width: 100%;
+    max-height: none;
   }
 }

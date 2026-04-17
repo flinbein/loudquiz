@@ -1,6 +1,7 @@
 import { useGameStore } from "@/store/gameStore";
 import { canBeCaptain, getRandomCaptain } from "@/logic/captain";
 import { getPlayedQuestionIndices, getNextPhaseAfterReview, createNextRoundState, createNextBlitzRoundState, getTotalQuestionCount, getTopicIndexForQuestion, getDifficultyForQuestion } from "@/logic/phaseTransitions";
+import { addUsedQuestion } from "@/persistence/localPersistence";
 import { createTimer, getPickTimerDuration, getCaptainTimerDuration, getActiveTimerDuration, getAnswerTimerDuration, getBlitzCaptainTimerDuration } from "@/logic/timer";
 import { calculateRoundScore, calculateBonusMultiplier, checkBonusConditions } from "@/logic/scoring";
 import type { AnswerEvaluation, PlayerRoundResult, RoundPhase, RoundState, TimerState } from "@/types/game";
@@ -27,6 +28,20 @@ export function selectQuestion(linearIndex: number): void {
 
   const played = getPlayedQuestionIndices(state.history);
   if (played.includes(linearIndex)) return;
+
+  // Persist used question for AI deduplication
+  const topicIndex = getTopicIndexForQuestion(linearIndex, state.topics);
+  const topic = state.topics[topicIndex];
+  if (topic) {
+    let remaining = linearIndex;
+    for (let i = 0; i < topicIndex; i++) {
+      remaining -= state.topics[i]!.questions.length;
+    }
+    const question = topic.questions[remaining];
+    if (question) {
+      addUsedQuestion(topic.name, question.text);
+    }
+  }
 
   useGameStore.getState().setState({
     phase: "round-ready",

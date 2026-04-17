@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { useGameStore } from "@/store/gameStore";
-import { FinaleScoreboard } from "./FinaleScoreboard";
 import { NominationCarousel } from "@/components/NominationCarousel/NominationCarousel";
 import { getAllNominations } from "@/logic/nominations";
+import { HostLayout } from "@/pages/blocks/HostLayout";
+import { SidebarBlock } from "@/pages/blocks/SidebarBlock";
+import { HostMainContainer } from "@/pages/blocks/HostMainContainer";
 
 export function HostFinale() {
-  const teams = useGameStore((s) => s.teams);
-  const teamMode = useGameStore((s) => s.settings.teamMode);
   const history = useGameStore((s) => s.history);
   const players = useGameStore((s) => s.players);
   const topics = useGameStore((s) => s.topics);
@@ -17,9 +17,11 @@ export function HostFinale() {
   );
 
   return (
-    <>
-      <FinaleScoreboard teams={teams} teamMode={teamMode} />
-      <NominationCarousel nominations={nominations} />
-    </>
+    <HostLayout>
+      <HostMainContainer>
+        <NominationCarousel nominations={nominations} />
+      </HostMainContainer>
+      <SidebarBlock/>
+    </HostLayout>
   );
 }

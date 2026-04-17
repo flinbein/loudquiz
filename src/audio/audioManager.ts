@@ -10,8 +10,8 @@
  * play; vibration is fired alongside when enabled.
  */
 
-const MUSIC_SRC = "/assets/music.mp3";
-const SIGNAL_SRC = "/assets/ring.mp3";
+import MUSIC_SRC from "./music.mp3";
+import SIGNAL_SRC from "./ring.mp3";
 
 const FADE_OUT_DURATION_MS = 3000;
 const FADE_STEP_MS = 50;

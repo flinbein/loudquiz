@@ -15,8 +15,11 @@ import {
   setPlayerName,
   getCalibration,
   setCalibration,
-  getUsedQuestions,
-  addUsedQuestions,
+  getUsedQuestionsByTopic,
+  getUsedQuestionsTopics,
+  addUsedQuestion,
+  setUsedQuestionsTopic,
+  clearUsedQuestionsTopic,
   clearUsedQuestions,
 } from "./localPersistence";
 import type { GameState } from "@/types/game";
@@ -125,17 +128,54 @@ describe("localPersistence", () => {
     expect(cal.musicVolume).toBe(0.4);
   });
 
-  it("used questions: add, get, clear", () => {
-    expect(getUsedQuestions()).toEqual([]);
+  describe("used questions by topic", () => {
+    it("returns empty record initially", () => {
+      expect(getUsedQuestionsByTopic()).toEqual({});
+      expect(getUsedQuestionsTopics()).toEqual([]);
+    });
 
-    addUsedQuestions(["q1", "q2"]);
-    expect(getUsedQuestions()).toEqual(["q1", "q2"]);
+    it("addUsedQuestion appends to topic", () => {
+      addUsedQuestion("Animals", "Name a cat breed");
+      addUsedQuestion("Animals", "Name a dog breed");
+      addUsedQuestion("Music", "Name a jazz artist");
 
-    addUsedQuestions(["q2", "q3"]);
-    expect(getUsedQuestions()).toEqual(["q1", "q2", "q3"]);
+      expect(getUsedQuestionsByTopic()).toEqual({
+        Animals: ["Name a cat breed", "Name a dog breed"],
+        Music: ["Name a jazz artist"],
+      });
+      expect(getUsedQuestionsTopics()).toEqual(["Animals", "Music"]);
+    });
 
-    clearUsedQuestions();
-    expect(getUsedQuestions()).toEqual([]);
+    it("addUsedQuestion deduplicates within topic", () => {
+      addUsedQuestion("Animals", "Name a cat breed");
+      addUsedQuestion("Animals", "Name a cat breed");
+      expect(getUsedQuestionsByTopic()).toEqual({
+        Animals: ["Name a cat breed"],
+      });
+    });
+
+    it("setUsedQuestionsTopic overwrites topic questions", () => {
+      addUsedQuestion("Animals", "Old question");
+      setUsedQuestionsTopic("Animals", ["New question 1", "New question 2"]);
+      expect(getUsedQuestionsByTopic()).toEqual({
+        Animals: ["New question 1", "New question 2"],
+      });
+    });
+
+    it("clearUsedQuestionsTopic removes one topic", () => {
+      addUsedQuestion("Animals", "Q1");
+      addUsedQuestion("Music", "Q2");
+      clearUsedQuestionsTopic("Animals");
+      expect(getUsedQuestionsByTopic()).toEqual({ Music: ["Q2"] });
+      expect(getUsedQuestionsTopics()).toEqual(["Music"]);
+    });
+
+    it("clearUsedQuestions removes all", () => {
+      addUsedQuestion("Animals", "Q1");
+      addUsedQuestion("Music", "Q2");
+      clearUsedQuestions();
+      expect(getUsedQuestionsByTopic()).toEqual({});
+    });
   });
 });
 

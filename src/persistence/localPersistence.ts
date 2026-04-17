@@ -72,22 +72,42 @@ export function setCalibration(settings: CalibrationSettings): void {
   localStorage.setItem(KEYS.calibration, JSON.stringify(settings));
 }
 
-// Used questions
+// Used questions (grouped by topic)
 
-export function getUsedQuestions(): string[] {
+export function getUsedQuestionsByTopic(): Record<string, string[]> {
   try {
     const raw = localStorage.getItem(KEYS.usedQuestions);
-    if (!raw) return [];
-    return JSON.parse(raw) as string[];
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+    return parsed as Record<string, string[]>;
   } catch {
-    return [];
+    return {};
   }
 }
 
-export function addUsedQuestions(questions: string[]): void {
-  const existing = getUsedQuestions();
-  const merged = [...new Set([...existing, ...questions])];
-  localStorage.setItem(KEYS.usedQuestions, JSON.stringify(merged));
+export function getUsedQuestionsTopics(): string[] {
+  return Object.keys(getUsedQuestionsByTopic());
+}
+
+export function addUsedQuestion(topic: string, questionText: string): void {
+  const all = getUsedQuestionsByTopic();
+  const existing = all[topic] ?? [];
+  if (existing.includes(questionText)) return;
+  all[topic] = [...existing, questionText];
+  localStorage.setItem(KEYS.usedQuestions, JSON.stringify(all));
+}
+
+export function setUsedQuestionsTopic(topic: string, questions: string[]): void {
+  const all = getUsedQuestionsByTopic();
+  all[topic] = questions;
+  localStorage.setItem(KEYS.usedQuestions, JSON.stringify(all));
+}
+
+export function clearUsedQuestionsTopic(topic: string): void {
+  const all = getUsedQuestionsByTopic();
+  delete all[topic];
+  localStorage.setItem(KEYS.usedQuestions, JSON.stringify(all));
 }
 
 export function clearUsedQuestions(): void {

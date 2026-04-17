@@ -20,7 +20,7 @@ import { HostTopicsSuggest } from "@/pages/topics/HostTopicsSuggest";
 import { PlayerTopicsSuggest } from "@/pages/topics/PlayerTopicsSuggest";
 import { GameShell } from "@/pages/GameShell";
 import { useAiOrchestrator } from "@/hooks/useAiOrchestrator";
-import { handleJoin, handleSetTeam, handleSetReady, handleChangeEmoji, startGame } from "@/store/actions/lobby";
+import { handleJoin, handleSetTeam, handleSetReady, handleChangeEmoji, startGame, playAgain } from "@/store/actions/lobby";
 import {
   submitTopicSuggestion,
   playerNoIdeas,
@@ -159,6 +159,9 @@ function HostPlay() {
           if (player && player.team !== "none") startFirstRound(player.team);
           break;
         }
+        case "play-again":
+          playAgain();
+          break;
       }
     });
   }, []);

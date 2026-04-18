@@ -14,7 +14,7 @@
 
   min-height: 100vh;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: 1fr auto;
   background: var(--color-bg);
   color: var(--color-text);
   position: relative;

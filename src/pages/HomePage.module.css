@@ -1,0 +1,100 @@
+.page {
+  /* Local dark palette — overrides inherited theme variables for this page only */
+  --color-bg: #0a0a14;
+  --color-bg-elev: #12121e;
+  --color-text: #e8e8f0;
+  --color-text-secondary: rgba(232, 232, 240, 0.6);
+  --color-text-muted: rgba(232, 232, 240, 0.4);
+
+  /* Neon accents reuse global team colors where possible */
+  --neon-red: var(--color-team-red);
+  --neon-red-glow: rgba(229, 57, 53, 0.55);
+  --neon-blue: var(--color-team-blue);
+  --neon-blue-glow: rgba(30, 136, 229, 0.55);
+
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--color-bg);
+  color: var(--color-text);
+  position: relative;
+  overflow: hidden;
+}
+
+.page::before,
+.page::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(80px);
+  will-change: translate, scale;
+}
+
+.page::before {
+  width: 55vmin;
+  aspect-ratio: 1;
+  top: 10%;
+  left: 5%;
+  background: radial-gradient(circle, var(--neon-red-glow), transparent 65%);
+  animation: orbitRed 24s ease-in-out infinite, pulseRed 7s ease-in-out infinite;
+}
+
+.page::after {
+  width: 50vmin;
+  aspect-ratio: 1;
+  bottom: 10%;
+  right: 5%;
+  background: radial-gradient(circle, var(--neon-blue-glow), transparent 65%);
+  animation: orbitBlue 28s ease-in-out infinite, pulseBlue 9s ease-in-out infinite;
+}
+
+.main {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  align-items: center;
+  gap: clamp(2rem, 6vw, 6rem);
+  padding: clamp(2rem, 6vw, 5rem);
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .main {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 1.5rem 1.25rem;
+    text-align: center;
+    justify-items: center;
+  }
+}
+
+@keyframes orbitRed {
+  0%   { translate:  0vw   0vh; }
+  25%  { translate:  8vw   4vh; }
+  50%  { translate:  4vw  10vh; }
+  75%  { translate: -4vw   6vh; }
+  100% { translate:  0vw   0vh; }
+}
+
+@keyframes orbitBlue {
+  0%   { translate:  0vw   0vh; }
+  25%  { translate: -6vw  -8vh; }
+  50%  { translate:-10vw  -2vh; }
+  75%  { translate: -2vw   6vh; }
+  100% { translate:  0vw   0vh; }
+}
+
+@keyframes pulseRed  { 0%, 100% { scale: 1; } 50% { scale: 1.15; } }
+@keyframes pulseBlue { 0%, 100% { scale: 1; } 50% { scale: 1.12; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .page::before,
+  .page::after {
+    animation: none;
+  }
+}

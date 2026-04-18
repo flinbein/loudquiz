@@ -10,7 +10,7 @@ describe("App", () => {
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByText("Loud Quiz")).toBeInTheDocument();
+    expect(screen.getByText("Вечеринка, наушники, жесты")).toBeInTheDocument();
   });
 
   it("renders constructor page", () => {

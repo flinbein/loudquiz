@@ -1,0 +1,113 @@
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  min-width: 280px;
+}
+
+.primary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 4px;
+  background: linear-gradient(135deg, var(--neon-red), #b71c1c);
+  color: #fff;
+  font-family: var(--font-display);
+  cursor: pointer;
+  animation: ctaPulse 3s ease-in-out infinite;
+}
+
+.primaryLabel {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.primarySub {
+  font-size: 0.75rem;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+.primary:hover {
+  filter: brightness(1.1);
+}
+
+.primary:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.outline {
+  padding: 12px 28px;
+  border: 1.5px solid var(--neon-blue);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--neon-blue);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.outline:hover {
+  background: rgba(30, 136, 229, 0.12);
+}
+
+.outline:focus-visible {
+  outline: 2px solid var(--neon-blue);
+  outline-offset: 2px;
+}
+
+.textLinks {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.textLink {
+  padding: 4px 6px;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.textLink:hover {
+  color: var(--color-text);
+}
+
+.textLink:focus-visible {
+  outline: 2px solid var(--neon-red);
+  outline-offset: 2px;
+}
+
+.textLinkSep {
+  color: var(--color-text-muted);
+}
+
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 0 24px var(--neon-red-glow); }
+  50%      { box-shadow: 0 0 36px var(--neon-red-glow); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary { animation: none; }
+}

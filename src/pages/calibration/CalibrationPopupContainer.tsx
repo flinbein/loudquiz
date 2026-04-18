@@ -7,12 +7,12 @@ import { useClockSyncStore } from "@/store/clockSyncStore";
 import { useTestAudio } from "@/hooks/useTestAudio";
 import { useSecondPulse } from "@/hooks/useSecondPulse";
 
+import MUSIC_SRC from "@/assets/music.mp3";
+import SIGNAL_SRC from "@/assets/ring.mp3";
+
 export interface CalibrationPopupContainerProps {
   role: CalibrationRole;
 }
-
-const MUSIC_SRC = "/assets/music.mp3";
-const RING_SRC = "/assets/ring.mp3";
 
 /**
  * Container that binds Zustand stores to the pure <CalibrationPopup>.
@@ -63,7 +63,7 @@ export function CalibrationPopupContainer({ role }: CalibrationPopupContainerPro
   // Isolated signal element — re-triggered by bumping `signalTick`.
   const signalAudioRef = useRef<HTMLAudioElement | null>(null);
   if (signalAudioRef.current === null && typeof Audio !== "undefined") {
-    signalAudioRef.current = new Audio(RING_SRC);
+    signalAudioRef.current = new Audio(SIGNAL_SRC);
   }
   useEffect(() => {
     if (signalTick === 0) return;

@@ -1,0 +1,40 @@
+.bar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  pointer-events: none;
+}
+
+.bar > * {
+  pointer-events: auto;
+}
+
+.iconBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(232, 232, 240, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text);
+  font-size: 18px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.iconBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(232, 232, 240, 0.35);
+}
+
+.iconBtn:focus-visible {
+  outline: 2px solid var(--neon-red);
+  outline-offset: 2px;
+}

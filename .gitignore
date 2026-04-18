@@ -33,3 +33,6 @@ Thumbs.db
 
 # Screenshots
 screenshots/*.png
+
+# Brainstorming session artifacts
+.superpowers/

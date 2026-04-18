@@ -39,7 +39,7 @@
   top: 10%;
   left: 5%;
   background: radial-gradient(circle, var(--neon-red-glow), transparent 65%);
-  animation: orbitRed 24s ease-in-out infinite, pulseRed 7s ease-in-out infinite;
+  animation: orbitRed 23s ease-in-out infinite, pulseRed 5s ease-in-out infinite;
 }
 
 .page::after {
@@ -48,7 +48,7 @@
   bottom: 10%;
   right: 5%;
   background: radial-gradient(circle, var(--neon-blue-glow), transparent 65%);
-  animation: orbitBlue 28s ease-in-out infinite, pulseBlue 9s ease-in-out infinite;
+  animation: orbitBlue 27s ease-in-out infinite, pulseBlue 7s ease-in-out infinite;
 }
 
 .main {
@@ -77,17 +77,17 @@
 
 @keyframes orbitRed {
   0%   { translate:  0vw   0vh; }
-  25%  { translate:  8vw   4vh; }
-  50%  { translate:  4vw  10vh; }
-  75%  { translate: -4vw   6vh; }
+  25%  { translate:  16vw   8vh; }
+  50%  { translate:  8vw  20vh; }
+  75%  { translate: -8vw   12vh; }
   100% { translate:  0vw   0vh; }
 }
 
 @keyframes orbitBlue {
   0%   { translate:  0vw   0vh; }
-  25%  { translate: -6vw  -8vh; }
-  50%  { translate:-10vw  -2vh; }
-  75%  { translate: -2vw   6vh; }
+  25%  { translate: -12vw  -16vh; }
+  50%  { translate:-20vw  -4vh; }
+  75%  { translate: -4vw   12vh; }
   100% { translate:  0vw   0vh; }
 }
 

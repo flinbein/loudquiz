@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
+import type { TFunction } from "i18next";
 import type { GameState } from "@/types/game";
 import { phaseLabel } from "./phaseLabel";
 
 // Minimal t() stub that returns the key with interpolated values joined in.
-const t = (key: string, vars?: Record<string, unknown>): string =>
-  vars ? `${key}:${JSON.stringify(vars)}` : key;
+const t = ((key: string, vars?: Record<string, unknown>): string =>
+  vars ? `${key}:${JSON.stringify(vars)}` : key) as unknown as TFunction;
 
 function makeState(overrides: Partial<GameState>): GameState {
   return {
@@ -50,7 +51,7 @@ describe("phaseLabel", () => {
       topics: [
         { name: "A", difficulty: 1, questions: [{ text: "q1", answer: "" }, { text: "q2", answer: "" }] },
         { name: "B", difficulty: 1, questions: [{ text: "q3", answer: "" }] },
-      ] as GameState["topics"],
+      ] as unknown as GameState["topics"],
       history: [
         { type: "round", teamId: "red", captainName: "x", score: 0, jokerUsed: false, playerResults: [], difficulty: 1, topicIndex: 0, bonusTimeApplied: false, bonusTime: 0, bonusTimeMultiplier: 1, groups: [] },
         { type: "blitz", teamId: "red", captainName: "x", score: 0, jokerUsed: false, playerResults: [], difficulty: 1, topicIndex: -1, bonusTimeApplied: false, bonusTime: 0, bonusTimeMultiplier: 1, groups: [] },
@@ -62,7 +63,7 @@ describe("phaseLabel", () => {
   it("round phase with empty history: current = 1", () => {
     const state = makeState({
       phase: "round-captain",
-      topics: [{ name: "A", difficulty: 1, questions: [{ text: "q1", answer: "" }] }] as GameState["topics"],
+      topics: [{ name: "A", difficulty: 1, questions: [{ text: "q1", answer: "" }] }] as unknown as GameState["topics"],
     });
     expect(phaseLabel(state, t)).toBe(`home.resumePhase.round:${JSON.stringify({ current: 1, total: 1 })}`);
   });
@@ -74,7 +75,7 @@ describe("phaseLabel", () => {
         { title: "B1", items: [] },
         { title: "B2", items: [] },
         { title: "B3", items: [] },
-      ] as GameState["blitzTasks"],
+      ] as unknown as GameState["blitzTasks"],
       history: [
         { type: "blitz", teamId: "red", captainName: "x", score: 0, jokerUsed: false, playerResults: [], difficulty: 1, topicIndex: -1, bonusTimeApplied: false, bonusTime: 0, bonusTimeMultiplier: 1, groups: [] },
       ],

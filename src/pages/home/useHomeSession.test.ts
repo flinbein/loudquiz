@@ -61,7 +61,7 @@ describe("useHomeSession", () => {
   it("returns resume for round-active with correct roomId and phase", () => {
     setStoredState(
       makeState("round-active", {
-        topics: [{ name: "A", difficulty: 1, questions: [{ text: "q", answer: "" }] }] as GameState["topics"],
+        topics: [{ name: "A", difficulty: 1, questions: [{ text: "q", answer: "" }] }] as unknown as GameState["topics"],
       }),
       "QUIZ42",
     );
@@ -78,7 +78,7 @@ describe("useHomeSession", () => {
   it("returns resume for blitz-active", () => {
     setStoredState(
       makeState("blitz-active", {
-        blitzTasks: [{ title: "B", items: [] }] as GameState["blitzTasks"],
+        blitzTasks: [{ title: "B", items: [] }] as unknown as GameState["blitzTasks"],
       }),
       "QUIZ42",
     );

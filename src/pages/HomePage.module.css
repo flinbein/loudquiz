@@ -2,6 +2,8 @@
   /* Local dark palette — overrides inherited theme variables for this page only */
   --color-bg: #0a0a14;
   --color-bg-elev: #12121e;
+  --color-bg-secondary: rgba(255, 255, 255, 0.04);
+  --color-border: rgba(232, 232, 240, 0.2);
   --color-text: #e8e8f0;
   --color-text-secondary: rgba(232, 232, 240, 0.6);
   --color-text-muted: rgba(232, 232, 240, 0.4);

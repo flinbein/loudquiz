@@ -129,7 +129,7 @@ export function createBroadcastChannelTransport(): Transport {
       const roomId = generateRoomId();
       initRTC();
       initChannel(roomId);
-      const joinUrl = `${window.location.origin}/play?room=${roomId}`;
+      const joinUrl = `${window.location.origin}${import.meta.env.BASE_URL}play?room=${roomId}`;
       console.log(`${tag} room created: ${roomId}`);
       return { roomId, joinUrl };
     },

@@ -175,7 +175,7 @@ function useHostTransport(): UseTransportHostResult {
         .joinRoom(savedRoomId)
         .then(() => {
           setRoomId(savedRoomId);
-          setJoinUrl(`${window.location.origin}/play?room=${savedRoomId}`);
+          setJoinUrl(`${window.location.origin}${import.meta.env.BASE_URL}play?room=${savedRoomId}`);
           setConnected(true);
         })
         .catch((err) => {

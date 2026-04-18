@@ -236,7 +236,7 @@ export function createP2PTTransport(role: P2PTRole): Transport {
     async createRoom(): Promise<RoomInfo> {
       const roomId = generateRoomId();
       initP2PT(roomId);
-      const joinUrl = `${window.location.origin}/play?room=${roomId}`;
+      const joinUrl = `${window.location.origin}${import.meta.env.BASE_URL}play?room=${roomId}`;
       console.log(`[p2pt-debug] ${tag()} room created: ${roomId}`);
       return { roomId, joinUrl };
     },

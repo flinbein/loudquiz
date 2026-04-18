@@ -4,9 +4,21 @@
   },
   "home": {
     "newGame": "New Game",
-    "constructor": "Question Editor",
+    "joinGame": "Join Game",
+    "constructor": "Editor",
     "rules": "Rules",
-    "joinGame": "Join Game"
+    "resume": "Continue",
+    "resumePhase": {
+      "topics": "Picking topics",
+      "round": "Round in progress · {{current}} / {{total}}",
+      "blitz": "Blitz in progress · {{current}} / {{total}}"
+    },
+    "slogan": "A party with headphones and gestures",
+    "steps": {
+      "one": "Gather your team",
+      "two": "Put on headphones",
+      "three": "Explain with gestures"
+    }
   },
   "constructor": {
     "title": "Question Editor",

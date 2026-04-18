@@ -4,9 +4,21 @@
   },
   "home": {
     "newGame": "Новая игра",
-    "constructor": "Редактор вопросов",
+    "joinGame": "Присоединиться",
+    "constructor": "Редактор",
     "rules": "Правила",
-    "joinGame": "Присоединиться"
+    "resume": "Продолжить",
+    "resumePhase": {
+      "topics": "Выбор тем",
+      "round": "Идёт раунд · {{current}} / {{total}}",
+      "blitz": "Идёт блиц · {{current}} / {{total}}"
+    },
+    "slogan": "Вечеринка, наушники, жесты",
+    "steps": {
+      "one": "Собери команду",
+      "two": "Надень наушники",
+      "three": "Объясни жестами"
+    }
   },
   "constructor": {
     "title": "Редактор вопросов",
